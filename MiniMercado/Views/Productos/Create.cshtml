@@ -1,0 +1,61 @@
+﻿@model MiniMercado.Models.Producto
+
+@{
+    ViewData["Title"] = "Nuevo Producto";
+}
+
+<h2>Nuevo Producto</h2>
+
+<hr />
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+
+<hr />
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label asp-for="CodigoBarra" class="form-label"></label>
+        <input asp-for="CodigoBarra" class="form-control" />
+        <span asp-validation-for="CodigoBarra" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Precio" class="form-label"></label>
+        <input asp-for="Precio" class="form-control" />
+        <span asp-validation-for="Precio" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Stock" class="form-label"></label>
+        <input asp-for="Stock" class="form-control" />
+        <span asp-validation-for="Stock" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="Activo" class="form-check-input" />
+        <label asp-for="Activo" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        💾 Guardar
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        ⬅ Volver
+    </a>
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

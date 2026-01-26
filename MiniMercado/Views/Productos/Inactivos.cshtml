@@ -1,0 +1,43 @@
+﻿@model List<MiniMercado.Models.Producto>
+
+<h2>Productos Inactivos</h2>
+
+<form method="get" class="mb-3">
+    <input type="text" name="filtro"
+           class="form-control"
+           placeholder="Buscar por nombre o código de barra" />
+</form>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Código de Barra</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var producto in Model)
+        {
+            <tr>
+                <td>@producto.Nombre</td>
+                <td>@producto.CodigoBarra</td>
+                <td>@producto.Precio</td>
+                <td>@producto.Stock</td>
+                <td>
+                    <a asp-action="Reactivar"
+                       asp-route-id="@producto.Id"
+                       class="btn btn-success btn-sm">
+                        Reactivar
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">
+    Volver
+</a>
