@@ -37,8 +37,8 @@ namespace MiniMercado.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Observacion")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int?>("ProductoId")
                         .IsRequired()
@@ -88,6 +88,54 @@ namespace MiniMercado.Migrations
                     b.ToTable("Productos");
                 });
 
+            modelBuilder.Entity("MiniMercado.Models.Venta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Ventas");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.VentaDetalle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VentaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("VentaDetalles");
+                });
+
             modelBuilder.Entity("MiniMercado.Models.MovimientoStock", b =>
                 {
                     b.HasOne("MiniMercado.Models.Producto", "Producto")
@@ -99,9 +147,33 @@ namespace MiniMercado.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("MiniMercado.Models.VentaDetalle", b =>
+                {
+                    b.HasOne("MiniMercado.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MiniMercado.Models.Venta", "Venta")
+                        .WithMany("Detalles")
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Venta");
+                });
+
             modelBuilder.Entity("MiniMercado.Models.Producto", b =>
                 {
                     b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.Venta", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 #pragma warning restore 612, 618
         }

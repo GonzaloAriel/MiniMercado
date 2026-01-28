@@ -1,0 +1,36 @@
+﻿
+@model List<MiniMercado.Models.VentaDetalle>
+
+<h2>Nueva Venta</h2>
+
+<form method="post">
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <select asp-for="@Model[i].ProductoId"
+                                asp-items="@(new SelectList(ViewBag.Productos, "Id", "Nombre"))"
+                                class="form-control">
+                        </select>
+                    </td>
+                    <td>
+                        <input asp-for="@Model[i].Cantidad" class="form-control" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success">
+        Confirmar Venta
+    </button>
+</form>

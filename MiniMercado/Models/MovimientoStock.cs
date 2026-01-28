@@ -24,6 +24,8 @@ namespace MiniMercado.Models
         [StringLength(20)]
         public string Tipo { get; set; }
 
-        public string Observacion { get; set; }
+        [StringLength(200)]
+        public string? Observacion { get; set; }
+
     }
 }
