@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Mvc;
 using MiniMercado.Data;
 using MiniMercado.Models;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace MiniMercado.Models
@@ -27,7 +28,7 @@ namespace MiniMercado.Models
         public bool Activo { get; set; } = true;
 
 
-
+        [ValidateNever]
         public List<MovimientoStock> Movimientos { get; set; }
 
     }

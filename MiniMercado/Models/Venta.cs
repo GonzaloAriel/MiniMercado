@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -13,6 +14,7 @@ namespace MiniMercado.Models
         [Required]
         public decimal Total { get; set; }
 
+        [ValidateNever]
         public List<VentaDetalle> Detalles { get; set; }
     }
 }

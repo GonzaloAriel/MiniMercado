@@ -1,15 +1,15 @@
-﻿
-@model List<MiniMercado.Models.VentaDetalle>
+﻿@model List<MiniMercado.Models.VentaDetalle>
 
 <h2>Nueva Venta</h2>
 
 <form method="post">
 
-    <table class="table">
+    <table class="table" id="tablaProductos">
         <thead>
             <tr>
                 <th>Producto</th>
                 <th>Cantidad</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -17,20 +17,138 @@
             {
                 <tr>
                     <td>
-                        <select asp-for="@Model[i].ProductoId"
-                                asp-items="@(new SelectList(ViewBag.Productos, "Id", "Nombre"))"
+                        <select name="detalles[@i].ProductoId"
                                 class="form-control">
+                            <option value="">Seleccione</option>
+                            @foreach (var p in ViewBag.Productos)
+                            {
+                                <option value="@p.Id" data-precio="@p.Precio">
+                                    @p.Nombre (Stock: @p.Stock)
+                                </option>
+
+                            }
                         </select>
                     </td>
+
                     <td>
-                        <input asp-for="@Model[i].Cantidad" class="form-control" />
+                        <input type="number"
+                               name="detalles[@i].Cantidad"
+                               class="form-control"
+                               min="1"
+                               value="1" />
+                    </td>
+
+                    <td>
+                        <button type="button"
+                                class="btn btn-danger"
+                                onclick="this.closest('tr').remove()">
+                            ❌
+                        </button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 
+    <h4 class="mt-3">
+        Total: $<span id="totalVenta">0</span>
+    </h4>
+
+
+
+    <button type="button" class="btn btn-primary" onclick="agregarFila()">
+        ➕ Agregar producto
+    </button>
+
+    <br /><br />
+
     <button type="submit" class="btn btn-success">
         Confirmar Venta
     </button>
 </form>
+
+<script>
+        const productosHtml = `
+        @foreach (var p in ViewBag.Productos)
+        {
+                    <option value="@p.Id" data-precio="@p.Precio">
+                        @p.Nombre
+                    </option>
+        }
+    `;
+</script>
+
+
+<script>
+    let index = @Model.Count;
+
+    function agregarFila() {
+        const tabla = document.getElementById("tablaProductos").querySelector("tbody");
+
+        const fila = `
+        <tr>
+            <td>
+                <select name="detalles[${index}].ProductoId" class="form-control">
+                    <option value="">Seleccione</option>
+                    @foreach (var p in ViewBag.Productos)
+                    {
+                                    <option value="@p.Id" data-precio="@p.Precio">
+                                     @p.Nombre
+                                    </option>
+                    }
+                </select>
+            </td>
+
+            <td>
+                <input type="number"
+                       name="detalles[${index}].Cantidad"
+                       class="form-control"
+                       min="1"
+                       value="1" />
+            </td>
+
+            <td>
+                <button type="button"
+                        class="btn btn-danger"
+                        onclick="this.closest('tr').remove()">
+                    ❌
+                </button>
+            </td>
+        </tr>
+        `;
+
+        tabla.insertAdjacentHTML("beforeend", fila);
+        index++;
+    }
+</script>
+
+<script>
+    function recalcularTotal() {
+        let total = 0;
+
+        document.querySelectorAll("tbody tr").forEach(row => {
+            const select = row.querySelector("select");
+            const cantidadInput = row.querySelector("input");
+
+            if (!select || !cantidadInput) return;
+
+            const option = select.options[select.selectedIndex];
+            if (!option) return;
+
+            const precio = parseFloat(option.dataset.precio);
+            const cantidad = parseInt(cantidadInput.value);
+
+            if (!isNaN(precio) && !isNaN(cantidad)) {
+                total += precio * cantidad;
+            }
+        });
+
+        document.getElementById("totalVenta").innerText = total.toFixed(2);
+    }
+
+    document.addEventListener("change", recalcularTotal);
+    document.addEventListener("keyup", recalcularTotal);
+</script>
+
+
+

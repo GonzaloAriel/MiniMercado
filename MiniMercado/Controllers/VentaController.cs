@@ -29,6 +29,8 @@ namespace MiniMercado.Controllers
         }
 
 
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(List<VentaDetalle> detalles)
