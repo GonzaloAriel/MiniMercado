@@ -1,0 +1,74 @@
+﻿@model List<Venta>
+
+<h2>Historial de Ventas</h2>
+
+<hr />
+
+<form method="get" class="row g-2 mb-3">
+
+    <div class="col-md-3">
+        <label class="form-label">N° venta</label>
+        <input type="number"
+               name="ventaId"
+               class="form-control"
+               placeholder="N°" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Desde fecha</label>
+        <input type="date"
+               name="desde"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Hasta fecha</label>
+        <input type="date"
+               name="hasta"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Filtrar</label>
+        <button class="btn btn-primary w-100">
+            🔍 Filtrar
+        </button>
+    </div>
+
+</form>
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td>@v.Id</td>
+                <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>$@v.Total</td>
+                <td>
+                    <a asp-action="Detalle" asp-route-id="@v.Id"
+                       class="btn btn-sm btn-info">
+                        Ver
+                    </a>
+
+                    <a asp-action="Ticket"
+                       asp-route-id="@v.Id"
+                       target="_blank"
+                       class="btn btn-sm btn-secondary">
+                        🧾 Imprimir Ticket
+                    </a>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

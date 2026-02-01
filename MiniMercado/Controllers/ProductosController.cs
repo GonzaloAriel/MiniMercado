@@ -16,13 +16,22 @@ namespace MiniMercado.Controllers
         }
 
         // LISTAR
-        public IActionResult Index()
+        public IActionResult Index(string filtro)
         {
             var productos = _context.Productos
-       .Where(p => p.Activo)
-       .ToList();
+                .Where(p => p.Activo);
 
-            return View(productos);
+            if (!string.IsNullOrEmpty(filtro))
+            {
+                filtro = filtro.ToLower();
+
+                productos = productos.Where(p =>
+                    p.Nombre.ToLower().Contains(filtro) ||
+                    p.CodigoBarra.Contains(filtro)
+                );
+            }
+
+            return View(productos.ToList());
         }
 
         // CREATE GET

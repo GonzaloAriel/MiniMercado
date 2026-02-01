@@ -1,0 +1,28 @@
+﻿<h2 class="text-success">Venta confirmada!!</h2>
+
+<p>@ViewBag.Mensaje</p>
+
+<div class="mt-3">
+    <a asp-action="Create" class="btn btn-success">
+        🛒 Nueva Venta
+    </a>
+
+    <a asp-action="Detalle" asp-route-id="@ViewBag.VentaId"
+       class="btn btn-primary">
+        📄 Ver detalle
+    </a>
+
+    <a asp-action="Ticket"
+       asp-route-id="@ViewBag.VentaId"
+       target="_blank"
+       class="btn btn-secondary">
+        🧾 Imprimir Ticket
+    </a>
+
+    <a asp-controller="Home" asp-action="Index"
+       class="btn btn-info">
+        🏠 Inicio
+    </a>
+
+
+</div>

@@ -41,7 +41,7 @@
                     <td>
                         <button type="button"
                                 class="btn btn-danger"
-                                onclick="this.closest('tr').remove()">
+                                onclick="eliminarFila(this)">
                             ❌
                         </button>
                     </td>
@@ -91,11 +91,12 @@
                 <select name="detalles[${index}].ProductoId" class="form-control">
                     <option value="">Seleccione</option>
                     @foreach (var p in ViewBag.Productos)
-                    {
+                            {
                                     <option value="@p.Id" data-precio="@p.Precio">
-                                     @p.Nombre
+                                        @p.Nombre (Stock: @p.Stock)
                                     </option>
-                    }
+
+                            }
                 </select>
             </td>
 
@@ -109,8 +110,8 @@
 
             <td>
                 <button type="button"
-                        class="btn btn-danger"
-                        onclick="this.closest('tr').remove()">
+                   class="btn btn-danger"
+                    onclick="eliminarFila(this)">
                     ❌
                 </button>
             </td>
@@ -149,6 +150,15 @@
     document.addEventListener("change", recalcularTotal);
     document.addEventListener("keyup", recalcularTotal);
 </script>
+
+<script>
+    function eliminarFila(btn) {
+        const fila = btn.closest('tr');
+        fila.remove();
+        recalcularTotal();
+    }
+</script>
+
 
 
 

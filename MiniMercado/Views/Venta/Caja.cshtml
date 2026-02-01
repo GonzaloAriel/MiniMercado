@@ -1,0 +1,76 @@
+﻿@model List<MiniMercado.Models.Venta>
+
+<h2>📊 Caja diaria</h2>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Fecha</label>
+        <input type="date"
+               name="fecha"
+               value="@ViewBag.Fecha.ToString("yyyy-MM-dd")"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3 align-self-end">
+        <button class="btn btn-primary w-100">
+            🔍 Ver caja
+        </button>
+    </div>
+</form>
+
+<hr />
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="alert alert-info">
+            📅 Fecha: <strong>@ViewBag.Fecha.ToString("dd/MM/yyyy")</strong>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="alert alert-success">
+            💰 Total vendido: <strong>$@ViewBag.Total</strong>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="alert alert-secondary">
+            🧾 Ventas realizadas: <strong>@ViewBag.CantidadVentas</strong>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Hora</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td>@v.Id</td>
+                <td>@v.Fecha.ToString("HH:mm")</td>
+                <td>$@v.Total</td>
+                <td>
+                    <a asp-action="Detalle"
+                       asp-route-id="@v.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        Ver
+                    </a>
+
+                    <a asp-action="Ticket"
+                       asp-route-id="@v.Id"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-secondary">
+                        🧾
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

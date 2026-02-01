@@ -1,0 +1,34 @@
+﻿@model Venta
+
+<h2>Detalle de Venta #@Model.Id</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cant.</th>
+            <th>Precio</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model.Detalles)
+        {
+            <tr>
+                <td>@d.Producto.Nombre</td>
+                <td>@d.Cantidad</td>
+                <td>$@d.PrecioUnitario</td>
+                <td>$@(d.Cantidad* d.PrecioUnitario)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Total: $@Model.Total</h4>
+
+<a asp-action="Ticket"
+   asp-route-id="@Model.Id"
+   target="_blank"
+   class="btn btn-secondary">
+    🧾 Imprimir Ticket
+</a>
