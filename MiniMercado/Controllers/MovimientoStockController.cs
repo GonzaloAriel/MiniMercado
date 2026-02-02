@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MiniMercado.Data;
 using MiniMercado.Models;
@@ -6,6 +7,7 @@ using System.Linq;
 
 namespace MiniMercado.Controllers
 {
+    [Authorize]
     public class MovimientoStockController : Controller
     {
         private readonly MiniMercadoContext _context;

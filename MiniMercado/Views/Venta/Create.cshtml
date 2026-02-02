@@ -23,7 +23,7 @@
                             @foreach (var p in ViewBag.Productos)
                             {
                                 <option value="@p.Id" data-precio="@p.Precio">
-                                    @p.Nombre (Stock: @p.Stock)
+                                    @p.Nombre (Stock: @p.Stock) (Precio: @p.Precio)
                                 </option>
 
                             }
@@ -93,7 +93,7 @@
                     @foreach (var p in ViewBag.Productos)
                             {
                                     <option value="@p.Id" data-precio="@p.Precio">
-                                        @p.Nombre (Stock: @p.Stock)
+                                            @p.Nombre (Stock: @p.Stock) (Precio: @p.Precio)
                                     </option>
 
                             }

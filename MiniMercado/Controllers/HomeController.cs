@@ -1,32 +1,36 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using MiniMercado.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using MiniMercado.Data;
 
 namespace MiniMercado.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly MiniMercadoContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(MiniMercadoContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
-            return View();
-        }
+            // 📅 Ventas de HOY
+            DateTime hoy = DateTime.Today;
+            DateTime mañana = hoy.AddDays(1);
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+            var ventasHoy = _context.Ventas
+                .Where(v => v.Fecha >= hoy && v.Fecha < mañana);
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            ViewBag.TotalHoy = ventasHoy.Sum(v => v.Total);
+            ViewBag.CantidadVentasHoy = ventasHoy.Count();
+
+            // ⚠️ Stock bajo (menos de 5, ajustable)
+            ViewBag.StockBajo = _context.Productos
+                .Where(p => p.Activo && p.Stock <= 5)
+                .OrderBy(p => p.Stock)
+                .ToList();
+
+            return View();
         }
     }
 }

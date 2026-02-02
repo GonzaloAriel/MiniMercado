@@ -1,11 +1,13 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace MiniMercado.Controllers
 {
+    [Authorize]
     public class VentaController : Controller
     {
         private readonly MiniMercadoContext _context;

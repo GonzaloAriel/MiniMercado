@@ -1,8 +1,9 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace MiniMercado.Controllers
 {
@@ -16,6 +17,7 @@ namespace MiniMercado.Controllers
         }
 
         // LISTAR
+        [Authorize(Roles = "Admin")]
         public IActionResult Index(string filtro)
         {
             var productos = _context.Productos
@@ -35,6 +37,7 @@ namespace MiniMercado.Controllers
         }
 
         // CREATE GET
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();

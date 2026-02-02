@@ -4,6 +4,8 @@
 
 <h2 class="mb-4">🏪 Mini Mercado</h2>
 
+
+<!-- 🚀 ACCESOS -->
 <div class="row">
 
     <div class="col-md-4 mb-3">
@@ -43,3 +45,60 @@
     </div>
 
 </div>
+
+<hr />
+
+<!-- 🔔 RESUMEN DEL DÍA -->
+<div class="row mb-4 pt-xxl-5">
+
+    <div class="col-md-4">
+        <div class="alert alert-success text-center">
+            💰 <strong>Ventas de hoy</strong><br />
+            $@ViewBag.TotalHoy
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="alert alert-success text-center">
+            🧾 <strong>Cantidad de ventas</strong><br />
+            @ViewBag.CantidadVentasHoy
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="alert alert-success text-center">
+            ⚠️ <strong>Productos con stock bajo</strong><br />
+            @(ViewBag.StockBajo.Count)
+        </div>
+    </div>
+
+</div>
+
+<!-- ⚠️ LISTADO DE STOCK BAJO -->
+@if (ViewBag.StockBajo.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header bg-info">
+            ⚠️ Stock bajo
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in ViewBag.StockBajo)
+                    {
+                        <tr>
+                            <td>@p.Nombre</td>
+                            <td class="text-danger fw-bold">@p.Stock</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -1,0 +1,37 @@
+﻿@model MiniMercado.Models.ViewModels.CrearUsuarioVM
+
+<h2>Crear Usuario</h2>
+
+<form method="post">
+
+    <div class="mb-3">
+        <label>Email</label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Contraseña</label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Rol</label>
+        <select asp-for="Rol"
+                asp-items="@(new SelectList(ViewBag.Roles, "Name", "Name"))"
+                class="form-control">
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Crear Usuario
+    </button>
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
