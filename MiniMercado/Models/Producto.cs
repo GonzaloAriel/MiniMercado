@@ -23,7 +23,10 @@ namespace MiniMercado.Models
 
         [Required(ErrorMessage = "El stock es obligatorio")]
         [Range(0, 100000, ErrorMessage = "El stock no puede ser negativo")]
-        public int Stock { get; set; }
+        public decimal Stock { get; set; }
+
+        public bool EsPorPeso { get; set; } = false;
+        public bool PrecioEditable { get; set; } = false;
 
         public bool Activo { get; set; } = true;
 

@@ -22,25 +22,21 @@ namespace MiniMercado.Controllers
                 .Where(p => p.Activo && p.Stock > 0)
                 .ToList();
 
-            var detalles = new List<VentaDetalle>
-            {
-                new VentaDetalle() // al menos una fila
-            };
-
-            return View(detalles);
+            return View(new List<VentaDetalle> { new VentaDetalle() });
         }
-
-
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(List<VentaDetalle> detalles)
         {
-            if (detalles == null || !detalles.Any())
+            if (!ModelState.IsValid || detalles == null || !detalles.Any())
             {
-                ModelState.AddModelError("", "Debe agregar al menos un producto");
-                return View();
+                ViewBag.Productos = _context.Productos
+                    .Where(p => p.Activo && p.Stock > 0)
+                    .ToList();
+
+                return View(detalles ?? new List<VentaDetalle> { new VentaDetalle() });
             }
 
             decimal total = 0;
@@ -48,19 +44,27 @@ namespace MiniMercado.Controllers
             foreach (var item in detalles)
             {
                 var producto = _context.Productos.Find(item.ProductoId);
+                if (producto == null)
+                    return BadRequest();
 
-                if (producto == null || item.Cantidad > producto.Stock)
+                // 🔒 Precio SIEMPRE parte del producto
+                // Si es editable, ya viene modificado desde el input
+                // pero lo normalizamos como decimal puro
+                item.PrecioUnitario = producto.PrecioEditable
+                    ? decimal.Round(item.PrecioUnitario, 2)
+                    : producto.Precio;
+
+                if (!producto.EsPorPeso)
                 {
-                    ModelState.AddModelError("",
-                        $"Stock insuficiente para {producto?.Nombre}");
-                    return View();
+                    item.Cantidad = Math.Floor(item.Cantidad);
                 }
 
+                // Stock
                 producto.Stock -= item.Cantidad;
-                item.PrecioUnitario = producto.Precio;
+
+                // Total
                 total += item.PrecioUnitario * item.Cantidad;
 
-                // Registrar movimiento
                 _context.MovimientosStock.Add(new MovimientoStock
                 {
                     ProductoId = producto.Id,

@@ -15,19 +15,25 @@
         </a>
     </div>
 
-    <div class="col-md-4 mb-3">
-        <a asp-controller="Productos" asp-action="Index"
-           class="btn btn-primary w-100 p-4 fs-5">
-            📦 Productos
-        </a>
-    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-md-4 mb-3">
+            <a asp-controller="Productos" asp-action="Index"
+               class="btn btn-primary w-100 p-4 fs-5">
+                📦 Productos
+            </a>
+        </div>
+    }
 
-    <div class="col-md-4 mb-3">
-        <a asp-controller="MovimientoStock" asp-action="Ingreso"
-           class="btn btn-warning w-100 p-4 fs-5">
-            ➕ Ingreso de Stock
-        </a>
-    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-md-4 mb-3">
+            <a asp-controller="MovimientoStock" asp-action="Ingreso"
+               class="btn btn-warning w-100 p-4 fs-5">
+                ➕ Ingreso de Stock
+            </a>
+        </div>
+    }
 
     <div class="col-md-4 mb-3">
         <a asp-controller="Venta" asp-action="Index"
@@ -45,6 +51,22 @@
     </div>
 
 </div>
+
+@if (User.IsInRole("Admin"))
+{
+    <hr />
+    <h4>⚙️ Administración</h4>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <a asp-controller="Usuarios" asp-action="Create"
+               class="btn btn-outline-dark w-100 p-3">
+                👤 Crear Usuario
+            </a>
+        </div>
+    </div>
+}
+
 
 <hr />
 

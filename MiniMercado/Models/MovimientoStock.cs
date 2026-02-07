@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
@@ -18,7 +19,8 @@ namespace MiniMercado.Models
         public DateTime Fecha { get; set; } = DateTime.Now;
 
         [Required(ErrorMessage = "Debe ingresar cantidad")]
-        public int Cantidad { get; set; }
+        [Column(TypeName = "decimal(18,3)")]
+        public decimal Cantidad { get; set; }
 
         [Required]
         [StringLength(20)]

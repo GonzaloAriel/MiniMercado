@@ -39,6 +39,21 @@
         <span asp-validation-for="Stock" class="text-danger"></span>
     </div>
 
+    <div class="form-check mb-2">
+        <input asp-for="EsPorPeso" class="form-check-input" />
+        <label asp-for="EsPorPeso" class="form-check-label">
+            Se vende por peso
+        </label>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="PrecioEditable" class="form-check-input" />
+        <label asp-for="PrecioEditable" class="form-check-label">
+            Precio editable en venta
+        </label>
+    </div>
+
+
     <div class="form-check mb-3">
         <input asp-for="Activo" class="form-check-input" />
         <label asp-for="Activo" class="form-check-label"></label>

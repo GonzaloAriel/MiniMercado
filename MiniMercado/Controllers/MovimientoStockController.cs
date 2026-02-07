@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class MovimientoStockController : Controller
     {
         private readonly MiniMercadoContext _context;

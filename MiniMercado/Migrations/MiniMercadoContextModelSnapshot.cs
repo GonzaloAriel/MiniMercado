@@ -228,8 +228,8 @@ namespace MiniMercado.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,3)");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -270,6 +270,9 @@ namespace MiniMercado.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("EsPorPeso")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -278,8 +281,11 @@ namespace MiniMercado.Migrations
                     b.Property<decimal>("Precio")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Stock")
-                        .HasColumnType("int");
+                    b.Property<bool>("PrecioEditable")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Stock")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -313,8 +319,8 @@ namespace MiniMercado.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,3)");
 
                     b.Property<decimal>("PrecioUnitario")
                         .HasColumnType("decimal(18,2)");

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
@@ -20,7 +21,8 @@ namespace MiniMercado.Models
         public Producto Producto { get; set; }
 
         [Required]
-        public int Cantidad { get; set; }
+        [Column(TypeName = "decimal(18,3)")]
+        public decimal Cantidad { get; set; }
 
         [Required]
         public decimal PrecioUnitario { get; set; }
