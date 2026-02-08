@@ -21,14 +21,14 @@
         {
             <tr>
                 <td>@d.Producto.Nombre</td>
-                <td>@d.Cantidad</td>
-                <td>$@(d.Cantidad* d.PrecioUnitario)</td>
+                <td>@d.Cantidad.ToString("0.##")</td>
+                <td>$@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
             </tr>
         }
     </table>
 
     <hr />
-    <p><strong>Total: $@Model.Total</strong></p>
+    <p><strong>Total: $@Model.Total.ToString("0.##")</strong></p>
 
 </body>
 </html>

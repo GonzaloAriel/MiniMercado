@@ -182,9 +182,10 @@
 
             const precio = parseFloat(option.dataset.precio) || 0;
 
-                const esPorPeso = option.dataset.peso === "True";
+            const esPorPeso = option.dataset.peso === "True";
+            const editable = option.dataset.editable === "True";
 
-    const cantidadInput = fila.querySelector(".cantidad");
+            const cantidadInput = fila.querySelector(".cantidad");
 
     if (esPorPeso) {
         cantidadInput.step = "0.01";

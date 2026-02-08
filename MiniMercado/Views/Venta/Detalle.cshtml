@@ -17,16 +17,16 @@
             <tr>
                 <td>@d.Producto.Nombre</td>
                 <td>@d.Cantidad.ToString("0.##")</td>
-                <td>@d.PrecioUnitario.ToString("N2")</td>
+                <td>@d.PrecioUnitario.ToString("0.##")</td>
                 <td>
-                    @((d.Cantidad * d.PrecioUnitario).ToString("N2"))
+                    @((d.Cantidad * d.PrecioUnitario).ToString("0.##"))
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-<h4>Total: @Model.Total.ToString("N2")</h4>
+<h4>Total: @Model.Total.ToString("0.##")</h4>
 
 <a asp-action="Ticket"
    asp-route-id="@Model.Id"
