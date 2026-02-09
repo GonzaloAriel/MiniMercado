@@ -14,8 +14,9 @@ namespace MiniMercado.Models
         [ValidateNever]
         public Venta Venta { get; set; }
 
-        [Required]
-        public int ProductoId { get; set; }
+        [Required(ErrorMessage = "Debe seleccionar un producto")]
+        public int? ProductoId { get; set; }
+
 
         [ValidateNever]
         public Producto Producto { get; set; }

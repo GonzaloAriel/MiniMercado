@@ -7,10 +7,18 @@ using MiniMercado.Models;
 
 namespace MiniMercado.Controllers
 {
+
     [Authorize]
     public class VentaController : Controller
     {
         private readonly MiniMercadoContext _context;
+        private void CargarProductos()
+        {
+            ViewBag.Productos = _context.Productos
+                    .Where(p => p.Activo && p.Stock > 0)
+                    .ToList();
+        }
+
 
         public VentaController(MiniMercadoContext context)
         {
@@ -30,11 +38,31 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(List<VentaDetalle> detalles)
         {
+            // Limpiar errores automáticos del ModelBinder
+            var keysConError = ModelState.Keys
+                .Where(k => k.Contains("detalles"))
+                .ToList();
+
+            foreach (var key in keysConError)
+            {
+                if (ModelState[key].Errors.Any(e =>
+                    e.ErrorMessage.Contains("invalid", StringComparison.OrdinalIgnoreCase)))
+                {
+                    ModelState[key].Errors.Clear();
+                }
+            }
+            //--------------------------------------------
+
+            detalles = detalles
+            .Where(d => d.ProductoId.HasValue)
+            .ToList();
+
             if (!ModelState.IsValid || detalles == null || !detalles.Any())
             {
-                ViewBag.Productos = _context.Productos
-                    .Where(p => p.Activo && p.Stock > 0)
-                    .ToList();
+                CargarProductos();
+
+                ModelState.AddModelError("",
+                    "Debe agregar al menos un producto a la venta.");
 
                 return View(detalles ?? new List<VentaDetalle> { new VentaDetalle() });
             }
@@ -43,13 +71,28 @@ namespace MiniMercado.Controllers
 
             foreach (var item in detalles)
             {
+                if (item.ProductoId == null)
+                {
+                    ModelState.AddModelError("",
+                        "Hay productos sin seleccionar. Por favor, revise la venta.");
+
+                    CargarProductos();
+                    return View(detalles);
+                }
+
                 var producto = _context.Productos.Find(item.ProductoId);
                 if (producto == null)
                     return BadRequest();
 
-                // 🔒 Precio SIEMPRE parte del producto
-                // Si es editable, ya viene modificado desde el input
-                // pero lo normalizamos como decimal puro
+                if (producto.Stock < item.Cantidad)
+                {
+                    ModelState.AddModelError("",
+                        $"No hay stock suficiente de {producto.Nombre}. Disponible: {producto.Stock.ToString("0.#")}");
+
+                    CargarProductos();
+                    return View(detalles);
+                }
+
                 item.PrecioUnitario = producto.PrecioEditable
                     ? decimal.Round(item.PrecioUnitario, 2)
                     : producto.Precio;

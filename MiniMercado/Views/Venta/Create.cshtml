@@ -2,6 +2,8 @@
 
 <h2 class="mb-3">🛒 Nueva Venta</h2>
 
+<div asp-validation-summary="All" class="text-danger"></div>
+
 <form method="post">
 
     <div class="card mb-3">
@@ -33,7 +35,7 @@
                                                 data-precio="@p.Precio"
                                                 data-peso="@p.EsPorPeso"
                                                 data-editable="@p.PrecioEditable">
-                                            @p.Nombre
+                                            @p.Nombre (Stock: @p.Stock.ToString("0.##"))
                                         </option>
                                     }
                                 </select>
@@ -96,6 +98,9 @@
     let index = @Model.Count;
 
     function agregarFila() {
+
+        limpiarErroresGlobales();
+
         const tbody = document.querySelector("#tablaVenta tbody");
 
         const fila = `
@@ -107,12 +112,12 @@
                     <option value="">Seleccione</option>
                     @foreach (var p in ViewBag.Productos)
                     {
-                            <option value="@p.Id"
-                                    data-precio="@p.Precio"
-                                    data-peso="@p.EsPorPeso"
-                                    data-editable="@p.PrecioEditable">
-                                @p.Nombre
-                            </option>
+                                <option value="@p.Id"
+                                        data-precio="@p.Precio"
+                                        data-peso="@p.EsPorPeso"
+                                        data-editable="@p.PrecioEditable">
+                                    @p.Nombre
+                                </option>
                     }
                 </select>
             </td>
@@ -163,7 +168,7 @@
 
         const subtotal = cantidad * precio;
 
-        fila.querySelector(".subtotal").innerText = "$" + subtotal.toFixed(2);
+        fila.querySelector(".subtotal").innerText = "$" + subtotal;
         recalcularTotal();
     }
 
@@ -172,11 +177,15 @@
         document.querySelectorAll(".subtotal").forEach(s => {
             total += parseFloat(s.innerText.replace("$", "")) || 0;
         });
-        document.getElementById("totalVenta").innerText = total.toFixed(2);
+        document.getElementById("totalVenta").innerText = total;
     }
 
        document.addEventListener("change", function (e) {
+
         if (e.target.classList.contains("producto-select")) {
+
+            limpiarErroresGlobales();
+
             const fila = e.target.closest("tr");
             const option = e.target.selectedOptions[0];
 
@@ -232,3 +241,28 @@
     });
 </script>
 
+<script>
+        function limpiarErroresGlobales() {
+        const summary = document.querySelector(".validation-summary-errors");
+
+        if (summary) {
+            summary.innerHTML = "";
+            summary.classList.remove("validation-summary-errors");
+            summary.classList.add("validation-summary-valid");
+        }
+    }
+</script>
+
+<script>
+        document.addEventListener("focusin", function (e) {
+        if (e.target.classList.contains("producto-select")) {
+            limpiarErroresGlobales();
+        }
+    });
+
+    document.addEventListener("click", function (e) {
+        if (e.target.classList.contains("producto-select")) {
+            limpiarErroresGlobales();
+        }
+    });
+</script>

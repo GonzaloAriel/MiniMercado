@@ -29,13 +29,13 @@
 
     <div class="col-md-4">
         <div class="alert alert-success">
-            💰 Total vendido: <strong>$@ViewBag.Total</strong>
+            💰 Total vendido: <strong>$@ViewBag.Total.ToString("0.##")l</strong>
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="alert alert-secondary">
-            🧾 Ventas realizadas: <strong>@ViewBag.CantidadVentas</strong>
+            🧾 Ventas realizadas: <strong>@ViewBag.CantidadVentas.ToString("0.##")</strong>
         </div>
     </div>
 </div>
@@ -55,7 +55,7 @@
             <tr>
                 <td>@v.Id</td>
                 <td>@v.Fecha.ToString("HH:mm")</td>
-                <td>$@v.Total</td>
+                <td>$@v.Total.ToString("0.##")</td>
                 <td>
                     <a asp-action="Detalle"
                        asp-route-id="@v.Id"
