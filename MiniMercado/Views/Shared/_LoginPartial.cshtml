@@ -6,7 +6,7 @@
     @if (SignInManager.IsSignedIn(User))
     {
         <li class="nav-item">
-            <span class="nav-link text-dark">
+            <span class="nav-link fw-bold text-black">
                 👤 @User.Identity?.Name
             </span>
         </li>
@@ -15,7 +15,7 @@
                   asp-page="/Account/Logout"
                   method="post"
                   class="d-inline">
-                <button type="submit" class="nav-link btn btn-link text-dark">
+                <button type="submit" class="nav-link btn btn-link fw-bold text-black">
                     🚪 Salir
                 </button>
             </form>
@@ -24,7 +24,7 @@
     else
     {
         <li class="nav-item">
-            <a class="nav-link text-dark"
+            <a class="nav-link fw-bold text-black"
                asp-area="Identity"
                asp-page="/Account/Login">
                 🔐 Ingresar

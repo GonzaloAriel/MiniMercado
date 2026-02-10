@@ -10,32 +10,83 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MiniMercado</a>
 
-                <partial name="_LoginPartial" />
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                    🏪 MiniMercado
+                </a>
 
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+
+                    <ul class="navbar-nav me-auto">
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link fw-bold text-black"
+                               asp-controller="Venta"
+                               asp-action="Create">
+                                🛒 Nueva Venta
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link fw-bold text-black"
+                               asp-controller="Venta"
+                               asp-action="Index">
+                                📄 Ventas
+                            </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold text-black"
+                               asp-controller="Venta"
+                               asp-action="Caja">
+                                📊 Caja
+                            </a>
+                        </li>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-black"
+                                   asp-controller="Productos"
+                                   asp-action="Index">
+                                    📦 Productos
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-black"
+                                   asp-controller="MovimientoStock"
+                                   asp-action="Ingreso">
+                                    ➕ Ingreso Stock
+                                </a>
+                            </li>
+                        }
+
                     </ul>
+
+                    <!-- LOGIN / LOGOUT -->
+                    <ul class="navbar-nav ">
+                        <partial name="_LoginPartial" />
+                    </ul>
+
                 </div>
             </div>
         </nav>
+
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-3 ">
             @RenderBody()
         </main>
     </div>
