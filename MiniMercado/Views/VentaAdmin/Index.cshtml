@@ -1,0 +1,65 @@
+﻿@model IEnumerable<MiniMercado.Models.Venta>
+
+@{
+    ViewData["Title"] = "Administración de Ventas";
+}
+
+<h2 class="mb-4">🛠 Administración de Ventas</h2>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th style="width:200px;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var venta in Model)
+        {
+            <tr class="@(venta.Activa ? "table-danger" : "")">
+                <td>@venta.Id</td>
+                <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>$@venta.Total.ToString("0")</td>
+                <td>
+                    @if (venta.Activa)
+                    {
+                        <span class="badge bg-danger">Anulada</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Activa</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Detalle"
+                       asp-route-id="@venta.Id"
+                       class="btn btn-sm btn-info">
+                        👁 Detalle
+                    </a>
+
+                    @if (!venta.Activa)
+                    {
+                        <a asp-action="Anular"
+                           asp-route-id="@venta.Id"
+                           class="btn btn-sm btn-danger">
+                            ❌ Anular
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+

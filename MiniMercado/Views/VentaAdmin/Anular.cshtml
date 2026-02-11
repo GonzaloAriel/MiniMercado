@@ -1,0 +1,37 @@
+﻿@model MiniMercado.Models.Venta
+
+@{
+    ViewData["Title"] = "Anular Venta";
+}
+
+<h2 class="text-danger">⚠ Confirmar Anulación</h2>
+
+<div class="alert alert-warning">
+    Está a punto de anular la venta <strong>#@Model.Id</strong>.
+    <br />
+    Esta acción:
+    <ul>
+        <li>Restaurará el stock</li>
+        <li>Marcará la venta como anulada</li>
+        <li>No se podrá revertir fácilmente</li>
+    </ul>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm") <br />
+        <strong>Total:</strong> $@Model.Total.ToString("0")
+    </div>
+</div>
+
+<form asp-action="ConfirmarAnular" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <button type="submit" class="btn btn-danger">
+        ❌ Confirmar Anulación
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>

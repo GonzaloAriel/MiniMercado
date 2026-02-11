@@ -14,6 +14,10 @@ namespace MiniMercado.Models
         [Required]
         public decimal Total { get; set; }
 
+        public bool Activa { get; set; } = true;
+
+        public string? MotivoAnulacion { get; set; }
+
         [ValidateNever]
         public List<VentaDetalle> Detalles { get; set; }
     }

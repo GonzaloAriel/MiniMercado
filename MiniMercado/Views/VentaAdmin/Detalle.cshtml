@@ -1,0 +1,52 @@
+﻿@model MiniMercado.Models.Venta
+
+@{
+    ViewData["Title"] = "Detalle de Venta";
+}
+
+<h2>📄 Detalle de Venta #@Model.Id</h2>
+
+<div class="mb-3">
+    <strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm") <br />
+    <strong>Estado:</strong>
+    @if (Model.Activa)
+    {
+        <span class="badge bg-danger">Anulada</span>
+    }
+    else
+    {
+        <span class="badge bg-success">Activa</span>
+    }
+</div>
+
+<table class="table table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Producto</th>
+            <th class="text-end">Cantidad</th>
+            <th class="text-end">Precio</th>
+            <th class="text-end">Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model.Detalles)
+        {
+            <tr>
+                <td>@d.Producto.Nombre</td>
+                <td class="text-end">@d.Cantidad.ToString("0.###")</td>
+                <td class="text-end">$@d.PrecioUnitario.ToString("0")</td>
+                <td class="text-end">
+                    $@( (d.Cantidad * d.PrecioUnitario).ToString("0") )
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4 class="text-end">
+    Total: $@Model.Total.ToString("0")
+</h4>
+
+<a asp-action="Index" class="btn btn-secondary">
+    ⬅ Volver
+</a>

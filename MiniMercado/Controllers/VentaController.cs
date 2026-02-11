@@ -19,11 +19,11 @@ namespace MiniMercado.Controllers
                     .ToList();
         }
 
-
         public VentaController(MiniMercadoContext context)
         {
             _context = context;
         }
+
         public IActionResult Create()
         {
             ViewBag.Productos = _context.Productos
@@ -144,7 +144,9 @@ namespace MiniMercado.Controllers
 
         public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId)
         {
-            var ventas = _context.Ventas.AsQueryable();
+            var ventas = _context.Ventas
+                            .Where(v => !v.Activa)   
+                            .AsQueryable();
 
             if (ventaId.HasValue)
                 ventas = ventas.Where(v => v.Id == ventaId.Value);
@@ -170,7 +172,8 @@ namespace MiniMercado.Controllers
                 .ThenInclude(d => d.Producto)
                 .FirstOrDefault(v => v.Id == id);
 
-            if (venta == null) return NotFound();
+            if (venta == null || venta.Activa)
+                return NotFound();
 
             return View(venta);
         }
@@ -182,7 +185,9 @@ namespace MiniMercado.Controllers
                 .ThenInclude(d => d.Producto)
                 .FirstOrDefault(v => v.Id == id);
 
-            if (venta == null) return NotFound();
+            if (venta == null || venta.Activa)
+                return NotFound();
+
 
             return View(venta);
         }
@@ -195,6 +200,7 @@ namespace MiniMercado.Controllers
             DateTime hasta = dia.Date.AddDays(1);
 
             var ventas = _context.Ventas
+                .Where(v => !v.Activa)
                 .Where(v => v.Fecha >= desde && v.Fecha < hasta)
                 .OrderBy(v => v.Fecha)
                 .ToList();

@@ -52,21 +52,30 @@
 
 </div>
 
-@if (User.IsInRole("Admin"))
-{
-    <hr />
-    <h4>⚙️ Administración</h4>
+<div class="row">
+    @if (User.IsInRole("Admin"))
+    {
+        <hr />
+        <h4>⚙️ Administración</h4>
 
-    <div class="row">
         <div class="col-md-4 mb-3">
             <a asp-controller="Usuarios" asp-action="Create"
                class="btn btn-danger w-100 p-3">
                 👤 Crear Usuario
             </a>
         </div>
-    </div>
-}
+    }
 
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-md-4 mb-3">
+            <a asp-controller="VentaAdmin" asp-action="Index"
+               class="btn btn-danger w-100 p-3">
+                ✏ Administracion de Venta
+            </a>
+        </div>
+    }
+</div>
 
 <hr />
 

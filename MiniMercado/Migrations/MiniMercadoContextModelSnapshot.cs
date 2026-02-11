@@ -300,8 +300,14 @@ namespace MiniMercado.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
@@ -325,7 +331,8 @@ namespace MiniMercado.Migrations
                     b.Property<decimal>("PrecioUnitario")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ProductoId")
+                    b.Property<int?>("ProductoId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("VentaId")
