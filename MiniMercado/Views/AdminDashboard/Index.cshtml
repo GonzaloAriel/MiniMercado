@@ -1,0 +1,123 @@
+﻿@{
+    ViewData["Title"] = "Dashboard Anual";
+    var ventasPorMes = ViewBag.VentasPorMes;
+    var productosTop = ViewBag.ProductosTop;
+}
+
+<h2 class="mt-3">📊 Dashboard Año @ViewBag.Anio</h2>
+
+<hr />
+
+<div class="row text-center mb-4">
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Total Facturado</h5>
+            <h3>$ @ViewBag.TotalAnual.ToString("N0")</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Ventas Anuladas</h5>
+            <h3>@ViewBag.Anuladas</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Ticket Promedio</h5>
+            <h3>$ @ViewBag.TicketPromedio.ToString("N0")</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Productos Bajo Stock</h5>
+            <h3>@ViewBag.BajoStock.Count</h3>
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<h4>📈 Ventas por Mes</h4>
+<canvas id="ventasChart"></canvas>
+
+<hr />
+
+<h4>🏆 Productos Más Vendidos</h4>
+<canvas id="productosChart"></canvas>
+
+<hr />
+
+<h4>⚠ Productos con Bajo Stock</h4>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-primary">
+        <tr>
+            <th>Producto</th>
+            <th>Stock</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in ViewBag.BajoStock)
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Stock</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ventasData = {
+        labels: [
+            @foreach (var m in ventasPorMes)
+            {
+                    @: "@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m.Mes)",
+            }
+        ],
+        datasets: [{
+            label: 'Total Facturado',
+            data: [
+                @foreach (var m in ventasPorMes)
+                {
+                        @: @m.Total,
+                }
+            ],
+            borderWidth: 2
+        }]
+    };
+
+    new Chart(document.getElementById('ventasChart'), {
+        type: 'line',
+        data: ventasData
+    });
+
+    const productosData = {
+        labels: [
+            @foreach (var p in productosTop)
+            {
+                    @: "@p.Producto",
+            }
+        ],
+        datasets: [{
+            label: 'Cantidad Vendida',
+            data: [
+                @foreach (var p in productosTop)
+                {
+                        @: @p.CantidadVendida,
+                }
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    new Chart(document.getElementById('productosChart'), {
+        type: 'bar',
+        data: productosData
+    });
+</script>

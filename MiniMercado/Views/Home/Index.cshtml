@@ -60,7 +60,7 @@
 
         <div class="col-md-4 mb-3">
             <a asp-controller="Usuarios" asp-action="Create"
-               class="btn btn-danger w-100 p-3">
+               class="btn btn-secondary w-100 p-3">
                 👤 Crear Usuario
             </a>
         </div>
@@ -70,11 +70,22 @@
     {
         <div class="col-md-4 mb-3">
             <a asp-controller="VentaAdmin" asp-action="Index"
-               class="btn btn-danger w-100 p-3">
+               class="btn btn-secondary w-100 p-3">
                 ✏ Administracion de Venta
             </a>
         </div>
     }
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-md-4 mb-3">
+            <a asp-controller="AdminDashboard" asp-action="Index"
+               class="btn btn-secondary w-100 p-3">
+                📈 Metricas y economia
+            </a>
+        </div>
+    }
+
 </div>
 
 <hr />

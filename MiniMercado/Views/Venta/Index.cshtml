@@ -10,7 +10,7 @@
         <label class="form-label">N° venta</label>
         <input type="number"
                name="ventaId"
-               class="form-control"
+               class="form-control bg-"
                placeholder="N°" />
     </div>
 
@@ -38,13 +38,13 @@
 </form>
 
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
         <tr>
             <th>#</th>
             <th>Fecha</th>
             <th>Total</th>
-            <th></th>
+            <th style="width:200px;">Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -57,14 +57,14 @@
                 <td>
                     <a asp-action="Detalle" asp-route-id="@v.Id"
                        class="btn btn-sm btn-info">
-                        Ver
+                        👁 Detalle
                     </a>
 
                     <a asp-action="Ticket"
                        asp-route-id="@v.Id"
                        target="_blank"
                        class="btn btn-sm btn-secondary">
-                        🧾 Imprimir Ticket
+                        🧾 Ticket
                     </a>
 
                 </td>

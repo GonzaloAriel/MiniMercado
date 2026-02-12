@@ -40,13 +40,13 @@
     </div>
 </div>
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
         <tr>
             <th>#</th>
             <th>Hora</th>
             <th>Total</th>
-            <th></th>
+            <th style="width:200px;">Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -59,15 +59,15 @@
                 <td>
                     <a asp-action="Detalle"
                        asp-route-id="@v.Id"
-                       class="btn btn-sm btn-outline-primary">
-                        Ver
+                       class="btn btn-sm btn-info">
+                        👁 Detalle
                     </a>
 
                     <a asp-action="Ticket"
                        asp-route-id="@v.Id"
                        target="_blank"
-                       class="btn btn-sm btn-outline-secondary">
-                        🧾
+                       class="btn btn-sm btn-secondary">
+                        🧾 Ticket
                     </a>
                 </td>
             </tr>
