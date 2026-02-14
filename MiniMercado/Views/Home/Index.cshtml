@@ -2,11 +2,13 @@
     ViewData["Title"] = "Inicio";
 }
 
-<h2 class="mb-4 mt-4">🏪 Mini Mercado</h2>
+<a class="navbar-brand" asp-controller="Home" asp-action="Index">
+    <img class="mt-4" src="~/images/logoBlanco.png" height="65" alt="MiniMercado Logo" />
+</a>
 
 
 <!-- 🚀 ACCESOS -->
-<div class="row">
+<div class="row mt-5">
 
     <div class="col-md-4 mb-3">
         <a asp-controller="Venta" asp-action="Create"

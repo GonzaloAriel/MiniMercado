@@ -22,6 +22,14 @@ body {
     margin-bottom: 60px;
 }
 
+    /* Enlaces Nav */
+
+.navbar .nav-link:hover {
+    color: #0dcaf0 !important; /* celeste */
+    transition: 0.3s ease;
+}
+    
+
     /* Modo oscuro */
 body.dark-mode {
     background-color: black;
@@ -46,4 +54,5 @@ body.dark-mode .form-control {
     color: #fff;
     border-color: #444;
 }
-       
+
+

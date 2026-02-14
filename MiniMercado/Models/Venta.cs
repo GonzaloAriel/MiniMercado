@@ -19,6 +19,6 @@ namespace MiniMercado.Models
         public string? MotivoAnulacion { get; set; }
 
         [ValidateNever]
-        public List<VentaDetalle> Detalles { get; set; }
+        public List<VentaDetalle> Detalles { get; set; } = new();
     }
 }

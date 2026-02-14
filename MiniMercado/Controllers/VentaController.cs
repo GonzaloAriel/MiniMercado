@@ -120,6 +120,8 @@ namespace MiniMercado.Controllers
             var venta = new Venta
             {
                 Total = total,
+                Fecha = DateTime.Now,
+                Activa = false,
                 Detalles = detalles
             };
 

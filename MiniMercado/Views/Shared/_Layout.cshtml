@@ -15,9 +15,10 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
             <div class="container-fluid">
 
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
-                    🏪 MiniMercado
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logoBlancoSSub.png" height="45" alt="MiniMercado Logo" />
                 </a>
+
 
                 <button class="navbar-toggler" type="button"
                         data-bs-toggle="collapse"
@@ -30,7 +31,7 @@
                     <ul class="navbar-nav me-auto">
 
                         <li class="nav-item">
-                            <a class="nav-link fw-bold text-black"
+                            <a class="nav-link fw-bold text-black "
                                asp-controller="Venta"
                                asp-action="Create">
                                 🛒 Nueva Venta
@@ -75,9 +76,9 @@
                             </li>
                         }
 
-                        @if (User.IsInRole("Admin"))
+                        @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
                         {
-                            <li class="nav-item">
+                            <li class="nav-item mt-1">
                                 <button id="toggleDark" 
                                         class="btn btn-secondary border-0 btn-outline-dark fw-bold text-light ms-4">
                                     🌘
