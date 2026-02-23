@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
+using MiniMercado.Services;
 
 namespace MiniMercado.Controllers
 {
@@ -12,16 +13,21 @@ namespace MiniMercado.Controllers
     public class VentaController : Controller
     {
         private readonly MiniMercadoContext _context;
+        private readonly ITenantService _tenantService;
+
         private void CargarProductos()
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             ViewBag.Productos = _context.Productos
-                    .Where(p => p.Activo && p.Stock > 0)
-                    .ToList();
+                .Where(p => p.Activo && p.Stock > 0 && p.TenantId == tenantId)
+                .ToList();
         }
 
-        public VentaController(MiniMercadoContext context)
+        public VentaController(MiniMercadoContext context, ITenantService tenantService)
         {
             _context = context;
+            _tenantService = tenantService;
         }
 
         public IActionResult Create()
@@ -38,6 +44,8 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(List<VentaDetalle> detalles)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             // Limpiar errores automáticos del ModelBinder
             var keysConError = ModelState.Keys
                 .Where(k => k.Contains("detalles"))
@@ -80,7 +88,9 @@ namespace MiniMercado.Controllers
                     return View(detalles);
                 }
 
-                var producto = _context.Productos.Find(item.ProductoId);
+                var producto = _context.Productos
+                    .FirstOrDefault(p => p.Id == item.ProductoId && p.TenantId == tenantId);
+
                 if (producto == null)
                     return BadRequest();
 
@@ -97,6 +107,8 @@ namespace MiniMercado.Controllers
                     ? decimal.Round(item.PrecioUnitario, 2)
                     : producto.Precio;
 
+                item.TenantId = tenantId;
+
                 if (!producto.EsPorPeso)
                 {
                     item.Cantidad = Math.Floor(item.Cantidad);
@@ -112,7 +124,8 @@ namespace MiniMercado.Controllers
                 {
                     ProductoId = producto.Id,
                     Cantidad = item.Cantidad,
-                    Tipo = "VENTA"
+                    Tipo = "VENTA",
+                    TenantId = tenantId
                 });
             }
 
@@ -122,6 +135,7 @@ namespace MiniMercado.Controllers
                 Total = total,
                 Fecha = DateTime.Now,
                 Activa = false,
+                TenantId = tenantId,
                 Detalles = detalles
             };
 
@@ -146,8 +160,10 @@ namespace MiniMercado.Controllers
 
         public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var ventas = _context.Ventas
-                            .Where(v => !v.Activa)   
+                            .Where(v => !v.Activa && v.TenantId == tenantId)   
                             .AsQueryable();
 
             if (ventaId.HasValue)
@@ -169,10 +185,13 @@ namespace MiniMercado.Controllers
 
         public IActionResult Detalle(int id)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var venta = _context.Ventas
+                .Where(v => v.Id == id && v.TenantId == tenantId)
                 .Include(v => v.Detalles)
-                .ThenInclude(d => d.Producto)
-                .FirstOrDefault(v => v.Id == id);
+                    .ThenInclude(d => d.Producto)
+                .FirstOrDefault();
 
             if (venta == null || venta.Activa)
                 return NotFound();
@@ -182,27 +201,31 @@ namespace MiniMercado.Controllers
 
         public IActionResult Ticket(int id)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var venta = _context.Ventas
+                .Where(v => v.Id == id && v.TenantId == tenantId)
                 .Include(v => v.Detalles)
-                .ThenInclude(d => d.Producto)
-                .FirstOrDefault(v => v.Id == id);
+                    .ThenInclude(d => d.Producto)
+                .FirstOrDefault();
 
             if (venta == null || venta.Activa)
                 return NotFound();
-
 
             return View(venta);
         }
 
         public IActionResult Caja(DateTime? fecha)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             DateTime dia = fecha ?? DateTime.Today;
 
             DateTime desde = dia.Date;
             DateTime hasta = dia.Date.AddDays(1);
 
             var ventas = _context.Ventas
-                .Where(v => !v.Activa)
+                .Where(v => !v.Activa && v.TenantId == tenantId)
                 .Where(v => v.Fecha >= desde && v.Fecha < hasta)
                 .OrderBy(v => v.Fecha)
                 .ToList();
@@ -215,7 +238,6 @@ namespace MiniMercado.Controllers
 
             return View(ventas);
         }
-
 
     }
 

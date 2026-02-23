@@ -8,5 +8,9 @@ namespace MiniMercado.Models
         // Nombre
         // Apellido
         // ClienteId (si es multi-tenant)
+        public int? TenantId { get; set; }
+
+        public Tenant? Tenant { get; set; }
+
     }
 }

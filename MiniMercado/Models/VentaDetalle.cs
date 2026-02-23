@@ -27,5 +27,11 @@ namespace MiniMercado.Models
 
         [Required]
         public decimal PrecioUnitario { get; set; }
+
+        [ValidateNever]
+        public int TenantId { get; set; }
+        [ValidateNever]
+        public Tenant Tenant { get; set; }
+
     }
 }

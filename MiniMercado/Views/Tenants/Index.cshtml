@@ -1,0 +1,32 @@
+﻿@model IEnumerable<MiniMercado.Models.Tenant>
+
+<h2>Tenants</h2>
+
+<a asp-action="Create" class="btn btn-primary">Crear Tenant</a>
+
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Nombre</th>
+            <th>Activo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tenant in Model)
+        {
+            <tr>
+                <td>@tenant.Id</td>
+                <td>@tenant.NombreComercio</td>
+                <td>@tenant.Activo</td>
+                <td>
+                    <a asp-action="Toggle" asp-route-id="@tenant.Id"
+                       class="btn btn-sm btn-warning">
+                        Activar / Desactivar
+                    </a>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>

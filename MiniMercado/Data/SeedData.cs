@@ -3,44 +3,35 @@ using MiniMercado.Models;
 
 public static class SeedData
 {
-    public static async Task CrearRoles(IServiceProvider services)
+    public static async Task CrearRoles(IServiceProvider serviceProvider)
     {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        string[] roles = { "Admin", "Caja" };
-
-        foreach (var rol in roles)
-        {
-            if (!await roleManager.RoleExistsAsync(rol))
-            {
-                await roleManager.CreateAsync(new IdentityRole(rol));
-            }
-        }
+        if (!await roleManager.RoleExistsAsync("AdminGlobal"))
+            await roleManager.CreateAsync(new IdentityRole("AdminGlobal"));
     }
 
-    public static async Task CrearAdmin(IServiceProvider services)
+    public static async Task CrearAdmin(IServiceProvider serviceProvider)
     {
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        string email = "admin@minimercado.com";
-        string password = "Admin123!"; // luego se cambia
+        var adminEmail = "admin@minimercado.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
-        var admin = await userManager.FindByEmailAsync(email);
-
-        if (admin == null)
+        if (adminUser == null)
         {
-            admin = new ApplicationUser
+            var user = new ApplicationUser
             {
-                UserName = email,
-                Email = email,
-                EmailConfirmed = true
+                UserName = adminEmail,
+                Email = adminEmail,
+                TenantId = null
             };
 
-            var result = await userManager.CreateAsync(admin, password);
+            var result = await userManager.CreateAsync(user, "Admin123!");
 
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(admin, "Admin");
+                await userManager.AddToRoleAsync(user, "AdminGlobal");
             }
         }
     }

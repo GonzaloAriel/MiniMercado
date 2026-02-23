@@ -10,18 +10,22 @@ namespace MiniMercado.Controllers
     public class ProductosController : Controller
     {
         private readonly MiniMercadoContext _context;
-
-        public ProductosController(MiniMercadoContext context)
+        private readonly ITenantService _tenantService;
+        public ProductosController(MiniMercadoContext context,
+                ITenantService tenantService)
         {
             _context = context;
+            _tenantService = tenantService;
         }
 
         // LISTAR
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Index(string filtro)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var productos = _context.Productos
-                .Where(p => p.Activo);
+                .Where(p => p.Activo && p.TenantId == tenantId);
 
             if (!string.IsNullOrEmpty(filtro))
             {
@@ -37,7 +41,7 @@ namespace MiniMercado.Controllers
         }
 
         // CREATE GET
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Create()
         {
             return View();
@@ -45,8 +49,13 @@ namespace MiniMercado.Controllers
 
         // CREATE POST
         [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Create(Producto producto)
         {
+            producto.TenantId = _tenantService.GetTenantId().Value;
+
+            ModelState.Remove(nameof(producto.TenantId));
+
             if (!ModelState.IsValid)
                 return View(producto);
 
@@ -56,29 +65,60 @@ namespace MiniMercado.Controllers
         }
 
         // EDIT GET
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Edit(int id)
         {
-            var producto = _context.Productos.Find(id);
-            if (producto == null) return NotFound();
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var producto = _context.Productos
+                .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
+
+            if (producto == null)
+                return NotFound();
+
             return View(producto);
         }
 
         // EDIT POST
         [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Edit(Producto producto)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            ModelState.Remove(nameof(producto.TenantId));
+
             if (!ModelState.IsValid)
                 return View(producto);
 
-            _context.Productos.Update(producto);
+            var productoDb = _context.Productos
+                .FirstOrDefault(p => p.Id == producto.Id && p.TenantId == tenantId);
+
+            if (productoDb == null)
+                return NotFound();
+
+            productoDb.Nombre = producto.Nombre;
+            productoDb.Precio = producto.Precio;
+            productoDb.CodigoBarra = producto.CodigoBarra;
+            productoDb.Stock = producto.Stock;
+            productoDb.Activo = producto.Activo;
+            productoDb.PrecioEditable = producto.PrecioEditable;
+            productoDb.EsPorPeso = producto.EsPorPeso;
+
             _context.SaveChanges();
+
             return RedirectToAction(nameof(Index));
         }
 
         // DELETE GET
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Delete(int id)
         {
-            var producto = _context.Productos.FirstOrDefault(p => p.Id == id && p.Activo);
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var producto = _context.Productos
+                .FirstOrDefault(p => p.Id == id && p.Activo && p.TenantId == tenantId);
+
             if (producto == null)
                 return NotFound();
 
@@ -87,9 +127,14 @@ namespace MiniMercado.Controllers
 
         // DELETE POST
         [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult DeleteConfirmed(int id)
         {
-            var producto = _context.Productos.Find(id);
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var producto = _context.Productos
+                .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
+
             if (producto == null)
                 return NotFound();
 
@@ -97,14 +142,16 @@ namespace MiniMercado.Controllers
 
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
         //INACTIVOS
         public IActionResult Inactivos(string filtro)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var productos = _context.Productos
-                .Where(p => !p.Activo);
+                .Where(p => !p.Activo && p.TenantId == tenantId);
 
             if (!string.IsNullOrEmpty(filtro))
             {
@@ -121,7 +168,11 @@ namespace MiniMercado.Controllers
         //REACTIVAR
         public IActionResult Reactivar(int id)
         {
-            var producto = _context.Productos.Find(id);
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var producto = _context.Productos
+                .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
+
             if (producto == null)
                 return NotFound();
 

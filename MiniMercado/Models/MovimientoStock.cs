@@ -8,6 +8,7 @@ namespace MiniMercado.Models
 {
     public class MovimientoStock
     {
+
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Debe seleccionar un producto")]
@@ -28,6 +29,11 @@ namespace MiniMercado.Models
 
         [StringLength(200)]
         public string? Observacion { get; set; }
+
+        [ValidateNever]
+        public int TenantId { get; set; }
+        [ValidateNever]
+        public Tenant Tenant { get; set; }
 
     }
 }
