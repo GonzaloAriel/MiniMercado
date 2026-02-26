@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
 
+
 namespace MiniMercado.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ProductosController : Controller
     {
         private readonly MiniMercadoContext _context;

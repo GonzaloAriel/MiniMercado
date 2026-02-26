@@ -1,0 +1,38 @@
+﻿@model List<MiniMercado.Models.Tenant>
+
+<h2>Tenants</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tenant in Model)
+        {
+            <tr>
+                <td>@tenant.NombreComercio</td>
+                <td>
+                    @if (tenant.Activo)
+                    {
+                        <span class="badge bg-success">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Suspendido</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="UsuariosPorTenant"
+                       asp-route-tenantId="@tenant.Id"
+                       class="btn btn-sm btn-primary">
+                        Ver Usuarios
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

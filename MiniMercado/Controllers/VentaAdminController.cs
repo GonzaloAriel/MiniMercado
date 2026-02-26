@@ -5,7 +5,7 @@ using MiniMercado.Data;
 using MiniMercado.Models;
 using System;
 
-[Authorize(Roles = "AdminGlobal,Admin")]
+[Authorize(Roles = "Admin")]
 public class VentaAdminController : Controller
 {
     private readonly MiniMercadoContext _context;

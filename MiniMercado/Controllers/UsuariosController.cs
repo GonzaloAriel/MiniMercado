@@ -3,28 +3,59 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MiniMercado.Models;
 using MiniMercado.Models.ViewModels;
+using MiniMercado.Services;
 
-[Authorize(Roles = "AdminGlobal, Admin")]
+[Authorize(Roles = "Admin")]
 public class UsuariosController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ITenantService _tenantService;
 
-
     public UsuariosController(
-     UserManager<ApplicationUser> userManager,
-     RoleManager<IdentityRole> roleManager,
-     ITenantService tenantService)
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        ITenantService tenantService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _tenantService = tenantService;
     }
 
+    // ============================
+    // LISTADO
+    // ============================
+    public async Task<IActionResult> Index()
+    {
+        var tenantId = _tenantService.GetTenantId();
 
-    // GET
-    [Authorize(Roles = "AdminGlobal, Admin")]
+        if (!tenantId.HasValue)
+            return Unauthorized();
+
+        var usuarios = _userManager.Users
+            .Where(u => u.TenantId == tenantId.Value)
+            .ToList();
+
+        var lista = new List<UsuarioListadoVM>();
+
+        foreach (var user in usuarios)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            lista.Add(new UsuarioListadoVM
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Rol = roles.FirstOrDefault()
+            });
+        }
+
+        return View(lista);
+    }
+
+    // ============================
+    // CREATE
+    // ============================
     public IActionResult Create()
     {
         ViewBag.Roles = _roleManager.Roles
@@ -34,30 +65,20 @@ public class UsuariosController : Controller
         return View();
     }
 
-    // POST
     [HttpPost]
-    [Authorize(Roles = "AdminGlobal, Admin")]
     public async Task<IActionResult> Create(CrearUsuarioVM model)
     {
+        var tenantId = _tenantService.GetTenantId();
+
+        if (!tenantId.HasValue)
+            return Unauthorized();
+
         if (!ModelState.IsValid)
         {
             ViewBag.Roles = _roleManager.Roles
                 .Where(r => r.Name != "AdminGlobal")
                 .ToList();
 
-            return View(model);
-        }
-
-        var tenantId = _tenantService.GetTenantId();
-
-        if (!tenantId.HasValue)
-            return Unauthorized();
-
-        // Verificar que el rol exista
-        var roleExists = await _roleManager.RoleExistsAsync(model.Rol);
-        if (!roleExists)
-        {
-            ModelState.AddModelError("", "Rol inválido.");
             return View(model);
         }
 
@@ -74,7 +95,7 @@ public class UsuariosController : Controller
         if (result.Succeeded)
         {
             await _userManager.AddToRoleAsync(user, model.Rol);
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction(nameof(Index));
         }
 
         foreach (var error in result.Errors)
@@ -87,4 +108,123 @@ public class UsuariosController : Controller
         return View(model);
     }
 
+    // ============================
+    // EDIT
+    // ============================
+    public async Task<IActionResult> Edit(string id)
+    {
+        var tenantId = _tenantService.GetTenantId();
+
+        if (!tenantId.HasValue)
+            return Unauthorized();
+
+        var user = await _userManager.FindByIdAsync(id);
+
+        if (user == null || user.TenantId != tenantId.Value)
+            return NotFound();
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var model = new EditUsuarioVM
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Rol = roles.FirstOrDefault()
+        };
+
+        ViewBag.Roles = _roleManager.Roles
+            .Where(r => r.Name != "AdminGlobal")
+            .ToList();
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(EditUsuarioVM model)
+    {
+        var tenantId = _tenantService.GetTenantId();
+
+        if (!tenantId.HasValue)
+            return Unauthorized();
+
+        var user = await _userManager.FindByIdAsync(model.Id);
+
+        if (user == null || user.TenantId != tenantId.Value)
+            return NotFound();
+
+        user.Email = model.Email;
+        user.UserName = model.Email;
+
+        await _userManager.UpdateAsync(user);
+
+        var currentRoles = await _userManager.GetRolesAsync(user);
+        await _userManager.RemoveFromRolesAsync(user, currentRoles);
+        await _userManager.AddToRoleAsync(user, model.Rol);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    // ============================
+    // CAMBIAR PASSWORD
+    // ============================
+    public IActionResult CambiarPassword(string id)
+    {
+        return View(new CambiarPasswordVM { Id = id });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CambiarPassword(CambiarPasswordVM model)
+    {
+        var tenantId = _tenantService.GetTenantId();
+
+        if (!tenantId.HasValue)
+            return Unauthorized();
+
+        var user = await _userManager.FindByIdAsync(model.Id);
+
+        if (user == null || user.TenantId != tenantId.Value)
+            return NotFound();
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var result = await _userManager.ResetPasswordAsync(user, token, model.NuevaPassword);
+
+        if (result.Succeeded)
+            return RedirectToAction(nameof(Index));
+
+        foreach (var error in result.Errors)
+            ModelState.AddModelError("", error.Description);
+
+        return View(model);
+    }
+
+    // ============================
+    // DELETE
+    // ============================
+    public async Task<IActionResult> Delete(string id)
+    {
+        var tenantId = _tenantService.GetTenantId();
+
+        if (!tenantId.HasValue)
+            return Unauthorized();
+
+        var user = await _userManager.FindByIdAsync(id);
+
+        if (user == null || user.TenantId != tenantId.Value)
+            return NotFound();
+
+        // 🔒 No permitir borrarse a sí mismo
+        if (user.Id == _userManager.GetUserId(User))
+        {
+            TempData["Error"] = "No puedes eliminar tu propio usuario.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await _userManager.DeleteAsync(user);
+
+        return RedirectToAction(nameof(Index));
+    }
 }

@@ -1,0 +1,45 @@
+﻿@model List<MiniMercado.Models.ViewModels.UsuarioListadoVM>
+
+<h2>Usuarios</h2>
+
+
+<a asp-action="Create" class="btn btn-primary mb-3">
+    Nuevo Usuario
+</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Rol</th>
+            <th style="width:250px;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.Rol</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">
+                        Editar
+                    </a>
+
+                    <a asp-action="CambiarPassword" asp-route-id="@user.Id" class="btn btn-sm btn-info">
+                        Password
+                    </a>
+
+                    @if (user.Rol != "Admin")
+                    {
+                        <a asp-action="Delete" asp-route-id="@user.Id"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('¿Eliminar usuario?');">
+                            Eliminar
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
