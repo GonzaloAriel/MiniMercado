@@ -26,36 +26,36 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
+                @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
+                {
+                    <div class="collapse navbar-collapse" id="navbarNav">
 
-                    <ul class="navbar-nav me-auto">
+                        <ul class="navbar-nav me-auto">
 
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold text-black "
-                               asp-controller="Venta"
-                               asp-action="Create">
-                                🛒 Nueva Venta
-                            </a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-black "
+                                   asp-controller="Venta"
+                                   asp-action="Create">
+                                    🛒 Nueva Venta
+                                </a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold text-black"
-                               asp-controller="Venta"
-                               asp-action="Index">
-                                📄 Ventas
-                            </a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-black"
+                                   asp-controller="Venta"
+                                   asp-action="Index">
+                                    📄 Ventas
+                                </a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold text-black"
-                               asp-controller="Venta"
-                               asp-action="Caja">
-                                📊 Caja
-                            </a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-black"
+                                   asp-controller="Venta"
+                                   asp-action="Caja">
+                                    📊 Caja
+                                </a>
+                            </li>
 
-                        @if (User.IsInRole("Admin"))
-                        {
                             <li class="nav-item">
                                 <a class="nav-link fw-bold text-black"
                                    asp-controller="Productos"
@@ -63,10 +63,7 @@
                                     📦 Productos
                                 </a>
                             </li>
-                        }
 
-                        @if (User.IsInRole("Admin"))
-                        {
                             <li class="nav-item">
                                 <a class="nav-link fw-bold text-black"
                                    asp-controller="MovimientoStock"
@@ -74,25 +71,24 @@
                                     ➕ Ingreso Stock
                                 </a>
                             </li>
-                        }
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
-                        {
+
                             <li class="nav-item mt-1">
-                                <button id="toggleDark" 
+                                <button id="toggleDark"
                                         class="btn btn-secondary border-0 btn-outline-dark fw-bold text-light ms-4">
                                     🌘
                                 </button>
                             </li>
-                        }
-                    </ul>
 
-                    <!-- LOGIN / LOGOUT -->
-                    <ul class="navbar-nav ">
-                        <partial name="_LoginPartial" />
-                    </ul>
+                        </ul>
 
-                </div>
+                        <!-- LOGIN / LOGOUT -->
+                        <ul class="navbar-nav ">
+                            <partial name="_LoginPartial" />
+                        </ul>
+
+                    </div>
+                }
             </div>
         </nav>
 

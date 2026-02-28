@@ -6,7 +6,6 @@ using MiniMercado.Models;
 using MiniMercado.Services;
 using System.Globalization;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC + Razor Pages
@@ -27,20 +26,23 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.AccessDeniedPath = "/Tenant/Desactivado";
-}
-);
+});
 
 builder.Services.AddScoped<
     IUserClaimsPrincipalFactory<ApplicationUser>,
     CustomClaimsPrincipalFactory>();
 
-
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddScoped<ITenantService, TenantService>();
 
-
 var app = builder.Build();
+
+// 🔹 Seed automático (Roles + Tenant Demo + AdminGlobal)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedData.Inicializar(services);
+}
 
 // Pipeline
 if (!app.Environment.IsDevelopment())
@@ -68,63 +70,5 @@ app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-
-
-// Seed roles + admin
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-    string[] roles = { "Admin", "Caja", "AdminGlobal" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
-
-    var email = "global@admin.com";
-    var user = await userManager.FindByEmailAsync(email);
-
-    if (user == null)
-    {
-        user = new ApplicationUser
-        {
-            UserName = email,
-            Email = email,
-            EmailConfirmed = true
-        };
-
-        await userManager.CreateAsync(user, "Admin123!");
-        await userManager.AddToRoleAsync(user, "AdminGlobal");
-    }
-
-    // Crear Admin para Tenant 1
-    var tenantAdminEmail = "admin@demo.com";
-
-    var tenantAdmin = userManager.FindByEmailAsync(tenantAdminEmail)
-        .GetAwaiter().GetResult();
-
-    if (tenantAdmin == null)
-    {
-        tenantAdmin = new ApplicationUser
-        {
-            UserName = tenantAdminEmail,
-            Email = tenantAdminEmail,
-            EmailConfirmed = true,
-            TenantId = 1 // 👈 Tenant MiniMercado Demo
-        };
-
-        userManager.CreateAsync(tenantAdmin, "Admin123!")
-            .GetAwaiter().GetResult();
-
-        userManager.AddToRoleAsync(tenantAdmin, "Admin")
-            .GetAwaiter().GetResult();
-    }
-
-}
-
 
 app.Run();
