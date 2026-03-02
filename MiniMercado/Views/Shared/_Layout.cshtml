@@ -26,12 +26,12 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
-                {
-                    <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="collapse navbar-collapse" id="navbarNav">
 
-                        <ul class="navbar-nav me-auto">
+                    <ul class="navbar-nav me-auto">
 
+                        @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
+                        {
                             <li class="nav-item">
                                 <a class="nav-link fw-bold text-black "
                                    asp-controller="Venta"
@@ -44,7 +44,7 @@
                                 <a class="nav-link fw-bold text-black"
                                    asp-controller="Venta"
                                    asp-action="Index">
-                                    📄 Ventas
+                                    📄 Historial ventas
                                 </a>
                             </li>
 
@@ -56,22 +56,25 @@
                                 </a>
                             </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold text-black"
-                                   asp-controller="Productos"
-                                   asp-action="Index">
-                                    📦 Productos
-                                </a>
-                            </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link fw-bold text-black"
+                                       asp-controller="Productos"
+                                       asp-action="Index">
+                                        📦 Productos
+                                    </a>
+                                </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold text-black"
-                                   asp-controller="MovimientoStock"
-                                   asp-action="Ingreso">
-                                    ➕ Ingreso Stock
-                                </a>
-                            </li>
-
+                                <li class="nav-item">
+                                    <a class="nav-link fw-bold text-black"
+                                       asp-controller="MovimientoStock"
+                                       asp-action="Ingreso">
+                                        ➕ Ingreso Stock
+                                    </a>
+                                </li>
+                            }
+                        }
 
                             <li class="nav-item mt-1">
                                 <button id="toggleDark"
@@ -79,16 +82,14 @@
                                     🌘
                                 </button>
                             </li>
+                    </ul>
 
-                        </ul>
+                    <!-- LOGIN / LOGOUT -->
+                    <ul class="navbar-nav ">
+                        <partial name="_LoginPartial" />
+                    </ul>
 
-                        <!-- LOGIN / LOGOUT -->
-                        <ul class="navbar-nav ">
-                            <partial name="_LoginPartial" />
-                        </ul>
-
-                    </div>
-                }
+                </div>
             </div>
         </nav>
 

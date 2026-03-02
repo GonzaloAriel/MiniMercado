@@ -21,7 +21,7 @@
         {
             <tr>
                 <td>@d.Producto.Nombre</td>
-                <td>@d.Cantidad.ToString("0.##")</td>
+                <td>x @d.Cantidad.ToString("0.##")</td>
                 <td>$@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
             </tr>
         }

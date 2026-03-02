@@ -1,5 +1,4 @@
-﻿
-@model List<MiniMercado.Models.VentaDetalle>
+﻿@model List<MiniMercado.Models.VentaDetalle>
 
 <h2 class="mb-3 mt-4">🛒 Nueva Venta</h2>
 
@@ -113,12 +112,12 @@
                     <option value="">Seleccione</option>
                     @foreach (var p in ViewBag.Productos)
                     {
-                                <option value="@p.Id"
-                                        data-precio="@p.Precio"
-                                        data-peso="@p.EsPorPeso"
-                                        data-editable="@p.PrecioEditable">
-                                    @p.Nombre
-                                </option>
+                                    <option value="@p.Id"
+                                            data-precio="@p.Precio"
+                                            data-peso="@p.EsPorPeso"
+                                            data-editable="@p.PrecioEditable">
+                                        @p.Nombre
+                                    </option>
                     }
                 </select>
             </td>
@@ -226,10 +225,35 @@
         }
     });
 
-    function eliminarFila(btn) {
+    function eliminarFila(btn) 
+    {
         btn.closest("tr").remove();
+        reindexarFilas();
         recalcularTotal();
     }
+
+    function reindexarFilas() 
+    {
+        const filas = document.querySelectorAll("#tablaVenta tbody tr");
+
+        filas.forEach((fila, i) => {
+
+            fila.querySelectorAll("select, input").forEach(input => {
+
+                if (input.name.includes("ProductoId"))
+                    input.name = `detalles[${i}].ProductoId`;
+
+                if (input.name.includes("Cantidad"))
+                    input.name = `detalles[${i}].Cantidad`;
+
+                if (input.name.includes("PrecioUnitario"))
+                    input.name = `detalles[${i}].PrecioUnitario`;
+            });
+        });
+
+        index = filas.length;
+    }
+
 </script>
 
 <script>
