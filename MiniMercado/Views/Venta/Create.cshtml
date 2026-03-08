@@ -117,14 +117,14 @@
 
     @foreach (var p in ViewBag.Productos)
     {
-                @: {
-                @: id: @p.Id,
-                @: nombre: "@p.Nombre",
-                @: codigo: "@p.CodigoBarra",
-                @: precio: @p.Precio,
-                @: peso: "@p.EsPorPeso",
-                @: editable: "@p.PrecioEditable"
-                @: },
+                    @: {
+                    @: id: @p.Id,
+                    @: nombre: "@p.Nombre",
+                    @: codigo: "@p.CodigoBarra",
+                    @: precio: @p.Precio,
+                    @: peso: "@p.EsPorPeso",
+                    @: editable: "@p.PrecioEditable"
+                    @: },
     }
 
     ];
@@ -149,14 +149,14 @@
 
     @foreach (var p in ViewBag.Productos)
     {
-                <text>
-                <option value="@p.Id"
-                data-precio="@p.Precio"
-                data-peso="@p.EsPorPeso"
-                data-editable="@p.PrecioEditable">
-                @p.Nombre
-                </option>
-                </text>
+                    <text>
+                    <option value="@p.Id"
+                    data-precio="@p.Precio"
+                    data-peso="@p.EsPorPeso"
+                    data-editable="@p.PrecioEditable">
+                    @p.Nombre
+                    </option>
+                    </text>
     }
 
     </select>
@@ -228,11 +228,30 @@
 </script>
 
 <script>
-
        function completarFila(prod)
     {
         const filas = document.querySelectorAll("#tablaVenta tbody tr");
 
+        // 1️⃣ buscar si el producto ya está en la tabla
+        for (let fila of filas)
+        {
+            const select = fila.querySelector(".producto-select");
+
+            if (select.value == prod.id)
+            {
+                const cantidadInput = fila.querySelector(".cantidad");
+
+                let cantidad = parseFloat(cantidadInput.value) || 0;
+
+                cantidadInput.value = cantidad + 1;
+
+                recalcularFila(fila);
+
+                return; // ya existe → no crear nueva fila
+            }
+        }
+
+        // 2️⃣ buscar fila libre
         let filaLibre = null;
 
         filas.forEach(f => {
@@ -243,15 +262,16 @@
                 filaLibre = f;
         });
 
+        // 3️⃣ si no hay fila libre → crear
         if (!filaLibre)
         {
             agregarFila();
             filaLibre = document.querySelector("#tablaVenta tbody tr:last-child");
         }
 
+        // 4️⃣ completar producto
         const select = filaLibre.querySelector(".producto-select");
 
-        // seleccionar option correcto
         for (let option of select.options)
         {
             if (option.value == prod.id)
@@ -261,10 +281,10 @@
             }
         }
 
-        // disparar evento change
         select.dispatchEvent(new Event("change", { bubbles: true }));
-    }
 
+        document.getElementById("buscadorProducto").focus();
+    }
 </script>
 
 <script>
