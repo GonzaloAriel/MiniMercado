@@ -344,6 +344,9 @@ namespace MiniMercado.Migrations
                     b.Property<string>("MotivoAnulacion")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NombreVenta")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 

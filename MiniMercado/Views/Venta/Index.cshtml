@@ -6,23 +6,31 @@
 
 <form method="get" class="row g-2 mb-3">
 
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label">N° venta</label>
         <input type="number"
                name="ventaId"
-               class="form-control bg-"
+               class="form-control"
                placeholder="N°" />
     </div>
 
     <div class="col-md-3">
-        <label class="form-label">Desde fecha</label>
+        <label class="form-label">Nombre</label>
+        <input type="text"
+               name="nombreVenta"
+               class="form-control"
+               placeholder="Cliente / Nota" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">Desde</label>
         <input type="date"
                name="desde"
                class="form-control" />
     </div>
 
-    <div class="col-md-3">
-        <label class="form-label">Hasta fecha</label>
+    <div class="col-md-2">
+        <label class="form-label">Hasta</label>
         <input type="date"
                name="hasta"
                class="form-control" />
@@ -43,6 +51,7 @@
         <tr>
             <th>#</th>
             <th>Fecha</th>
+            <th>Nombre</th>
             <th>Total</th>
             <th style="width:200px;">Acciones</th>
         </tr>
@@ -52,10 +61,21 @@
         {
             <tr>
                 <td>@v.Id</td>
+
                 <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>$@v.Total</td>
+
                 <td>
-                    <a asp-action="Detalle" asp-route-id="@v.Id"
+                    @(string.IsNullOrWhiteSpace(v.NombreVenta)
+                                    ? "-"
+                                    : v.NombreVenta)
+                </td>
+
+                <td>$@v.Total</td>
+
+                <td>
+
+                    <a asp-action="Detalle"
+                       asp-route-id="@v.Id"
                        class="btn btn-sm btn-info">
                         👁 Detalle
                     </a>

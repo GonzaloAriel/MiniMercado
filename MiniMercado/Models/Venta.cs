@@ -26,5 +26,6 @@ namespace MiniMercado.Models
         [ValidateNever]
         public Tenant Tenant { get; set; }
 
+        public string? NombreVenta { get; set; }
     }
 }

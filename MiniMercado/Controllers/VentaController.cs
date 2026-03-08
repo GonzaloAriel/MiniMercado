@@ -146,28 +146,57 @@ namespace MiniMercado.Controllers
             _context.SaveChanges();
 
             TempData["Mensaje"] = "✅ Venta registrada correctamente";
-            TempData["VentaId"] = venta.Id;
 
-            return RedirectToAction("Confirmacion");
+            return RedirectToAction("Confirmacion", new { ventaId = venta.Id });
         }
 
-        public IActionResult Confirmacion()
+        // POST: Confirmar venta
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Confirmacion(int ventaId, string? NombreVenta)
         {
+            var venta = _context.Ventas.FirstOrDefault(v => v.Id == ventaId);
+
+            if (venta == null)
+                return NotFound();
+
+            venta.NombreVenta = string.IsNullOrWhiteSpace(NombreVenta)
+                ? null
+                : NombreVenta;
+
+            _context.SaveChanges();
+
+            TempData["MensajeNombreVenta"] = "✅ Nombre de venta guardado correctamente.";
+
+            return RedirectToAction("Confirmacion", new { ventaId = venta.Id });
+        }
+
+        // GET: Confirmación de venta
+        public IActionResult Confirmacion(int ventaId)
+        {
+            ViewBag.VentaId = ventaId;
+
             ViewBag.Mensaje = TempData["Mensaje"];
-            ViewBag.VentaId = TempData["VentaId"];
+            ViewBag.MensajeNombreVenta = TempData["MensajeNombreVenta"];
+
             return View();
         }
 
-        public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId)
+
+
+        public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId, string? nombreVenta)
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
             var ventas = _context.Ventas
-                            .Where(v => !v.Activa && v.TenantId == tenantId)   
-                            .AsQueryable();
+                .Where(v => !v.Activa && v.TenantId == tenantId)
+                .AsQueryable();
 
             if (ventaId.HasValue)
                 ventas = ventas.Where(v => v.Id == ventaId.Value);
+
+            if (!string.IsNullOrWhiteSpace(nombreVenta))
+                ventas = ventas.Where(v => v.NombreVenta.Contains(nombreVenta));
 
             if (desde.HasValue)
                 ventas = ventas.Where(v => v.Fecha >= desde.Value);
