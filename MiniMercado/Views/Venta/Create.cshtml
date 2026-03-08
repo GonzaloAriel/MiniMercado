@@ -9,6 +9,13 @@
     <div class="card mb-3">
         <div class="card-body p-0">
 
+            <div class="mb-3">
+                <input type="text"
+                       id="buscadorProducto"
+                       class="form-control form-control-lg"
+                       placeholder="🔎 Buscar producto o código de barras..." />
+            </div>
+
             <table class="table table-bordered table-hover mb-0" id="tablaVenta">
                 <thead class="table-dark text-center">
                     <tr>
@@ -26,18 +33,22 @@
                         <tr>
                             <td>
                                 <select name="detalles[@i].ProductoId"
-                                        class="form-control producto-select"
-                                        data-index="@i">
+                                        class="form-control producto-select">
+
                                     <option value="">Seleccione</option>
+
                                     @foreach (var p in ViewBag.Productos)
                                     {
                                         <option value="@p.Id"
                                                 data-precio="@p.Precio"
                                                 data-peso="@p.EsPorPeso"
                                                 data-editable="@p.PrecioEditable">
+
                                             @p.Nombre (Stock: @p.Stock.ToString("0.##"))
+
                                         </option>
                                     }
+
                                 </select>
                             </td>
 
@@ -54,7 +65,6 @@
                                 <input type="text"
                                        name="detalles[@i].PrecioUnitario"
                                        class="form-control precio"
-                                       step="0.01"
                                        readonly />
                             </td>
 
@@ -67,6 +77,7 @@
                                     ❌
                                 </button>
                             </td>
+
                         </tr>
                     }
                 </tbody>
@@ -75,8 +86,8 @@
         </div>
     </div>
 
-    <!-- TOTAL BIEN VISIBLE -->
-    <div class="d-flex justify-content-between align-items-center ">
+    <div class="d-flex justify-content-between align-items-center">
+
         <button type="button"
                 class="btn btn-primary btn-lg"
                 onclick="agregarFila()">
@@ -86,10 +97,12 @@
         <div class="fs-3 fw-bold">
             TOTAL: $ <span id="totalVenta">0.00</span>
         </div>
+
     </div>
 
     <div class="mt-4">
-        <button type="submit" class="btn btn-success btn-lg w-100 mt-4">
+        <button type="submit"
+                class="btn btn-success btn-lg w-100 mt-4">
             ✅ Confirmar Venta
         </button>
     </div>
@@ -97,199 +110,246 @@
 </form>
 
 <script>
+
     let index = @Model.Count;
 
-    function agregarFila() {
+    const productos = [
 
-        limpiarErroresGlobales();
-
-        const tbody = document.querySelector("#tablaVenta tbody");
-
-        const fila = `
-        <tr>
-            <td>
-                <select name="detalles[${index}].ProductoId"
-                        class="form-control producto-select"
-                        data-index="${index}">
-                    <option value="">Seleccione</option>
-                    @foreach (var p in ViewBag.Productos)
-                    {
-                                        <option value="@p.Id"
-                                                data-precio="@p.Precio"
-                                                data-peso="@p.EsPorPeso"
-                                                data-editable="@p.PrecioEditable">
-                                            @p.Nombre
-                                        </option>
-                    }
-                </select>
-            </td>
-
-            <td>
-                <input type="number"
-                       name="detalles[${index}].Cantidad"
-                       class="form-control cantidad"
-                       value="1"
-                       step="0.01"
-                       min="0.01" />
-            </td>
-
-            <td>
-                <input type="text"
-                       name="detalles[${index}].PrecioUnitario"
-                       class="form-control precio"
-                       step="0.01"
-                       readonly />
-            </td>
-
-            <td class="text-end fw-bold subtotal">$0.00</td>
-
-            <td class="text-center">
-                <button type="button"
-                        class="btn btn-danger"
-                        onclick="eliminarFila(this)">
-                    ❌
-                </button>
-            </td>
-        </tr>
-        `;
-
-        tbody.insertAdjacentHTML("beforeend", fila);
-        index++;
+    @foreach (var p in ViewBag.Productos)
+    {
+                @: {
+                @: id: @p.Id,
+                @: nombre: "@p.Nombre",
+                @: codigo: "@p.CodigoBarra",
+                @: precio: @p.Precio,
+                @: peso: "@p.EsPorPeso",
+                @: editable: "@p.PrecioEditable"
+                @: },
     }
+
+    ];
+
 </script>
 
 <script>
-    function recalcularFila(fila) {
-            const cantidad = parseFloat(
-        fila.querySelector(".cantidad").value.replace(",", ".")
-    ) || 0;
 
-            const precio = parseFloat(
-        fila.querySelector(".precio").value.replace(",", ".")
-    ) || 0;
+    function agregarFila(){
 
-        const subtotal = cantidad * precio;
+    const tbody = document.querySelector("#tablaVenta tbody");
 
-        fila.querySelector(".subtotal").innerText = "$" + subtotal;
-        recalcularTotal();
-    }
+    const fila = `
+    <tr>
 
-    function recalcularTotal() {
-        let total = 0;
-        document.querySelectorAll(".subtotal").forEach(s => {
-            total += parseFloat(s.innerText.replace("$", "")) || 0;
-        });
-        document.getElementById("totalVenta").innerText = total;
-    }
+    <td>
 
-       document.addEventListener("change", function (e) {
+    <select name="detalles[${index}].ProductoId"
+            class="form-control producto-select">
 
-        if (e.target.classList.contains("producto-select")) {
+    <option value="">Seleccione</option>
 
-            limpiarErroresGlobales();
-
-            const fila = e.target.closest("tr");
-            const option = e.target.selectedOptions[0];
-
-            const precio = parseFloat(option.dataset.precio) || 0;
-
-            const esPorPeso = option.dataset.peso === "True";
-            const editable = option.dataset.editable === "True";
-
-            const cantidadInput = fila.querySelector(".cantidad");
-
-    if (esPorPeso) {
-        cantidadInput.step = "0.01";
-        cantidadInput.min = "0.01";
-    } else {
-        cantidadInput.step = "1";
-        cantidadInput.min = "1";
-        cantidadInput.value = Math.floor(cantidadInput.value);
-    }
-
-
-            const precioInput = fila.querySelector(".precio");
-            precioInput.value = Number.isInteger(precio)
-    ? precio.toString()
-    : precio.toFixed(2);
-
-            precioInput.readOnly = !editable;
-
-            recalcularFila(fila);
-        }
-    });
-
-
-    document.addEventListener("input", function (e) {
-        if (e.target.classList.contains("cantidad") ||
-            e.target.classList.contains("precio")) {
-            recalcularFila(e.target.closest("tr"));
-        }
-    });
-
-    function eliminarFila(btn)
+    @foreach (var p in ViewBag.Productos)
     {
-        btn.closest("tr").remove();
-        reindexarFilas();
-        recalcularTotal();
+                <text>
+                <option value="@p.Id"
+                data-precio="@p.Precio"
+                data-peso="@p.EsPorPeso"
+                data-editable="@p.PrecioEditable">
+                @p.Nombre
+                </option>
+                </text>
     }
 
-    function reindexarFilas()
+    </select>
+
+    </td>
+
+    <td>
+    <input type="number"
+    name="detalles[${index}].Cantidad"
+    class="form-control cantidad"
+    value="1"
+    step="0.01"
+    min="0.01"/>
+    </td>
+
+    <td>
+    <input type="text"
+    name="detalles[${index}].PrecioUnitario"
+    class="form-control precio"
+    readonly/>
+    </td>
+
+    <td class="text-end fw-bold subtotal">$0</td>
+
+    <td class="text-center">
+    <button type="button"
+    class="btn btn-danger"
+    onclick="eliminarFila(this)">❌</button>
+    </td>
+
+    </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend",fila);
+
+    index++;
+
+    }
+
+</script>
+
+<script>
+
+    document.getElementById("buscadorProducto")
+    .addEventListener("keyup",function(){
+
+    const texto=this.value.toLowerCase();
+
+    if(texto.length<2) return;
+
+    const producto=productos.find(p=>
+
+    p.nombre.toLowerCase().includes(texto)
+    ||
+    p.codigo.includes(texto)
+
+    );
+
+    if(producto){
+
+    completarFila(producto);
+
+    this.value="";
+
+    }
+
+    });
+
+</script>
+
+<script>
+
+       function completarFila(prod)
     {
         const filas = document.querySelectorAll("#tablaVenta tbody tr");
 
-        filas.forEach((fila, i) => {
+        let filaLibre = null;
 
-            fila.querySelectorAll("select, input").forEach(input => {
+        filas.forEach(f => {
 
-                if (input.name.includes("ProductoId"))
-                    input.name = `detalles[${i}].ProductoId`;
+            const select = f.querySelector(".producto-select");
 
-                if (input.name.includes("Cantidad"))
-                    input.name = `detalles[${i}].Cantidad`;
-
-                if (input.name.includes("PrecioUnitario"))
-                    input.name = `detalles[${i}].PrecioUnitario`;
-            });
+            if (!select.value && !filaLibre)
+                filaLibre = f;
         });
 
-        index = filas.length;
+        if (!filaLibre)
+        {
+            agregarFila();
+            filaLibre = document.querySelector("#tablaVenta tbody tr:last-child");
+        }
+
+        const select = filaLibre.querySelector(".producto-select");
+
+        // seleccionar option correcto
+        for (let option of select.options)
+        {
+            if (option.value == prod.id)
+            {
+                option.selected = true;
+                break;
+            }
+        }
+
+        // disparar evento change
+        select.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
 </script>
 
 <script>
-    document.querySelector("form").addEventListener("submit", function () {
 
-        document.querySelectorAll(".cantidad, .precio").forEach(input => {
-            input.value = input.value.replace(",", ".");
-        });
+    document.addEventListener("change",function(e){
 
-    });
-</script>
+    if(e.target.classList.contains("producto-select")){
 
-<script>
-        function limpiarErroresGlobales() {
-        const summary = document.querySelector(".validation-summary-errors");
+    const fila=e.target.closest("tr");
 
-        if (summary) {
-            summary.innerHTML = "";
-            summary.classList.remove("validation-summary-errors");
-            summary.classList.add("validation-summary-valid");
-        }
+    const option=e.target.selectedOptions[0];
+
+    const precio=parseFloat(option.dataset.precio)||0;
+
+    const precioInput=fila.querySelector(".precio");
+
+    precioInput.value=precio.toFixed(2);
+
+    recalcularFila(fila);
+
     }
+
+    });
+
 </script>
 
 <script>
-        document.addEventListener("focusin", function (e) {
-        if (e.target.classList.contains("producto-select")) {
-            limpiarErroresGlobales();
-        }
+
+    function recalcularFila(fila){
+
+    const cantidad=parseFloat(
+    fila.querySelector(".cantidad").value.replace(",",".")
+    )||0;
+
+    const precio=parseFloat(
+    fila.querySelector(".precio").value.replace(",",".")
+    )||0;
+
+    const subtotal=cantidad*precio;
+
+    fila.querySelector(".subtotal").innerText="$"+subtotal.toFixed(2);
+
+    recalcularTotal();
+
+    }
+
+    function recalcularTotal(){
+
+    let total=0;
+
+    document.querySelectorAll(".subtotal").forEach(s=>{
+
+    total+=parseFloat(s.innerText.replace("$",""))||0;
+
     });
 
-    document.addEventListener("click", function (e) {
-        if (e.target.classList.contains("producto-select")) {
-            limpiarErroresGlobales();
-        }
+    document.getElementById("totalVenta").innerText=total.toFixed(2);
+
+    }
+
+</script>
+
+<script>
+
+    function eliminarFila(btn){
+
+    btn.closest("tr").remove();
+
+    recalcularTotal();
+
+    }
+
+</script>
+
+<script>
+
+    document.querySelector("form")
+    .addEventListener("submit",function(){
+
+    document.querySelectorAll(".cantidad,.precio").forEach(i=>{
+
+    i.value=i.value.replace(",", ".");
+
     });
+
+    });
+
 </script>

@@ -130,6 +130,11 @@ namespace MiniMercado.Controllers
             }
 
             //Creamos la venta
+
+            detalles = detalles
+                        .Where(d => d.ProductoId != 0 && d.Cantidad > 0) //filtramos fila
+                        .ToList();
+
             var venta = new Venta
             {
                 Total = total,
