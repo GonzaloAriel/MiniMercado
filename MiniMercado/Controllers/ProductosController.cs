@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
+using MiniMercado.Services;
 
 
 namespace MiniMercado.Controllers
@@ -13,11 +14,13 @@ namespace MiniMercado.Controllers
     {
         private readonly MiniMercadoContext _context;
         private readonly ITenantService _tenantService;
+        private readonly AuditoriaService _auditoria;
         public ProductosController(MiniMercadoContext context,
-                ITenantService tenantService)
+                ITenantService tenantService, AuditoriaService auditoria)
         {
             _context = context;
             _tenantService = tenantService;
+            _auditoria = auditoria;
         }
 
         // LISTAR
@@ -63,6 +66,15 @@ namespace MiniMercado.Controllers
 
             _context.Productos.Add(producto);
             _context.SaveChanges();
+
+            _auditoria.Registrar
+            (
+              "Crear",
+              "Productos",
+               producto.Id,
+              "Se creo un producto"
+            );
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -109,6 +121,14 @@ namespace MiniMercado.Controllers
 
             _context.SaveChanges();
 
+            _auditoria.Registrar
+            (
+                "Modificar",
+                "Productos",
+                producto.Id,
+                "Se modificó el precio o stock"
+            );
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -143,6 +163,15 @@ namespace MiniMercado.Controllers
             producto.Activo = false;
 
             _context.SaveChanges();
+
+            var NombreProducto = producto.Nombre;
+            _auditoria.Registrar
+           (
+               "Eliminar",
+               "Productos",
+               producto.Id,
+                $"Se eliminó el producto: {NombreProducto}"
+           );
 
             return RedirectToAction(nameof(Index));
         }

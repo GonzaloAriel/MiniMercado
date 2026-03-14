@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
+using MiniMercado.Services;
 using System;
 
 [Authorize(Roles = "Admin")]
@@ -10,6 +11,7 @@ public class VentaAdminController : Controller
 {
     private readonly MiniMercadoContext _context;
     private readonly ITenantService _tenantService;
+    private readonly AuditoriaService _auditoria;
 
     public VentaAdminController(
             MiniMercadoContext context,
@@ -126,6 +128,8 @@ public class VentaAdminController : Controller
         venta.Activa = true;
 
         _context.SaveChanges();
+
+
 
         TempData["Mensaje"] = $"✅ Venta #{venta.Id} anulada correctamente.";
 

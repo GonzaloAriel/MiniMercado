@@ -27,5 +27,8 @@ namespace MiniMercado.Models
         public Tenant Tenant { get; set; }
 
         public string? NombreVenta { get; set; }
+        public string? UsuarioId { get; set; }
+        public string? Usuario { get; set; }
+
     }
 }

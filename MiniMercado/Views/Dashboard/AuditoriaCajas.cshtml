@@ -1,0 +1,143 @@
+﻿@model MiniMercado.ViewModels.DashboardCajasViewModel
+
+<h2 class="mt-4">📋 Auditoría de Cajas</h2>
+
+<form method="get" class="row mb-4">
+
+    <div class="col-md-3">
+        <label>Desde</label>
+        <input type="date" name="desde" value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Hasta</label>
+        <input type="date" name="hasta" value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
+
+    <div class="col-md-3 align-self-end">
+        <button class="btn btn-primary">Filtrar</button>
+    </div>
+
+</form>
+
+
+<h4>💰 Ventas por Caja / Día</h4>
+
+<table class="table table-bordered table-hover">
+
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Ventas</th>
+            <th>Anuladas</th>
+            <th>Total Vendido</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach (var item in Model.ResumenCajas)
+        {
+            <tr>
+                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                <td>@item.Usuario</td>
+                <td>@item.CantidadVentas</td>
+                <td>@item.CantidadAnuladas</td>
+                <td>$@item.TotalVendido</td>
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+
+
+<h4 class="mt-5">🧾 Historial de Ventas</h4>
+
+<table class="table table-bordered table-hover">
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Total</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach (var venta in Model.HistorialVentas)
+        {
+            <tr>
+
+                <td>@venta.VentaId</td>
+
+                <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+
+                <td>@venta.Usuario</td>
+
+                <td>$@venta.Total</td>
+
+                <td>
+                    @if (!venta.Activa)
+                    {
+                        <span class="badge bg-success">Activa</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Anulada</span>
+                    }
+                </td>
+
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+
+
+<h4 class="mt-5">🛡 Registro de Auditoría</h4>
+
+<table class="table table-bordered table-hover">
+
+    <thead>
+
+        <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Tabla</th>
+            <th>Registro</th>
+            <th>Descripción</th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        @foreach (var a in Model.Auditorias)
+        {
+            <tr>
+
+                <td>@a.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+
+                <td>@a.UsuarioId</td>
+
+                <td>@a.Accion</td>
+
+                <td>@a.Tabla</td>
+
+                <td>@a.RegistroId</td>
+
+                <td>@a.Descripcion</td>
+
+            </tr>
+        }
+
+    </tbody>
+
+</table>

@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
 using MiniMercado.Services;
+using System.Security.Claims;
+using static System.Net.WebRequestMethods;
 
 namespace MiniMercado.Controllers
 {
@@ -14,7 +16,8 @@ namespace MiniMercado.Controllers
     {
         private readonly MiniMercadoContext _context;
         private readonly ITenantService _tenantService;
-
+        private readonly AuditoriaService _auditoria;
+        private readonly IHttpContextAccessor _http;
         private void CargarProductos()
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -24,10 +27,12 @@ namespace MiniMercado.Controllers
                 .ToList();
         }
 
-        public VentaController(MiniMercadoContext context, ITenantService tenantService)
+        public VentaController(MiniMercadoContext context, ITenantService tenantService, AuditoriaService auditoria, IHttpContextAccessor http)
         {
             _context = context;
             _tenantService = tenantService;
+            _auditoria = auditoria;
+            _http = http;
         }
 
         public IActionResult Create()
@@ -50,6 +55,7 @@ namespace MiniMercado.Controllers
             var keysConError = ModelState.Keys
                 .Where(k => k.Contains("detalles"))
                 .ToList();
+
 
             foreach (var key in keysConError)
             {
@@ -141,14 +147,25 @@ namespace MiniMercado.Controllers
                 Fecha = DateTime.Now,
                 Activa = false,
                 TenantId = tenantId,
-                Detalles = detalles
+                Detalles = detalles,
+                UsuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                Usuario = _http.HttpContext.User?.Identity?.Name
             };
 
+            
             //Registramos la venta
             _context.Ventas.Add(venta);
 
             //Guardamos los cambios en la base de datos
             _context.SaveChanges();
+
+            //Auditoria
+            _auditoria.Registrar(
+                        "Crear",
+                        "Ventas",
+                        venta.Id,
+                        "Se registró una nueva venta"
+             );
 
             TempData["Mensaje"] = "✅ Venta registrada correctamente";
 
@@ -272,6 +289,9 @@ namespace MiniMercado.Controllers
 
             return View(ventas);
         }
+
+        
+        
 
     }
 

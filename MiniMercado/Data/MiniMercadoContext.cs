@@ -18,6 +18,7 @@ namespace MiniMercado.Data
         public DbSet<MovimientoStock> MovimientosStock { get; set; }
 
         public DbSet<Tenant> Tenants { get; set; }
+        public DbSet<Auditoria> Auditorias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +72,13 @@ namespace MiniMercado.Data
                         .HasQueryFilter(ms =>
                             IsGlobalAdmin() || ms.TenantId == GetCurrentTenantId()
                          );
+
+            modelBuilder.Entity<Venta>()
+                        .HasOne<ApplicationUser>()
+                        .WithMany()
+                        .HasForeignKey(v => v.UsuarioId)
+                        .OnDelete(DeleteBehavior.Restrict
+                        );
 
         }
 
