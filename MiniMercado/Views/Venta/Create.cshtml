@@ -68,7 +68,7 @@
                                        readonly />
                             </td>
 
-                            <td class="text-end fw-bold subtotal">$0.00</td>
+                            <td class="text-end fw-bold subtotal">$0</td>
 
                             <td class="text-center">
                                 <button type="button"
@@ -95,7 +95,7 @@
         </button>
 
         <div class="fs-3 fw-bold">
-            TOTAL: $ <span id="totalVenta">0.00</span>
+            TOTAL: $ <span id="totalVenta">0</span>
         </div>
 
     </div>
@@ -117,14 +117,14 @@
 
     @foreach (var p in ViewBag.Productos)
     {
-                    @: {
-                    @: id: @p.Id,
-                    @: nombre: "@p.Nombre",
-                    @: codigo: "@p.CodigoBarra",
-                    @: precio: @p.Precio,
-                    @: peso: "@p.EsPorPeso",
-                    @: editable: "@p.PrecioEditable"
-                    @: },
+                        @: {
+                        @: id: @p.Id,
+                        @: nombre: "@p.Nombre",
+                        @: codigo: "@p.CodigoBarra",
+                        @: precio: @p.Precio,
+                        @: peso: "@p.EsPorPeso",
+                        @: editable: "@p.PrecioEditable"
+                        @: },
     }
 
     ];
@@ -149,14 +149,14 @@
 
     @foreach (var p in ViewBag.Productos)
     {
-                    <text>
-                    <option value="@p.Id"
+                        <text>
+                            <option value="@p.Id"
                     data-precio="@p.Precio"
                     data-peso="@p.EsPorPeso"
                     data-editable="@p.PrecioEditable">
-                    @p.Nombre
-                    </option>
-                    </text>
+                                @p.Nombre
+                            </option>
+                        </text>
     }
 
     </select>
@@ -301,7 +301,7 @@
 
     const precioInput=fila.querySelector(".precio");
 
-    precioInput.value=precio.toFixed(2);
+    precioInput.value=precio.toFixed(0);
 
     recalcularFila(fila);
 
@@ -325,7 +325,7 @@
 
     const subtotal=cantidad*precio;
 
-    fila.querySelector(".subtotal").innerText="$"+subtotal.toFixed(2);
+    fila.querySelector(".subtotal").innerText="$"+subtotal.toFixed(0);
 
     recalcularTotal();
 
@@ -341,22 +341,32 @@
 
     });
 
-    document.getElementById("totalVenta").innerText=total.toFixed(2);
+    document.getElementById("totalVenta").innerText=total.toFixed(0);
 
     }
 
 </script>
 
 <script>
-
-    function eliminarFila(btn){
-
-    btn.closest("tr").remove();
-
-    recalcularTotal();
-
+    function eliminarFila(btn) {
+        btn.closest("tr").remove();
+        renumerarFilas();
+        recalcularTotal();
     }
 
+    function renumerarFilas() {
+        const filas = document.querySelectorAll("#tablaVenta tbody tr");
+        filas.forEach(function (fila, i) {
+            const select = fila.querySelector(".producto-select");
+            const cantidad = fila.querySelector(".cantidad");
+            const precio = fila.querySelector(".precio");
+
+            if (select)   select.name   = `detalles[${i}].ProductoId`;
+            if (cantidad) cantidad.name = `detalles[${i}].Cantidad`;
+            if (precio)   precio.name   = `detalles[${i}].PrecioUnitario`;
+        });
+        index = filas.length;
+    }
 </script>
 
 <script>
@@ -379,4 +389,50 @@
     {
         document.getElementById("buscadorProducto").focus();
     };
+</script>
+
+<script>
+    document.addEventListener("input", function (e) {
+        if (e.target.classList.contains("cantidad")) {
+            const fila = e.target.closest("tr");
+            recalcularFila(fila);
+        }
+    });
+</script>
+
+<script>
+    // Bloquea punto y coma en productos por unidad
+    document.addEventListener("keydown", function (e) {
+        if (!e.target.classList.contains("cantidad")) return;
+
+        const fila = e.target.closest("tr");
+        const select = fila.querySelector(".producto-select");
+        const option = select?.selectedOptions[0];
+        const esPorPeso = option?.dataset.peso?.toLowerCase() === "true";
+
+        if (!esPorPeso && (e.key === "." || e.key === ",")) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+<script>
+    // Limpia decimales en tiempo real si el producto es por unidad
+    document.addEventListener("input", function (e) {
+        if (!e.target.classList.contains("cantidad")) return;
+
+        const fila = e.target.closest("tr");
+        const select = fila.querySelector(".producto-select");
+        const option = select?.selectedOptions[0];
+        const esPorPeso = option?.dataset.peso?.toLowerCase() === "true";
+
+        if (!esPorPeso) {
+            const val = e.target.value;
+            if (val.includes(".") || val.includes(",")) {
+                e.target.value = Math.floor(parseFloat(val) || 1);
+            }
+        }
+
+        recalcularFila(fila);
+    });
 </script>
