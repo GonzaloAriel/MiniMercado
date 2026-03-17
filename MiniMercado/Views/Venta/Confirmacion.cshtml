@@ -1,42 +1,46 @@
-﻿@{
+﻿@model MiniMercado.Models.Venta
+
+@{
     ViewData["Title"] = "Venta Confirmada";
     var ventaId = ViewBag.VentaId;
 }
 
-<h2 class="text-success mt-4 fs-1">Venta confirmada!!</h2>
+<h2 class="text-success mt-4 fs-1">Venta confirmada🎉!!!</h2>
 
 <p>@ViewBag.Mensaje</p>
 
-<!-- Botones de acción -->
+<!-- Detalle de la venta -->
 <div class="mt-5">
-
-    <a asp-action="Create" class="btn btn-success">
-        🛒 Nueva Venta
-    </a>
-
-    <a asp-action="Detalle"
-       asp-route-id="@ventaId"
-       class="btn btn-primary">
-        📄 Ver detalle
-    </a>
-
-    <a asp-action="Ticket"
-       asp-route-id="@ventaId"
-       target="_blank"
-       class="btn btn-secondary">
-        🧾 Imprimir Ticket
-    </a>
-
-    <a asp-controller="Home"
-       asp-action="Index"
-       class="btn btn-info">
-        🏠 Inicio
-    </a>
-
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cant.</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Detalles)
+            {
+                <tr>
+                    <td>@d.Producto.Nombre</td>
+                    <td>@d.Cantidad.ToString("0.##")</td>
+                    <td>@d.PrecioUnitario.ToString("0.##")</td>
+                    <td>@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                <td class="fw-bold">@Model.Total.ToString("0.##")</td>
+            </tr>
+        </tfoot>
+    </table>
 </div>
 
 <div class="mt-5">
-    <!-- Formulario para agregar nombre/nota a la venta -->
     <form method="post"
           asp-controller="Venta"
           asp-action="Confirmacion">
@@ -49,25 +53,46 @@
             <label class="form-label">
                 Nombre o nota de la venta (opcional)
             </label>
-
             <input type="text"
                    name="NombreVenta"
                    class="form-control"
                    placeholder="Ej: Cliente Juan / Pedido especial" />
+
+            <button type="submit" class="btn btn-outline-primary mt-3">
+                💾 Guardar nota
+            </button>
         </div>
-
-        <button type="submit" class="btn btn-outline-primary">
-            💾 Guardar nota
-        </button>
+        <div class="mt-2">
+            @if (ViewBag.MensajeNombreVenta != null)
+            {
+                <div class="alert alert-success">
+                    @ViewBag.MensajeNombreVenta
+                </div>
+            }
+        </div>
     </form>
+</div>
 
-    <div class="mt-3">
-        @if (ViewBag.MensajeNombreVenta != null)
-        {
-            <div class="alert alert-success">
-                @ViewBag.MensajeNombreVenta
-            </div>
-        }
-    </div>
-
+<!-- Botones de acción -->
+<div class="mt-4">
+    <a asp-action="Create" class="btn btn-success mt-4 me-2">
+        🛒 Nueva Venta
+    </a>
+    <a asp-action="Ticket"
+           asp-route-id="@ventaId"
+           target="_blank"
+           class="btn btn-secondary mt-4 me-2">
+        🧾 Imprimir Ticket
+    </a>
+    <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-info mt-4 me-2">
+        🏠 Inicio
+    </a>
+    <a asp-controller="VentaAdmin"
+           asp-action="Anular"
+           asp-route-id="@ventaId"
+           class="btn btn-danger mt-4">
+        ❌ Anular
+    </a>
 </div>

@@ -38,6 +38,7 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddHttpContextAccessor();
 
+
 var app = builder.Build();
 
 // 🔹 Seed automático (Roles + Tenant Demo + AdminGlobal)

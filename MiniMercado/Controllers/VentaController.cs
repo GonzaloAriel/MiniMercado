@@ -196,16 +196,24 @@ namespace MiniMercado.Controllers
         // GET: Confirmación de venta
         public IActionResult Confirmacion(int ventaId)
         {
-            ViewBag.VentaId = ventaId;
+            var tenantId = _tenantService.GetTenantId().Value;
 
+            var venta = _context.Ventas
+                .Where(v => v.Id == ventaId && v.TenantId == tenantId)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Producto)
+                .FirstOrDefault();
+
+            if (venta == null)
+                return NotFound();
+
+            ViewBag.VentaId = ventaId;
             ViewBag.Mensaje = TempData["Mensaje"];
             ViewBag.MensajeNombreVenta = TempData["MensajeNombreVenta"];
 
-            return View();
+            return View(venta);
         }
-
-
-
+        
         public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId, string? nombreVenta)
         {
             var tenantId = _tenantService.GetTenantId().Value;

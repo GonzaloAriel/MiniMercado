@@ -6,7 +6,7 @@ using MiniMercado.Models;
 using MiniMercado.Services;
 using System;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Caja")]
 public class VentaAdminController : Controller
 {
     private readonly MiniMercadoContext _context;
@@ -24,7 +24,7 @@ public class VentaAdminController : Controller
     // =====================================================
     // LISTADO DE VENTAS
     // =====================================================
-    [Authorize(Roles = "AdminGlobal,Admin")]
+    [Authorize(Roles = "Admin,Caja")]
     public IActionResult Index()
     {
         var tenantId = _tenantService.GetTenantId().Value;
@@ -41,7 +41,7 @@ public class VentaAdminController : Controller
     // =====================================================
     // DETALLE DE VENTA
     // =====================================================
-    [Authorize(Roles = "AdminGlobal,Admin")]
+    [Authorize(Roles = "Admin,Caja")]
     public IActionResult Detalle(int id)
     {
         var tenantId = _tenantService.GetTenantId().Value;
@@ -61,7 +61,7 @@ public class VentaAdminController : Controller
     // =====================================================
     // CONFIRMAR ANULACIÓN (GET)
     // =====================================================
-    [Authorize(Roles = "AdminGlobal,Admin")]
+    [Authorize(Roles = "Admin,Caja")]
     public IActionResult Anular(int id)
     {
         var tenantId = _tenantService.GetTenantId().Value;
@@ -86,7 +86,7 @@ public class VentaAdminController : Controller
     // =====================================================
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "AdminGlobal,Admin")]
+    [Authorize(Roles = "Admin,Caja")]
     public IActionResult ConfirmarAnular(int id)
     {
         var tenantId = _tenantService.GetTenantId().Value;
