@@ -19,6 +19,7 @@ namespace MiniMercado.Data
 
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
+        public DbSet<Rubro> Rubros { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,9 +49,27 @@ namespace MiniMercado.Data
                 .HasForeignKey(ms => ms.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Rubro - Producto : Uno a Muchos
+            modelBuilder.Entity<Rubro>()
+                .HasMany(r => r.Productos)
+                .WithOne(p => p.Rubro)
+                .HasForeignKey(p => p.RubroId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Rubro>()
+                .HasOne(r => r.Tenant)
+                .WithMany()
+                .HasForeignKey(r => r.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Producto>()
                         .HasQueryFilter(p =>
                             IsGlobalAdmin() || p.TenantId == GetCurrentTenantId()
+                        );
+
+            modelBuilder.Entity<Rubro>()
+                        .HasQueryFilter(r =>
+                            IsGlobalAdmin() || r.TenantId == GetCurrentTenantId()
                         );
 
 

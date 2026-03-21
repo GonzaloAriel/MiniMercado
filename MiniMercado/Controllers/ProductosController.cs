@@ -23,14 +23,47 @@ namespace MiniMercado.Controllers
             _auditoria = auditoria;
         }
 
-        // LISTAR
-        [Authorize(Roles = "AdminGlobal, Admin")]
-        public IActionResult Index(string filtro)
+        // GET products by Rubro (filtered by current tenant)
+        [HttpGet]
+        [Authorize(Roles = "Caja,Admin,AdminGlobal")]
+        public IActionResult GetByRubro(int rubroId)
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
             var productos = _context.Productos
-                .Where(p => p.Activo && p.TenantId == tenantId);
+                .AsNoTracking()
+                .Where(p => p.RubroId == rubroId && p.TenantId == tenantId && p.Activo)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Nombre,
+                    p.Precio,
+                    p.Stock,
+                    p.EsPorPeso,
+                    p.PrecioEditable
+                })
+                .ToList();
+
+            return Json(productos);
+        }
+
+        // LISTAR
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult Index(string filtro)
+        {
+            var tenantId = _tenantService.GetTenantId();
+
+            var productos = _context.Productos
+                .Where(p => p.Activo && (tenantId == null || p.TenantId == tenantId.Value))
+                .Select(p => new MiniMercado.Models.ProductoListViewModel
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    CodigoBarra = p.CodigoBarra,
+                    Precio = p.Precio,
+                    Stock = p.Stock,
+                    Activo = p.Activo
+                });
 
             if (!string.IsNullOrEmpty(filtro))
             {

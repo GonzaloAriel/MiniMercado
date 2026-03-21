@@ -25,9 +25,11 @@ namespace MiniMercado.Controllers
             ViewBag.CantidadVentasHoy = ventasHoy.Count();
 
             // ⚠️ Stock bajo (menos de 5, ajustable)
+            // Project only needed fields to avoid materializing nullable DB columns that may contain NULL
             ViewBag.StockBajo = _context.Productos
                 .Where(p => p.Activo && p.Stock <= 5)
                 .OrderBy(p => p.Stock)
+                .Select(p => new { p.Nombre, p.Stock })
                 .ToList();
 
             return View();

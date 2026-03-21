@@ -17,10 +17,10 @@ namespace MiniMercado.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "6.0.36")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -55,7 +55,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -80,7 +80,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -231,7 +231,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Accion")
                         .IsRequired()
@@ -267,40 +267,13 @@ namespace MiniMercado.Migrations
                     b.ToTable("Auditorias");
                 });
 
-            modelBuilder.Entity("MiniMercado.Models.MercadoLibreToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AccessToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Expiracion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MercadoLibreTokens");
-                });
-
             modelBuilder.Entity("MiniMercado.Models.MovimientoStock", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<decimal>("Cantidad")
                         .HasColumnType("decimal(18,3)");
@@ -339,7 +312,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
@@ -363,8 +336,38 @@ namespace MiniMercado.Migrations
                     b.Property<bool>("PrecioEditable")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("RubroId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Stock")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RubroId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("Productos");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.Rubro", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -373,7 +376,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Productos");
+                    b.ToTable("Rubros");
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Tenant", b =>
@@ -382,7 +385,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
@@ -402,7 +405,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<bool>("Activa")
                         .HasColumnType("bit");
@@ -443,7 +446,7 @@ namespace MiniMercado.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<decimal>("Cantidad")
                         .HasColumnType("decimal(18,3)");
@@ -553,6 +556,25 @@ namespace MiniMercado.Migrations
 
             modelBuilder.Entity("MiniMercado.Models.Producto", b =>
                 {
+                    b.HasOne("MiniMercado.Models.Rubro", "Rubro")
+                        .WithMany("Productos")
+                        .HasForeignKey("RubroId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
+
+                    b.HasOne("MiniMercado.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Rubro");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.Rubro", b =>
+                {
                     b.HasOne("MiniMercado.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
@@ -608,6 +630,11 @@ namespace MiniMercado.Migrations
             modelBuilder.Entity("MiniMercado.Models.Producto", b =>
                 {
                     b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.Rubro", b =>
+                {
+                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Venta", b =>

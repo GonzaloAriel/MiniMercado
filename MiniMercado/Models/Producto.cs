@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace MiniMercado.Models
@@ -38,10 +39,17 @@ namespace MiniMercado.Models
         public List<MovimientoStock> Movimientos { get; set; }
 
         [ValidateNever]
-        public int TenantId { get; set; }
+        public int? TenantId { get; set; }
 
         [ValidateNever]
         public Tenant Tenant { get; set; }
+
+        // Relación con Rubro (categoria)
+        [ValidateNever]
+        public int? RubroId { get; set; }
+
+        [ValidateNever]
+        public Rubro Rubro { get; set; }
 
     }
 }
