@@ -1,0 +1,38 @@
+﻿@model List<MiniMercado.Models.Rubro>
+
+<h2>Productos Inactivos</h2>
+
+<form method="get" class="mb-3">
+    <input type="text" name="filtro"
+           class="form-control"
+           placeholder="Buscar por nombre" />
+</form>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Productos</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@((item.Productos?.Count() ?? 0))</td>
+                <td>
+                    <a asp-action="Reactivar"
+                           asp-route-id="@item.Id"
+                           class="btn btn-success btn-sm">
+                        Reactivar
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">
+    Volver
+</a>

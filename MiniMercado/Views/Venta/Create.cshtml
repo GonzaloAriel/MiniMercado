@@ -100,6 +100,44 @@
 
     </div>
 
+    <!-- SECCIÓN FIADO -->
+    <div class="mt-4 border-top pt-3">
+
+        <input type="hidden" id="esFiadoInput" name="EsFiado" value="false" />
+
+        <button type="button"
+                id="btnFiado"
+                class="btn btn-secondary btn-lg"
+                onclick="toggleFiado()">
+            📙 Fiado
+        </button>
+
+        <div id="seccionFiado" class="d-none mt-3">
+            <div class="input-group mb-2">
+                <input type="text"
+                       id="buscadorCliente"
+                       class="form-control form-control-lg"
+                       placeholder="🔎 Buscar cliente por nombre..."
+                       autocomplete="off" />
+                <button type="button"
+                        class="btn btn-outline-success btn-lg"
+                        onclick="abrirModalCliente()">
+                    ➕ Nuevo
+                </button>
+            </div>
+
+            <div id="resultadosCliente" class="list-group mb-2"></div>
+
+            <input type="hidden" id="clienteId" name="ClienteId" />
+
+            <div id="clienteSeleccionado" class="alert alert-info d-none">
+                <span id="clienteNombre"></span>
+                <span id="clienteSaldo" class="ms-3 fw-bold text-danger"></span>
+            </div>
+        </div>
+
+    </div>
+
     <div class="mt-4">
         <button type="submit"
                 class="btn btn-success btn-lg w-100 mt-4">
@@ -110,6 +148,85 @@
 </form>
 
 <script>
+    let fiadoActivo = false;
+
+    function toggleFiado() {
+        fiadoActivo = !fiadoActivo;
+        const seccion = document.getElementById("seccionFiado");
+        const btn = document.getElementById("btnFiado");
+        const input = document.getElementById("esFiadoInput");
+
+        if (fiadoActivo) {
+            seccion.classList.remove("d-none");
+            btn.classList.remove("btn-outline-secondary");
+            btn.classList.add("btn-warning");
+            btn.textContent = "📙 Fiado ✅ (clic para cancelar)";
+            input.value = "true";
+            document.getElementById("buscadorCliente").focus();
+        } else {
+            seccion.classList.add("d-none");
+            btn.classList.remove("btn-warning");
+            btn.classList.add("btn-outline-secondary");
+            btn.textContent = "📋 Fiado";
+            input.value = "false";
+            document.getElementById("clienteId").value = "";
+            document.getElementById("clienteSeleccionado").classList.add("d-none");
+            document.getElementById("resultadosCliente").innerHTML = "";
+            document.getElementById("buscadorCliente").value = "";
+        }
+    }
+
+    document.getElementById("buscadorCliente")?.addEventListener("input", function () {
+        const q = this.value;
+        if (q.length < 2) {
+            document.getElementById("resultadosCliente").innerHTML = "";
+            return;
+        }
+
+        fetch(`/Cliente/Buscar?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                const lista = document.getElementById("resultadosCliente");
+                lista.innerHTML = "";
+                data.forEach(c => {
+                    const item = document.createElement("a");
+                    item.href = "#";
+                    item.className = "list-group-item list-group-item-action";
+                    item.textContent = c.nombre + (c.telefono ? ` — ${c.telefono}` : "");
+                    item.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        seleccionarCliente(c);
+                        lista.innerHTML = "";
+                        document.getElementById("buscadorCliente").value = c.nombre;
+                    });
+                    lista.appendChild(item);
+                });
+            });
+    });
+
+    function seleccionarCliente(c) {
+        document.getElementById("clienteId").value = c.id;
+        document.getElementById("clienteNombre").textContent = "👤 " + c.nombre;
+        document.getElementById("clienteSeleccionado").classList.remove("d-none");
+
+        fetch(`/Cliente/Saldo?id=${c.id}`)
+            .then(r => r.json())
+            .then(data => {
+                const saldoEl = document.getElementById("clienteSaldo");
+                if (data.saldo > 0) {
+                    saldoEl.textContent = `⚠️ Saldo pendiente: $${data.saldo.toFixed(0)}`;
+                    saldoEl.classList.add("text-danger");
+                    saldoEl.classList.remove("text-success");
+                } else {
+                    saldoEl.textContent = "✅ Al día";
+                    saldoEl.classList.remove("text-danger");
+                    saldoEl.classList.add("text-success");
+                }
+            });
+    }
+</script>
+
+<script>
 
     let index = @Model.Count;
 
@@ -117,14 +234,14 @@
 
     @foreach (var p in ViewBag.Productos)
     {
-                        @: {
-                        @: id: @p.Id,
-                        @: nombre: "@p.Nombre",
-                        @: codigo: "@p.CodigoBarra",
-                        @: precio: @p.Precio,
-                        @: peso: "@p.EsPorPeso",
-                        @: editable: "@p.PrecioEditable"
-                        @: },
+                            @: {
+                            @: id: @p.Id,
+                            @: nombre: "@p.Nombre",
+                            @: codigo: "@p.CodigoBarra",
+                            @: precio: @p.Precio,
+                            @: peso: "@p.EsPorPeso",
+                            @: editable: "@p.PrecioEditable"
+                            @: },
     }
 
     ];
@@ -149,14 +266,14 @@
 
     @foreach (var p in ViewBag.Productos)
     {
-                        <text>
-                            <option value="@p.Id"
+                            <text>
+                                    <option value="@p.Id"
                     data-precio="@p.Precio"
                     data-peso="@p.EsPorPeso"
                     data-editable="@p.PrecioEditable">
-                                @p.Nombre
-                            </option>
-                        </text>
+                                            @p.Nombre
+                                    </option>
+                            </text>
     }
 
     </select>
@@ -414,6 +531,80 @@
             e.preventDefault();
         }
     });
+</script>
+
+<!-- MODAL CLIENTE RÁPIDO -->
+<div class="modal fade text-black rounded" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title fw-bold">➕ Nuevo Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
+                    <input type="text"
+                           id="nuevoClienteNombre"
+                           class="form-control form-control-lg"
+                           placeholder="Ej: Juan Pérez" />
+                    <div id="errorNombre" class="text-danger d-none">El nombre es obligatorio.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Teléfono <span class="text-muted">(opcional)</span></label>
+                    <input type="text"
+                           id="nuevoClienteTelefono"
+                           class="form-control form-control-lg"
+                           placeholder="Ej: 011-4444-5555" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success btn-lg" onclick="guardarClienteRapido()">
+                    💾 Guardar y seleccionar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalCliente() {
+        document.getElementById("nuevoClienteNombre").value = "";
+        document.getElementById("nuevoClienteTelefono").value = "";
+        document.getElementById("errorNombre").classList.add("d-none");
+        new bootstrap.Modal(document.getElementById("modalNuevoCliente")).show();
+        setTimeout(() => document.getElementById("nuevoClienteNombre").focus(), 300);
+    }
+
+    function guardarClienteRapido() {
+        const nombre = document.getElementById("nuevoClienteNombre").value.trim();
+        const telefono = document.getElementById("nuevoClienteTelefono").value.trim();
+
+        if (!nombre) {
+            document.getElementById("errorNombre").classList.remove("d-none");
+            return;
+        }
+
+        fetch("/Cliente/CrearRapido", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nombre, telefono })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                // Seleccionar el cliente recién creado
+                seleccionarCliente({ id: data.id, nombre: data.nombre });
+                document.getElementById("buscadorCliente").value = data.nombre;
+                bootstrap.Modal.getInstance(
+                    document.getElementById("modalNuevoCliente")).hide();
+            } else {
+                alert("Error al guardar el cliente: " + data.error);
+            }
+        })
+        .catch(() => alert("Error al conectar con el servidor."));
+    }
 </script>
 
 <script>

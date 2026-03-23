@@ -30,5 +30,11 @@ namespace MiniMercado.Models
         public string? UsuarioId { get; set; }
         public string? Usuario { get; set; }
 
+        public bool EsFiado { get; set; } = false;
+
+        public int? ClienteId { get; set; }
+
+        
+
     }
 }

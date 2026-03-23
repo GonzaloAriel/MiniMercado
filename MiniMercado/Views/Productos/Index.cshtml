@@ -1,4 +1,8 @@
-﻿@model List<MiniMercado.Models.ProductoListViewModel>
+﻿@model MiniMercado.Models.ProductoIndexViewModel
+
+@{
+    ViewData["Title"] = "Productos";
+}
 
 <h2>Listado de Productos</h2>
 
@@ -9,23 +13,38 @@
     </div>
 }
 
-
 <a asp-action="Create" class="btn btn-success mb-3">
     ➕ Nuevo Producto
 </a>
 
-
-<form method="get" class="mb-3">
-    <div class="input-group">
+<!-- Filtros -->
+<form method="get" class="mb-3 row g-2">
+    <div class="col-md-5">
         <input type="text"
                name="filtro"
                value="@Context.Request.Query["filtro"]"
                class="form-control"
                placeholder="Buscar por nombre o código de barra" />
-
-        <button class="btn btn-primary" type="submit">
-            🔍 Buscar
-        </button>
+    </div>
+    <div class="col-md-4">
+        <select name="rubroId" class="form-select">
+            <option value="">Todos los rubros</option>
+            @foreach (var r in Model.Rubros)
+            {
+                if (Model.FiltroRubro == r.Id)
+                {
+                    <option value="@r.Id" selected="selected">@r.Nombre</option>
+                }
+                else
+                {
+                    <option value="@r.Id">@r.Nombre</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" type="submit">🔍 Buscar</button>
+        <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
     </div>
 </form>
 
@@ -36,27 +55,38 @@
             <th>Código</th>
             <th>Precio</th>
             <th>Stock</th>
+            <th>Rubro</th>
             <th>Activo</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var producto in Model)
+        @if (Model.Productos != null && Model.Productos.Any())
+        {
+            foreach (var producto in Model.Productos)
+            {
+                <tr>
+                    <td>@producto.Nombre</td>
+                    <td>@producto.CodigoBarra</td>
+                    <td>@producto.Precio</td>
+                    <td>@producto.Stock</td>
+                    <td>@(producto.Rubro != null ? producto.Rubro.Nombre : "-")</td>
+                    <td>@(producto.Activo ? "Sí" : "No")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-warning btn-sm">
+                            Editar
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@producto.Id" class="btn btn-danger btn-sm">
+                            Eliminar
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+        else
         {
             <tr>
-                <td>@producto.Nombre</td>
-                <td>@producto.CodigoBarra</td>
-                <td>@producto.Precio</td>
-                <td>@producto.Stock</td>
-                <td>@(producto.Activo ? "Sí" : "No")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-warning btn-sm">
-                        Editar
-                    </a>
-                    <a asp-action="Delete" asp-route-id="@producto.Id" class="btn btn-danger btn-sm">
-                        Eliminar
-                    </a>
-                </td>
+                <td colspan="7">No se encontraron productos.</td>
             </tr>
         }
     </tbody>
@@ -65,5 +95,3 @@
 <a asp-action="Inactivos" class="btn btn-warning mb-3">
     ♻ Productos Inactivos
 </a>
-
-

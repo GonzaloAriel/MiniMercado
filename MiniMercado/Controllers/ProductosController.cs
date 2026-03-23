@@ -1,11 +1,10 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
 using MiniMercado.Services;
-
+using System.Linq;
 
 namespace MiniMercado.Controllers
 {
@@ -15,8 +14,8 @@ namespace MiniMercado.Controllers
         private readonly MiniMercadoContext _context;
         private readonly ITenantService _tenantService;
         private readonly AuditoriaService _auditoria;
-        public ProductosController(MiniMercadoContext context,
-                ITenantService tenantService, AuditoriaService auditoria)
+
+        public ProductosController(MiniMercadoContext context, ITenantService tenantService, AuditoriaService auditoria)
         {
             _context = context;
             _tenantService = tenantService;
@@ -49,39 +48,50 @@ namespace MiniMercado.Controllers
 
         // LISTAR
         [Authorize(Roles = "AdminGlobal, Admin")]
-        public IActionResult Index(string filtro)
+        public IActionResult Index(int? rubroId, string? filtro)
         {
-            var tenantId = _tenantService.GetTenantId();
+            var tenantId = _tenantService.GetTenantId().Value;
 
-            var productos = _context.Productos
-                .Where(p => p.Activo && (tenantId == null || p.TenantId == tenantId.Value))
-                .Select(p => new MiniMercado.Models.ProductoListViewModel
-                {
-                    Id = p.Id,
-                    Nombre = p.Nombre,
-                    CodigoBarra = p.CodigoBarra,
-                    Precio = p.Precio,
-                    Stock = p.Stock,
-                    Activo = p.Activo
-                });
+            var productosQuery = _context.Productos
+                .Where(p => p.Activo && p.TenantId == tenantId)
+                .Include(p => p.Rubro)
+                .AsQueryable();
+
+            if (rubroId.HasValue)
+                productosQuery = productosQuery.Where(p => p.RubroId == rubroId.Value);
 
             if (!string.IsNullOrEmpty(filtro))
             {
                 filtro = filtro.ToLower();
-
-                productos = productos.Where(p =>
+                productosQuery = productosQuery.Where(p =>
                     p.Nombre.ToLower().Contains(filtro) ||
-                    p.CodigoBarra.Contains(filtro)
-                );
+                    p.CodigoBarra.Contains(filtro));
             }
 
-            return View(productos.ToList());
+            var rubros = _context.Rubros
+                .Where(r => r.TenantId == tenantId)
+                .ToList();
+
+            var model = new ProductoIndexViewModel
+            {
+                Productos = productosQuery.ToList(),
+                Rubros = rubros,
+                FiltroRubro = rubroId
+            };
+
+            return View(model);
         }
 
         // CREATE GET
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Create()
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            ViewBag.Rubros = _context.Rubros
+                .Where(r => r.TenantId == tenantId)
+                .ToList();
+
             return View();
         }
 
@@ -123,6 +133,10 @@ namespace MiniMercado.Controllers
             if (producto == null)
                 return NotFound();
 
+            ViewBag.Rubros = _context.Rubros
+                .Where(r => r.TenantId == tenantId)
+                .ToList();
+
             return View(producto);
         }
 
@@ -134,9 +148,15 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             ModelState.Remove(nameof(producto.TenantId));
+            ModelState.Remove(nameof(producto.Rubro));
 
             if (!ModelState.IsValid)
+            {
+                ViewBag.Rubros = _context.Rubros
+                    .Where(r => r.TenantId == tenantId)
+                    .ToList();
                 return View(producto);
+            }
 
             var productoDb = _context.Productos
                 .FirstOrDefault(p => p.Id == producto.Id && p.TenantId == tenantId);
@@ -151,11 +171,11 @@ namespace MiniMercado.Controllers
             productoDb.Activo = producto.Activo;
             productoDb.PrecioEditable = producto.PrecioEditable;
             productoDb.EsPorPeso = producto.EsPorPeso;
+            productoDb.RubroId = producto.RubroId;
 
             _context.SaveChanges();
 
-            _auditoria.Registrar
-            (
+            _auditoria.Registrar(
                 "Modificar",
                 "Productos",
                 producto.Id,
@@ -206,6 +226,7 @@ namespace MiniMercado.Controllers
                 $"Se eliminó el producto: {NombreProducto}"
            );
 
+            TempData["Mensaje"] = "✅ Producto desactivado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 

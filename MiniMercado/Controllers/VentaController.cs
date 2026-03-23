@@ -37,8 +37,10 @@ namespace MiniMercado.Controllers
 
         public IActionResult Create()
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             ViewBag.Productos = _context.Productos
-                .Where(p => p.Activo && p.Stock > 0)
+                .Where(p => p.Activo && p.Stock > 0 && p.TenantId == tenantId)
                 .ToList();
 
             return View(new List<VentaDetalle> { new VentaDetalle() });
@@ -149,10 +151,15 @@ namespace MiniMercado.Controllers
                 TenantId = tenantId,
                 Detalles = detalles,
                 UsuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier),
-                Usuario = _http.HttpContext.User?.Identity?.Name
+                Usuario = _http.HttpContext.User?.Identity?.Name,
+                EsFiado = Request.Form["EsFiado"] == "true",
+                ClienteId = Request.Form["EsFiado"] == "true" &&
+                !string.IsNullOrEmpty(Request.Form["ClienteId"])
+                ? int.Parse(Request.Form["ClienteId"])
+                : (int?)null
             };
 
-            
+
             //Registramos la venta
             _context.Ventas.Add(venta);
 
@@ -198,14 +205,23 @@ namespace MiniMercado.Controllers
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
+            // Leer venta sin JOIN automático con Cliente
             var venta = _context.Ventas
-                .Where(v => v.Id == ventaId && v.TenantId == tenantId)
-                .Include(v => v.Detalles)
-                    .ThenInclude(d => d.Producto)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                             NombreVenta, UsuarioId, Usuario, EsFiado, 
+                             ClienteId, TenantId 
+                      FROM Ventas 
+                      WHERE Id = {0} AND TenantId = {1}", ventaId, tenantId)
                 .FirstOrDefault();
 
             if (venta == null)
                 return NotFound();
+
+            // Cargar detalles por separado
+            venta.Detalles = _context.VentaDetalles
+                .Where(d => d.VentaId == ventaId)
+                .Include(d => d.Producto)
+                .ToList();
 
             ViewBag.VentaId = ventaId;
             ViewBag.Mensaje = TempData["Mensaje"];
@@ -213,7 +229,7 @@ namespace MiniMercado.Controllers
 
             return View(venta);
         }
-        
+
         public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId, string? nombreVenta)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -271,6 +287,11 @@ namespace MiniMercado.Controllers
             if (venta == null || venta.Activa)
                 return NotFound();
 
+            var tenant = _context.Tenants
+                .FirstOrDefault(t => t.Id == tenantId);
+
+            ViewBag.Tenant = tenant;
+
             return View(venta);
         }
 
@@ -298,8 +319,8 @@ namespace MiniMercado.Controllers
             return View(ventas);
         }
 
-        
-        
+
+
 
     }
 

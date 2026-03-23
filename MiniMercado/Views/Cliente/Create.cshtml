@@ -1,0 +1,40 @@
+﻿@model MiniMercado.Models.Cliente
+
+@{
+    ViewData["Title"] = "Nuevo Cliente";
+}
+
+<h2>➕ Nuevo Cliente</h2>
+<hr />
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label">Nombre</label>
+        <input asp-for="Nombre" class="form-control" placeholder="Ej: Juan Pérez" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Telefono" class="form-label">Teléfono (opcional)</label>
+        <input asp-for="Telefono" class="form-control" placeholder="Ej: 011-4444-5555" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="LimiteCredito" class="form-label">Límite de crédito (0 = sin límite)</label>
+        <input asp-for="LimiteCredito" class="form-control" value="0" />
+        <span asp-validation-for="LimiteCredito" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">💾 Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">⬅ Volver</a>
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

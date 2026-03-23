@@ -1,0 +1,100 @@
+﻿@model MiniMercado.Models.Cliente
+
+@{
+    ViewData["Title"] = "Ficha del cliente";
+    var ventasFiadas = ViewBag.VentasFiadas as List<MiniMercado.Models.Venta>;
+    var pagos = ViewBag.Pagos as List<MiniMercado.Models.PagoFiado>;
+    decimal saldo = ViewBag.Saldo;
+    decimal totalDeuda = ViewBag.TotalDeuda;
+    decimal totalPagado = ViewBag.TotalPagado;
+}
+
+<h2>📙 Ficha de @Model.Nombre</h2>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body rounded">
+                <p><strong>Teléfono:</strong> @(Model.Telefono ?? "-")</p>
+                <p><strong>Límite:</strong> @(Model.LimiteCredito > 0 ? $"${Model.LimiteCredito:0.##}" : "Sin límite")</p>
+                <p><strong>Total fiado:</strong> $@totalDeuda.ToString("0.##")</p>
+                <p><strong>Total pagado:</strong> $@totalPagado.ToString("0.##")</p>
+                <hr />
+                <h4>
+                    Saldo pendiente:
+                    @if (saldo > 0)
+                    {
+                        <span class="badge bg-danger fs-5">$@saldo.ToString("0.##")</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success fs-5">Al día ✅</span>
+                    }
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-action="RegistrarPago" asp-route-id="@Model.Id" class="btn btn-success mb-3">
+    💵 Registrar pago
+</a>
+<a asp-action="Index" class="btn btn-secondary mb-3">⬅ Volver</a>
+
+<!-- Ventas fiadas -->
+<h4 class="mt-3">🛒 Ventas fiadas</h4>
+<table class="table table-bordered table-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (ventasFiadas != null && ventasFiadas.Any())
+        {
+            foreach (var v in ventasFiadas)
+            {
+                <tr>
+                    <td>@v.Id</td>
+                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>$@v.Total.ToString("0.##")</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="3">Sin ventas fiadas.</td></tr>
+        }
+    </tbody>
+</table>
+
+<!-- Pagos realizados -->
+<h4 class="mt-3">📙 Pagos realizados</h4>
+<table class="table table-bordered table-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Fecha</th>
+            <th>Monto</th>
+            <th>Observación</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (pagos != null && pagos.Any())
+        {
+            foreach (var p in pagos)
+            {
+                <tr>
+                    <td>@p.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>$@p.Monto.ToString("0.##")</td>
+                    <td>@(p.Observacion ?? "-")</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="3">Sin pagos registrados.</td></tr>
+        }
+    </tbody>
+</table>

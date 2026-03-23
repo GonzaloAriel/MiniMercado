@@ -1,0 +1,24 @@
+﻿@model MiniMercado.Models.Rubro
+
+<h2>Desactivar Producto</h2>
+
+<div class="alert alert-warning">
+    ⚠ Este rubro será desactivado (Se ocultara).
+</div>
+
+<dl class="row">
+    <dt class="col-sm-4">Nombre</dt>
+    <dd class="col-sm-8">@Model.Nombre</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input asp-for="Id" type="hidden" />
+
+    <button type="submit" class="btn btn-danger">
+        Desactivar
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>

@@ -1,12 +1,11 @@
+using System.Collections.Generic;
+
 namespace MiniMercado.Models
 {
-    public class ProductoListViewModel
+    public class ProductoIndexViewModel
     {
-        public int Id { get; set; }
-        public string Nombre { get; set; }
-        public string CodigoBarra { get; set; }
-        public decimal Precio { get; set; }
-        public decimal Stock { get; set; }
-        public bool Activo { get; set; }
+        public List<Producto> Productos { get; set; }
+        public List<Rubro> Rubros { get; set; }
+        public int? FiltroRubro { get; set; }
     }
-}
+}       

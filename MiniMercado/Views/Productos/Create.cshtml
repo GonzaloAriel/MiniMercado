@@ -5,13 +5,9 @@
 }
 
 <h2>Nuevo Producto</h2>
-
 <hr />
 
 <div asp-validation-summary="All" class="text-danger"></div>
-
-
-<hr />
 
 <form asp-action="Create" method="post">
 
@@ -39,6 +35,17 @@
         <span asp-validation-for="Stock" class="text-danger"></span>
     </div>
 
+    <div class="mb-3">
+        <label class="form-label">Rubro</label>
+        <select name="RubroId" class="form-select">
+            <option value="">-- Sin rubro --</option>
+            @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
+            {
+                <option value="@r.Id">@r.Nombre</option>
+            }
+        </select>
+    </div>
+
     <div class="form-check mb-2">
         <input asp-for="EsPorPeso" class="form-check-input" />
         <label asp-for="EsPorPeso" class="form-check-label">
@@ -46,13 +53,12 @@
         </label>
     </div>
 
-    <div class="form-check mb-3">
+    <div class="form-check mb-2">
         <input asp-for="PrecioEditable" class="form-check-input" />
         <label asp-for="PrecioEditable" class="form-check-label">
             Precio editable en venta
         </label>
     </div>
-
 
     <div class="form-check mb-3">
         <input asp-for="Activo" class="form-check-input" />

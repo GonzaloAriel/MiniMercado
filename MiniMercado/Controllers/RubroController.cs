@@ -28,9 +28,9 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             var rubros = _context.Rubros
+                .Where(r => r.Activo && r.TenantId == tenantId)
                 .Include(r => r.Productos)
-                .AsEnumerable()
-                .Where(r => r.Productos == null || r.Productos.All(p => p.TenantId == tenantId));
+                .ToList();
 
             return View(rubros);
         }
@@ -50,6 +50,13 @@ namespace MiniMercado.Controllers
             if (!ModelState.IsValid)
                 return View(rubro);
 
+            var tenantId = _tenantService.GetTenantId();
+            if (!tenantId.HasValue)
+                return Forbid();
+
+            rubro.TenantId = tenantId.Value;
+            rubro.Activo = true;
+
             _context.Rubros.Add(rubro);
             _context.SaveChanges();
 
@@ -62,9 +69,14 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Edit(int id)
         {
-            var rubro = _context.Rubros.Find(id);
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var rubro = _context.Rubros
+                .FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
+
             if (rubro == null)
                 return NotFound();
+
             return View(rubro);
         }
 
@@ -73,10 +85,14 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Edit(Rubro rubro)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             if (!ModelState.IsValid)
                 return View(rubro);
 
-            var rubroDb = _context.Rubros.Find(rubro.Id);
+            var rubroDb = _context.Rubros
+                .FirstOrDefault(r => r.Id == rubro.Id && r.TenantId == tenantId);
+
             if (rubroDb == null)
                 return NotFound();
 
@@ -92,9 +108,10 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Delete(int id)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var rubro = _context.Rubros
-                .Include(r => r.Productos)
-                .FirstOrDefault(r => r.Id == id);
+                .FirstOrDefault(r => r.Id == id && r.Activo && r.TenantId == tenantId);
 
             if (rubro == null)
                 return NotFound();
@@ -107,28 +124,64 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult DeleteConfirmed(int id)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+
             var rubro = _context.Rubros
-                .Include(r => r.Productos)
-                .FirstOrDefault(r => r.Id == id);
+                .FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
 
             if (rubro == null)
                 return NotFound();
 
-            // Set RubroId to null for related products
-            if (rubro.Productos != null)
-            {
-                foreach (var p in rubro.Productos)
-                {
-                    p.RubroId = null;
-                }
-            }
-
-            _context.Rubros.Remove(rubro);
+            rubro.Activo = false;
             _context.SaveChanges();
 
-            _auditoria.Registrar("Eliminar", "Rubros", id, "Se eliminó un rubro");
+            _auditoria.Registrar(
+                "Eliminar",
+                "Rubros",
+                rubro.Id,
+                $"Se eliminó el rubro: {rubro.Nombre}"
+            );
+
+            TempData["Mensaje"] = "✅ Rubro desactivado correctamente.";
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // INACTIVOS
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult Inactivos(string filtro)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var rubros = _context.Rubros
+                .Where(r => !r.Activo && r.TenantId == tenantId)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(filtro))
+            {
+                filtro = filtro.ToLower();
+                rubros = rubros.Where(r => r.Nombre.ToLower().Contains(filtro));
+            }
+
+            return View(rubros.ToList());
+        }
+
+        // REACTIVAR
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult Reactivar(int id)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var rubro = _context.Rubros
+                .FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
+
+            if (rubro == null)
+                return NotFound();
+
+            rubro.Activo = true;
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Inactivos));
         }
     }
 }

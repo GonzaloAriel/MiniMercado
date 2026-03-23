@@ -1,0 +1,71 @@
+﻿@model List<MiniMercado.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+    var deudas = ViewBag.Deudas as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var pagos = ViewBag.Pagos as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+}
+
+<h2>👥 Clientes</h2>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+<a asp-action="Create" class="btn btn-success mb-3">➕ Nuevo Cliente</a>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text"
+               name="filtro"
+               value="@Context.Request.Query["filtro"]"
+               class="form-control"
+               placeholder="Buscar por nombre o teléfono" />
+        <button class="btn btn-primary" type="submit">🔍 Buscar</button>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Límite crédito</th>
+            <th>Deuda</th>
+            <th>Saldo pendiente</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            var deuda = deudas.TryGetValue(c.Id, out var d) ? d : 0;
+            var pagado = pagos.TryGetValue(c.Id, out var p) ? p : 0;
+            var saldo = deuda - pagado;
+
+            <tr class="@(saldo > 0 ? "table-warning" : "")">
+                <td>@c.Nombre</td>
+                <td>@(c.Telefono ?? "-")</td>
+                <td>@(c.LimiteCredito > 0 ? $"${c.LimiteCredito:0.##}" : "Sin límite")</td>
+                <td>$@deuda.ToString("0.##")</td>
+                <td>
+                    @if (saldo > 0)
+                    {
+                        <span class="badge bg-danger fs-6">$@saldo.ToString("0.##")</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success fs-6">Al día</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Detalle" asp-route-id="@c.Id" class="btn btn-info btn-sm">📋 Ficha</a>
+                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-warning btn-sm">✏️ Editar</a>
+                    <a asp-action="Desactivar" asp-route-id="@c.Id" class="btn btn-danger btn-sm"
+                       onclick="return confirm('¿Desactivar este cliente?')">❌</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

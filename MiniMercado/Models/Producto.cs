@@ -39,7 +39,7 @@ namespace MiniMercado.Models
         public List<MovimientoStock> Movimientos { get; set; }
 
         [ValidateNever]
-        public int? TenantId { get; set; }
+        public int TenantId { get; set; }
 
         [ValidateNever]
         public Tenant Tenant { get; set; }

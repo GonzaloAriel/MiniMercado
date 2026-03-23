@@ -16,10 +16,11 @@ namespace MiniMercado.Data
         public DbSet<Venta> Ventas { get; set; }
         public DbSet<VentaDetalle> VentaDetalles { get; set; }
         public DbSet<MovimientoStock> MovimientosStock { get; set; }
-
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
         public DbSet<Rubro> Rubros { get; set; }
+        public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<PagoFiado> PagosFiado { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,75 +63,33 @@ namespace MiniMercado.Data
                 .HasForeignKey(r => r.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Producto>()
-                        .HasQueryFilter(p =>
-                            IsGlobalAdmin() || p.TenantId == GetCurrentTenantId()
-                        );
-
-            modelBuilder.Entity<Rubro>()
-                        .HasQueryFilter(r =>
-                            IsGlobalAdmin() || r.TenantId == GetCurrentTenantId()
-                        );
-
-
             modelBuilder.Entity<Venta>()
-                        .HasQueryFilter(v =>
-                            IsGlobalAdmin() || v.TenantId == GetCurrentTenantId()
-                         );
+                .HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(v => v.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            // Cliente - Venta : Uno a Muchos
 
+            modelBuilder.Entity<Cliente>()
+                .HasOne(c => c.Tenant)
+                .WithMany()
+                .HasForeignKey(c => c.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<VentaDetalle>()
-                        .HasQueryFilter(vd =>
-                            IsGlobalAdmin() || vd.TenantId == GetCurrentTenantId()
-                         );
+            modelBuilder.Entity<PagoFiado>()
+                .HasOne(p => p.Cliente)
+                .WithMany(c => c.Pagos)
+                .HasForeignKey(p => p.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<PagoFiado>()
+                .HasOne(p => p.Tenant)
+                .WithMany()
+                .HasForeignKey(p => p.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-
-            modelBuilder.Entity<MovimientoStock>()
-                        .HasQueryFilter(ms =>
-                            IsGlobalAdmin() || ms.TenantId == GetCurrentTenantId()
-                         );
-
-            modelBuilder.Entity<Venta>()
-                        .HasOne<ApplicationUser>()
-                        .WithMany()
-                        .HasForeignKey(v => v.UsuarioId)
-                        .OnDelete(DeleteBehavior.Restrict
-                        );
-
+           
         }
-
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public MiniMercadoContext(
-            DbContextOptions<MiniMercadoContext> options,
-            IHttpContextAccessor httpContextAccessor)
-            : base(options)
-        {
-            _httpContextAccessor = httpContextAccessor;
-        }
-
-        private int? GetCurrentTenantId()
-        {
-            var tenantIdClaim = _httpContextAccessor
-                .HttpContext?
-                .User?
-                .FindFirst("TenantId");
-
-            if (tenantIdClaim == null)
-                return null;
-
-            return int.Parse(tenantIdClaim.Value);
-        }
-
-        private bool IsGlobalAdmin()
-        {
-            return _httpContextAccessor
-                .HttpContext?
-                .User?
-                .IsInRole("AdminGlobal") ?? false;
-        }
-
     }
 }

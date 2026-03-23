@@ -1,0 +1,43 @@
+﻿@model MiniMercado.Models.PagoFiado
+
+@{
+    ViewData["Title"] = "Registrar Pago";
+    var cliente = ViewBag.Cliente as MiniMercado.Models.Cliente;
+    decimal saldo = ViewBag.Saldo;
+}
+
+<h2>💵 Registrar pago</h2>
+<hr />
+
+<div class="alert alert-info">
+    <strong>Cliente:</strong> @cliente?.Nombre <br />
+    <strong>Saldo pendiente:</strong>
+    <span class="text-danger fw-bold">$@saldo.ToString("0.##")</span>
+</div>
+
+<form asp-action="RegistrarPago" method="post">
+    <input type="hidden" name="ClienteId" value="@Model.ClienteId" />
+
+    <div class="mb-3">
+        <label class="form-label">Monto recibido</label>
+        <input asp-for="Monto" class="form-control form-control-lg"
+               placeholder="Ej: 500" step="0.01" min="0.01" />
+        <span asp-validation-for="Monto" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Observacion" class="form-label">Observación (opcional)</label>
+        <input asp-for="Observacion" class="form-control"
+               placeholder="Ej: Pago parcial, pagó con transferencia..." />
+    </div>
+
+    <button type="submit" class="btn btn-success btn-lg">💾 Guardar pago</button>
+    <a asp-action="Detalle" asp-route-id="@Model.ClienteId" class="btn btn-secondary btn-lg">⬅ Volver</a>
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

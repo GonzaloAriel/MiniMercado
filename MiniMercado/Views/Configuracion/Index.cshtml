@@ -1,0 +1,57 @@
+﻿@model MiniMercado.Models.Tenant
+
+@{
+    ViewData["Title"] = "Configuración del negocio";
+}
+
+<h2>⚙️ Configuración del negocio</h2>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+<form asp-action="Index" method="post" class="mt-3">
+
+    <div class="mb-3">
+        <label asp-for="NombreComercio" class="form-label">Nombre del comercio</label>
+        <input asp-for="NombreComercio" class="form-control" />
+        <span asp-validation-for="NombreComercio" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Direccion" class="form-label">Dirección</label>
+        <input asp-for="Direccion" class="form-control" placeholder="Ej: Av. San Martín 1234" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Telefono" class="form-label">Teléfono</label>
+        <input asp-for="Telefono" class="form-control" placeholder="Ej: 011-4444-5555" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" placeholder="Ej: contacto@minegocio.com" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CUIT" class="form-label">CUIT</label>
+        <input asp-for="CUIT" class="form-control" placeholder="Ej: 20-12345678-9" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MensajeTicket" class="form-label">Mensaje en el ticket</label>
+        <input asp-for="MensajeTicket" class="form-control" placeholder="Ej: ¡Gracias por su compra!" />
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        💾 Guardar configuración
+    </button>
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

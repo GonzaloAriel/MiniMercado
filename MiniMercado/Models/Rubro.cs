@@ -18,5 +18,6 @@ namespace MiniMercado.Models
         [ValidateNever] public int TenantId { get; set; }
 
         [ValidateNever] public Tenant Tenant { get; set; }
+        public bool Activo { get; set; } = true;
     }
 }
