@@ -27,6 +27,14 @@
 <form asp-action="ConfirmarAnular" method="post">
     <input type="hidden" asp-for="Id" />
 
+    <div class="mb-3">
+        <label class="form-label fw-bold">Motivo de anulación (opcional)</label>
+        <input type="text"
+               name="motivoAnulacion"
+               class="form-control"
+               placeholder="Ej: Error en el precio, devolución del cliente..." />
+    </div>
+
     <button type="submit" class="btn btn-danger">
         ❌ Confirmar Anulación
     </button>

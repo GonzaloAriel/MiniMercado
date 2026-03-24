@@ -25,7 +25,7 @@ public class VentaAdminController : Controller
     // LISTADO DE VENTAS
     // =====================================================
     [Authorize(Roles = "Admin,Caja")]
-    public IActionResult Index()
+    public IActionResult Index(DateTime? desde, DateTime? hasta, string? estado)
     {
         var tenantId = _tenantService.GetTenantId().Value;
 
@@ -33,9 +33,27 @@ public class VentaAdminController : Controller
             .Where(v => v.TenantId == tenantId)
             .Include(v => v.Detalles)
             .OrderByDescending(v => v.Fecha)
-            .ToList();
+            .AsQueryable();
 
-        return View(ventas);
+        if (desde.HasValue)
+            ventas = ventas.Where(v => v.Fecha >= desde.Value);
+
+        if (hasta.HasValue)
+            ventas = ventas.Where(v => v.Fecha <= hasta.Value.AddDays(1));
+
+        if (estado == "activa")
+            ventas = ventas.Where(v => !v.Activa); // Activas
+
+        if (estado == "anulada")
+            ventas = ventas.Where(v => v.Activa); // Anuladas
+
+        // Asignar el valor a ViewBag.Estado para usar en la vista
+        ViewBag.Estado = estado;
+
+        ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
+        ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
+
+        return View(ventas.ToList());
     }
 
     // =====================================================
@@ -87,7 +105,7 @@ public class VentaAdminController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin,Caja")]
-    public IActionResult ConfirmarAnular(int id)
+    public IActionResult ConfirmarAnular(int id, string? motivoAnulacion)
     {
         var tenantId = _tenantService.GetTenantId().Value;
 
@@ -106,14 +124,12 @@ public class VentaAdminController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        // 🔁 Restaurar stock
+        // Restaurar stock
         foreach (var detalle in venta.Detalles)
         {
             var producto = detalle.Producto;
-
             producto.Stock += detalle.Cantidad;
 
-            // Registrar movimiento de stock
             _context.MovimientosStock.Add(new MovimientoStock
             {
                 ProductoId = producto.Id,
@@ -124,12 +140,13 @@ public class VentaAdminController : Controller
             });
         }
 
-        // Marcar venta como anulada
+        // Marcar venta como anulada y guardar motivo
         venta.Activa = true;
+        venta.MotivoAnulacion = string.IsNullOrWhiteSpace(motivoAnulacion)
+            ? null
+            : motivoAnulacion;
 
         _context.SaveChanges();
-
-
 
         TempData["Mensaje"] = $"✅ Venta #{venta.Id} anulada correctamente.";
 

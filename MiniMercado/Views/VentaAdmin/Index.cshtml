@@ -13,6 +13,29 @@
     </div>
 }
 
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label">Desde</label>
+        <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-select">
+            <option value="">Todos</option>
+            <option value="activa" selected="@((ViewBag.Estado == "activa") ? "selected" : "")">Activas</option>
+            <option value="anulada" selected="@((ViewBag.Estado == "anulada") ? "selected" : "")">Anulada</option>
+        </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+        <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
+    </div>
+</form>
+
 <table class="table table-bordered table-hover">
     <thead class="table-dark">
         <tr>

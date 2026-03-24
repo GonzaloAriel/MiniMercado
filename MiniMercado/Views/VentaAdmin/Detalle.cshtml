@@ -9,6 +9,12 @@
 <div class="mb-3">
     <strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm") <br />
     <strong>Estado:</strong>
+    @if (Model.Activa && !string.IsNullOrEmpty(Model.MotivoAnulacion))
+    {
+        <strong>Motivo:</strong>
+        <span class="text-danger">@Model.MotivoAnulacion</span>
+        <br />
+    }
     @if (Model.Activa)
     {
         <span class="badge bg-danger">Anulada</span>

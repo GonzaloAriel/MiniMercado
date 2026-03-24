@@ -16,7 +16,7 @@
                        placeholder="🔎 Buscar producto o código de barras..." />
             </div>
 
-            <table class="table table-bordered table-hover mb-0" id="tablaVenta">
+            <table class="table table-bordered table-hover mb-0 mt-2" id="tablaVenta">
                 <thead class="table-dark text-center">
                     <tr>
                         <th style="width:35%">Producto</th>
@@ -101,13 +101,13 @@
     </div>
 
     <!-- SECCIÓN FIADO -->
-    <div class="mt-4 border-top pt-3">
+    <div class="mt-lg-5 border-top pt-3">
 
         <input type="hidden" id="esFiadoInput" name="EsFiado" value="false" />
 
         <button type="button"
                 id="btnFiado"
-                class="btn btn-secondary btn-lg"
+                class="btn btn-secondary btn-lg text-black"
                 onclick="toggleFiado()">
             📙 Fiado
         </button>
@@ -116,11 +116,11 @@
             <div class="input-group mb-2">
                 <input type="text"
                        id="buscadorCliente"
-                       class="form-control form-control-lg"
+                       class="form-control"
                        placeholder="🔎 Buscar cliente por nombre..."
                        autocomplete="off" />
                 <button type="button"
-                        class="btn btn-outline-success btn-lg"
+                        class="btn btn-outline-success "
                         onclick="abrirModalCliente()">
                     ➕ Nuevo
                 </button>
@@ -138,7 +138,7 @@
 
     </div>
 
-    <div class="mt-4">
+    <div class="mt-2">
         <button type="submit"
                 class="btn btn-success btn-lg w-100 mt-4">
             ✅ Confirmar Venta
@@ -167,7 +167,7 @@
             seccion.classList.add("d-none");
             btn.classList.remove("btn-warning");
             btn.classList.add("btn-outline-secondary");
-            btn.textContent = "📋 Fiado";
+            btn.textContent = "📙 Fiado";
             input.value = "false";
             document.getElementById("clienteId").value = "";
             document.getElementById("clienteSeleccionado").classList.add("d-none");
@@ -535,9 +535,9 @@
 
 <!-- MODAL CLIENTE RÁPIDO -->
 <div class="modal fade text-black rounded" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success">
+    <div class="modal-dialog rounded">
+        <div class="modal-content rounded">
+            <div class="modal-header bg-success rounded">
                 <h5 class="modal-title fw-bold">➕ Nuevo Cliente</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>

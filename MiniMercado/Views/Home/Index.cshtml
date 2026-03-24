@@ -54,36 +54,49 @@
 {
     <div class="text-center mt-4 mb-5">
         <a class="btn btn-success w-100 action-btn fs-4"
-           asp-area="Identity"
-           asp-page="/Account/Login">
+               asp-area="Identity"
+               asp-page="/Account/Login">
             🔐 Ingresar
         </a>
     </div>
 }
 
 <!-- 🚀 ACCIONES PRINCIPALES -->
+
+@if (User.IsInRole("Caja") || User.IsInRole("Admin"))
+{
+    <div class="col-md-12">
+        <a asp-controller="Venta" asp-action="Create"
+               class="btn btn-success w-100 action-btn fs-4">
+            🛍️ Nueva Venta!!
+        </a>
+    </div>
+}
+
+<hr />
+
 <div class="row g-4 mb-5">
 
     @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
     {
         <div class="col-md-4">
-            <a asp-controller="Venta" asp-action="Create"
-               class="btn btn-success w-100 action-btn">
-                🛒 Nueva Venta
-            </a>
-        </div>
-
-        <div class="col-md-4">
             <a asp-controller="Venta" asp-action="Index"
-               class="btn btn-primary w-100 action-btn">
+                   class="btn btn-primary w-100 action-btn">
                 📄 Historial de Ventas
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="Venta" asp-action="Caja"
-               class="btn btn-danger w-100 action-btn">
+                   class="btn btn-danger w-100 action-btn">
                 📊 Caja Diaria
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="VentaAdmin" asp-action="Index"
+                   class="btn btn-warning w-100 action-btn">
+                ✏ Administracion de Venta
             </a>
         </div>
     }
@@ -92,21 +105,21 @@
     {
         <div class="col-md-4">
             <a asp-controller="Productos" asp-action="Index"
-               class="btn btn-info w-100 action-btn">
+                   class="btn btn-dark w-100 action-btn">
                 📦 Gestión de Productos
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="MovimientoStock" asp-action="Ingreso"
-               class="btn btn-warning w-100 action-btn">
+                   class="btn btn-info w-100 action-btn">
                 ➕ Ingreso de Stock
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="Rubro" asp-action="Index"
-               class="btn btn-info w-100 action-btn">
+                   class="btn btn-secondary w-100 action-btn">
                 🏷️ Gestión de Rubros
             </a>
         </div>
@@ -118,29 +131,21 @@
 
         <div class="col-md-4">
             <a asp-controller="Usuarios" asp-action="Index"
-               class="btn btn-dark w-100 action-btn">
+                   class="btn btn-dark w-100 action-btn">
                 👤 Usuarios
-            </a>
-        </div>
-
-
-        <div class="col-md-4">
-            <a asp-controller="VentaAdmin" asp-action="Index"
-               class="btn btn-dark w-100 action-btn">
-                ✏ Administracion de Venta
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="AdminDashboard" asp-action="Index"
-               class="btn btn-dark w-100 action-btn">
+                   class="btn btn-dark w-100 action-btn">
                 📈 Metricas y economia
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="Dashboard" asp-action="AuditoriaCajas"
-               class="btn btn-dark w-100 action-btn">
+                   class="btn btn-dark w-100 action-btn">
                 📈 Auditorias
             </a>
         </div>
@@ -165,14 +170,14 @@
     {
         <div class="col-md-6">
             <a asp-controller="Tenants" asp-action="Index"
-               class="btn btn-danger w-100 action-btn">
+                   class="btn btn-danger w-100 action-btn">
                 🏢 Administrar Tenants
             </a>
         </div>
 
         <div class="col-md-6">
             <a asp-controller="AdminGlobalUsuarios" asp-action="Tenants"
-               class="btn btn-dark w-100 action-btn">
+                   class="btn btn-dark w-100 action-btn">
                 🔐 Gestión Global de Usuarios
             </a>
         </div>
