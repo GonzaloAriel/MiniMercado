@@ -15,10 +15,12 @@ public class VentaAdminController : Controller
 
     public VentaAdminController(
             MiniMercadoContext context,
-            ITenantService tenantService)
+            ITenantService tenantService,
+            AuditoriaService auditoria)
     {
         _context = context;
         _tenantService = tenantService;
+        _auditoria = auditoria;
     }
 
     // =====================================================
@@ -147,6 +149,14 @@ public class VentaAdminController : Controller
             : motivoAnulacion;
 
         _context.SaveChanges();
+
+        //Auditoria
+        _auditoria.Registrar(
+                    "Anular",
+                    "Ventas",
+                    venta.Id,
+                    "Se anulo una venta"
+         );
 
         TempData["Mensaje"] = $"✅ Venta #{venta.Id} anulada correctamente.";
 
