@@ -21,6 +21,7 @@ public class VentaAdminController : Controller
         _context = context;
         _tenantService = tenantService;
         _auditoria = auditoria;
+
     }
 
     // ANULAR AJAX
@@ -69,6 +70,7 @@ public class VentaAdminController : Controller
         _auditoria.Registrar("Anular", "Ventas", venta.Id, "Anulación AJAX");
 
         return Json(new { ok = true });
+
     }
 
     // =====================================================
