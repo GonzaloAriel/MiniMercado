@@ -174,9 +174,9 @@ public class VentaAdminController : Controller
         return View(venta);
     }
 
-    // ====================================================
+    // =====================================================
     // CONFIRMAR ANULACIÓN (POST)
-    // ====================================================
+    // =====================================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin,Caja")]
