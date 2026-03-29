@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace MiniMercado.Models
 {
-    public class Rubro
+    public class Rubro : ITenantEntity
     {
         public int Id { get; set; }
 

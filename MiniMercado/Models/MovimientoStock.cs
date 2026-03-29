@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
-    public class MovimientoStock
+    public class MovimientoStock : ITenantEntity
     {
 
         public int Id { get; set; }

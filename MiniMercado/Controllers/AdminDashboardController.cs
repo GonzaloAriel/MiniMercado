@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
+using MiniMercado.Services;
 
 namespace MiniMercado.Controllers
 {
@@ -9,21 +10,38 @@ namespace MiniMercado.Controllers
     public class AdminDashboardController : Controller
     {
         private readonly MiniMercadoContext _context;
+        private readonly ITenantService _tenantService;
 
-        public AdminDashboardController(MiniMercadoContext context)
+        public AdminDashboardController(MiniMercadoContext context, ITenantService tenantService)
         {
             _context = context;
+            _tenantService = tenantService;
         }
 
         public IActionResult Index(int? anio)
         {
+            var tenantId = _tenantService.GetTenantId().Value;
             int year = anio ?? DateTime.Today.Year;
 
-            var ventasDelAnio = _context.Ventas
+            var ventasRaw = _context.Ventas
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE TenantId = {0}", tenantId);
+
+            var ventasDelAnio = ventasRaw
                 .Where(v => !v.Activa && v.Fecha.Year == year)
-                .Include(v => v.Detalles)
-                .ThenInclude(d => d.Producto)
                 .ToList();
+
+            // Cargar detalles manualmente
+            foreach (var v in ventasDelAnio)
+            {
+                v.Detalles = _context.VentaDetalles
+                    .Where(d => d.VentaId == v.Id && d.TenantId == tenantId)
+                    .Include(d => d.Producto)
+                    .ToList();
+            }
 
             // Totales mensuales
             var ventasPorMes = ventasDelAnio
@@ -51,7 +69,7 @@ namespace MiniMercado.Controllers
                 .ToList();
 
             // Ventas anuladas
-            var anuladas = _context.Ventas
+            var anuladas = ventasRaw
                 .Count(v => v.Activa && v.Fecha.Year == year);
 
             // Ticket promedio
@@ -61,7 +79,7 @@ namespace MiniMercado.Controllers
 
             // Bajo stock
             var bajoStock = _context.Productos
-                .Where(p => p.Activo && p.Stock <= 5)
+                .Where(p => p.Activo && p.TenantId == tenantId && p.Stock <= 5)
                 .OrderBy(p => p.Stock)
                 .Take(5)
                 .ToList();

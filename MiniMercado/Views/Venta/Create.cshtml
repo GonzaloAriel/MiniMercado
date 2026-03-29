@@ -4,6 +4,17 @@
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
+<div class="card mb-4 shadow-sm">
+    <div class="card-body bg-black">
+        <h5 class="card-title text-primary"><i class="bi bi-upc-scan"></i> Escanear / Buscar Producto</h5>
+        <div class="input-group input-group-lg">
+            <input type="text" id="codigoBarraRapido" class="form-control" placeholder="Escriba el código de barras y presione ENTER..." autocomplete="off">
+            <button class="btn btn-primary" type="button" onclick="buscarPorCodigo()">🔍 Buscar</button>
+        </div>
+        <div id="statusBusqueda" class="mt-2 small"></div>
+    </div>
+</div>
+
 <form method="post">
 
     <div class="card mb-3">
@@ -107,9 +118,9 @@
 
         <button type="button"
                 id="btnFiado"
-                class="btn btn-secondary btn-lg text-black"
+                class="btn btn-outline-secondary btn-lg"
                 onclick="toggleFiado()">
-            📙 Fiado
+            📋 Fiado
         </button>
 
         <div id="seccionFiado" class="d-none mt-3">
@@ -148,6 +159,55 @@
 </form>
 
 <script>
+    function buscarPorCodigo() {
+        const codigo = document.getElementById("codigoBarraRapido").value.trim();
+        const status = document.getElementById("statusBusqueda");
+        
+        if (!codigo) return;
+
+        status.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> Buscando...</span>';
+
+        fetch(`/Productos/BuscarPorCodigo?codigo=${codigo}`)
+            .then(r => {
+                if (!r.ok) throw new Error("No encontrado");
+                return r.json();
+            })
+            .then(prod => {
+                status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> Encontrado: ${prod.nombre}</span>`;
+                
+                // Si el producto fue autocreado, debemos agregarlo a nuestra lista local JS de productos
+                if (!productos.find(p => p.id === prod.id)) {
+                    productos.push(prod);
+                    
+                    // Actualizar todos los selectores de productos en la tabla
+                    document.querySelectorAll(".producto-select").forEach(select => {
+                        const opt = new Option(prod.nombre, prod.id);
+                        opt.dataset.precio = prod.precio;
+                        opt.dataset.peso = prod.esPorPeso;
+                        opt.dataset.editable = prod.precioEditable;
+                        select.add(opt);
+                    });
+                }
+
+                completarFila(prod);
+                document.getElementById("codigoBarraRapido").value = "";
+                setTimeout(() => status.innerHTML = "", 3000);
+            })
+            .catch(() => {
+                status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Producto no encontrado en catálogo global.</span>';
+            });
+    }
+
+    // Permitir presionar ENTER en el buscador rápido
+    document.getElementById("codigoBarraRapido").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            buscarPorCodigo();
+        }
+    });
+</script>
+
+<script>
     let fiadoActivo = false;
 
     function toggleFiado() {
@@ -160,14 +220,14 @@
             seccion.classList.remove("d-none");
             btn.classList.remove("btn-outline-secondary");
             btn.classList.add("btn-warning");
-            btn.textContent = "📙 Fiado ✅ (clic para cancelar)";
+            btn.innerHTML = "📋 Fiado ✅ <small>(clic para cancelar)</small>";
             input.value = "true";
             document.getElementById("buscadorCliente").focus();
         } else {
             seccion.classList.add("d-none");
             btn.classList.remove("btn-warning");
             btn.classList.add("btn-outline-secondary");
-            btn.textContent = "📙 Fiado";
+            btn.innerHTML = "📋 Fiado";
             input.value = "false";
             document.getElementById("clienteId").value = "";
             document.getElementById("clienteSeleccionado").classList.add("d-none");
@@ -400,6 +460,13 @@
 
         select.dispatchEvent(new Event("change", { bubbles: true }));
 
+        // 5️⃣ Advertencia de stock
+        if (prod.stock <= 0) {
+            const status = document.getElementById("statusBusqueda");
+            status.innerHTML = `<span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle"></i> "${prod.nombre}" no tiene stock. Se venderá igualmente.</span>`;
+            setTimeout(() => status.innerHTML = "", 5000);
+        }
+
         document.getElementById("buscadorProducto").focus();
     }
 </script>
@@ -489,15 +556,23 @@
 <script>
 
     document.querySelector("form")
-    .addEventListener("submit",function(){
+        .addEventListener("submit", function (e) {
 
-    document.querySelectorAll(".cantidad,.precio").forEach(i=>{
+            if (fiadoActivo) {
+                const clienteId = document.getElementById("clienteId").value;
+                if (!clienteId) {
+                    e.preventDefault();
+                    alert("❌ Debe seleccionar un cliente para realizar una venta al fiado.");
+                    document.getElementById("buscadorCliente").focus();
+                    return;
+                }
+            }
 
-    i.value=i.value.replace(",", ".");
+            document.querySelectorAll(".cantidad,.precio").forEach(i => {
+                i.value = i.value.replace(",", ".");
+            });
 
-    });
-
-    });
+        });
 
 </script>
 

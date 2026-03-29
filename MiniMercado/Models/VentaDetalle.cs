@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
-    public class VentaDetalle
+    public class VentaDetalle : ITenantEntity
     {
         public int Id { get; set; }
 

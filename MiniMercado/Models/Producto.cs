@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
-    public class Producto
+    public class Producto : ITenantEntity
     {
         public int Id { get; set; }
 
@@ -45,11 +45,24 @@ namespace MiniMercado.Models
         public Tenant Tenant { get; set; }
 
         // Relación con Rubro (categoria)
-        [ValidateNever]
+        [Required(ErrorMessage = "Debe seleccionar un rubro o crear uno nuevo")]
         public int? RubroId { get; set; }
 
         [ValidateNever]
         public Rubro Rubro { get; set; }
+
+        // Vínculo opcional con el catálogo global (ProductoBase)
+        public int? ProductoBaseId { get; set; }
+
+        [ValidateNever]
+        public ProductoBase? ProductoBase { get; set; }
+
+        // Propiedades calculadas para UI
+        [NotMapped]
+        public string NombreDisplay => ProductoBase?.Nombre ?? Nombre;
+
+        [NotMapped]
+        public string CodigoDisplay => ProductoBase?.CodigoBarras ?? CodigoBarra;
 
     }
 }

@@ -1,0 +1,136 @@
+@model IEnumerable<MiniMercado.Models.ViewModels.TenantAdminViewModel>
+
+@{
+    ViewData["Title"] = "Gestión de Tenants - Administración Global";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Tenants (Comercios)</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Filtros de búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Tenants" method="get" class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" value="@ViewBag.CurrentSearch" class="form-control" placeholder="Buscar por nombre de comercio..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="ocultarDesactivados" id="ocultarDesactivados" value="true" @(ViewBag.OcultarDesactivados == true ? "checked" : "") onchange="this.form.submit()" />
+                        <label class="form-check-label" for="ocultarDesactivados">Ocultar desactivados</label>
+                    </div>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre del Comercio</th>
+                            <th>Último Pago</th>
+                            <th>Total Pagado</th>
+                            <th>Vencimiento</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tenant in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@tenant.NombreComercio</td>
+                                <td>@(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "Sin pagos")</td>
+                                <td>@tenant.TotalPagado.ToString("C")</td>
+                                <td>@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                <td>
+                                    @if (!tenant.Activo)
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-eye-slash-fill"></i> Oculto</span>
+                                    }
+                                    
+                                    @if (tenant.Bloqueado)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> Bloqueado</span>
+                                    }
+                                    else if (tenant.EstaVencido)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-octagon-fill"></i> Vencido</span>
+                                    }
+                                    else if (tenant.PorVencer)
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-fill"></i> Por vencer</span>
+                                    }
+                                    else if (tenant.Activo)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="RegistrarPago" asp-route-id="@tenant.Id" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-cash-stack me-1"></i> Cobrar
+                                        </a>
+
+                                        <form asp-action="ToggleBloqueo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            @if (tenant.Bloqueado)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-unlock-fill me-1"></i> Desbloquear
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-lock-fill me-1"></i> Bloquear
+                                                </button>
+                                            }
+                                        </form>
+
+                                        <form asp-action="ToggleActivo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            @if (tenant.Activo)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-warning text-dark">
+                                                    <i class="bi bi-eye-slash-fill me-1"></i> Ocultar
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-eye-fill me-1"></i> Activar
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

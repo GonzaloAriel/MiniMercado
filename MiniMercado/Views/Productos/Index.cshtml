@@ -1,97 +1,184 @@
-﻿@model MiniMercado.Models.ProductoIndexViewModel
+@model MiniMercado.Models.ProductoIndexViewModel
 
 @{
     ViewData["Title"] = "Productos";
 }
 
-<h2>Listado de Productos</h2>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2>📦 Listado de Productos</h2>
+    <div>
+        <a asp-action="Inactivos" class="btn btn-outline-warning me-2">
+            ♻ Productos Inactivos
+        </a>
+        <a asp-action="Create" class="btn btn-success">
+            ➕ Nuevo Producto
+        </a>
+    </div>
+</div>
 
 @if (TempData["Mensaje"] != null)
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success alert-dismissible fade show">
         @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
-<a asp-action="Create" class="btn btn-success mb-3">
-    ➕ Nuevo Producto
-</a>
+<div id="ajaxAlert" class="alert d-none alert-dismissible fade show">
+    <span id="ajaxAlertMessage"></span>
+    <button type="button" class="btn-close" onclick="this.parentElement.classList.add('d-none')"></button>
+</div>
 
 <!-- Filtros -->
-<form method="get" class="mb-3 row g-2">
-    <div class="col-md-5">
-        <input type="text"
-               name="filtro"
-               value="@Context.Request.Query["filtro"]"
-               class="form-control"
-               placeholder="Buscar por nombre o código de barra" />
-    </div>
-    <div class="col-md-4">
-        <select name="rubroId" class="form-select">
-            <option value="">Todos los rubros</option>
-            @foreach (var r in Model.Rubros)
-            {
-                if (Model.FiltroRubro == r.Id)
+<div class="card p-3 mb-4 shadow-sm">
+    <form method="get" class="row g-2">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text"
+                       name="filtro"
+                       value="@Context.Request.Query["filtro"]"
+                       class="form-control"
+                       placeholder="Buscar por nombre o código de barra..." />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select name="rubroId" class="form-select">
+                <option value="">-- Todos los rubros --</option>
+                @foreach (var r in Model.Rubros)
                 {
-                    <option value="@r.Id" selected="selected">@r.Nombre</option>
+                    <option value="@r.Id" selected="@(Model.FiltroRubro == r.Id ? "selected" : null)">@r.Nombre</option>
                 }
-                else
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary px-4" type="submit">🔍 Filtrar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Nombre</th>
+                <th>Código</th>
+                <th class="text-end">Precio</th>
+                <th class="text-center">Stock</th>
+                <th>Rubro</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Productos != null && Model.Productos.Any())
+            {
+                foreach (var producto in Model.Productos)
                 {
-                    <option value="@r.Id">@r.Nombre</option>
+                    <tr id="row-@producto.Id">
+                        <td class="fw-bold">@producto.NombreDisplay</td>
+                        <td><code class="text-muted">@producto.CodigoDisplay</code></td>
+                        <td class="text-end fw-bold text-success">$ @producto.Precio.ToString("N2")</td>
+                        <td class="text-center">
+                            <span class="badge @(producto.Stock <= 5 ? "bg-danger" : "bg-info")">
+                                @producto.Stock.ToString("0.##")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                @(producto.Rubro != null ? producto.Rubro.Nombre : "-")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-outline-warning btn-sm" title="Editar">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <button type="button" 
+                                        onclick="confirmarDesactivacion(@producto.Id, '@producto.Nombre')" 
+                                        class="btn btn-outline-danger btn-sm" 
+                                        title="Eliminar">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 }
             }
-        </select>
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-primary" type="submit">🔍 Buscar</button>
-        <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
-    </div>
-</form>
-
-<table class="table table-bordered table-hover">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Código</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Rubro</th>
-            <th>Activo</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (Model.Productos != null && Model.Productos.Any())
-        {
-            foreach (var producto in Model.Productos)
+            else
             {
                 <tr>
-                    <td>@producto.Nombre</td>
-                    <td>@producto.CodigoBarra</td>
-                    <td>@producto.Precio</td>
-                    <td>@producto.Stock</td>
-                    <td>@(producto.Rubro != null ? producto.Rubro.Nombre : "-")</td>
-                    <td>@(producto.Activo ? "Sí" : "No")</td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-warning btn-sm">
-                            Editar
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@producto.Id" class="btn btn-danger btn-sm">
-                            Eliminar
-                        </a>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        No se encontraron productos que coincidan con la búsqueda.
                     </td>
                 </tr>
             }
-        }
-        else
-        {
-            <tr>
-                <td colspan="7">No se encontraron productos.</td>
-            </tr>
-        }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 
-<a asp-action="Inactivos" class="btn btn-warning mb-3">
-    ♻ Productos Inactivos
-</a>
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        function confirmarDesactivacion(id, nombre) {
+            if (confirm(`¿Está seguro de que desea eliminar el producto "${nombre}"?`)) {
+                desactivarProducto(id);
+            }
+        }
+
+        function desactivarProducto(id) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const row = document.getElementById(`row-${id}`);
+            
+            // Efecto visual de carga
+            row.style.opacity = "0.5";
+            row.style.pointerEvents = "none";
+
+            $.ajax({
+                url: '/Productos/DesactivarAjax',
+                type: 'POST',
+                data: { 
+                    id: id,
+                    __RequestVerificationToken: token 
+                },
+                success: function(response) {
+                    if (response.ok) {
+                        $(row).fadeOut(400, function() {
+                            $(this).remove();
+                            mostrarAlerta("✅ Producto eliminado correctamente.", "alert-success");
+                            
+                            // Si no quedan filas, mostrar mensaje de vacío
+                            if ($('tbody tr').length === 0) {
+                                $('tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron productos.</td></tr>');
+                            }
+                        });
+                    } else {
+                        row.style.opacity = "1";
+                        row.style.pointerEvents = "auto";
+                        mostrarAlerta("❌ Error: " + response.error, "alert-danger");
+                    }
+                },
+                error: function() {
+                    row.style.opacity = "1";
+                    row.style.pointerEvents = "auto";
+                    mostrarAlerta("❌ Error al conectar con el servidor.", "alert-danger");
+                }
+            });
+        }
+
+        function mostrarAlerta(mensaje, clase) {
+            const alertDiv = document.getElementById("ajaxAlert");
+            const alertMsg = document.getElementById("ajaxAlertMessage");
+            
+            alertDiv.className = `alert ${clase} alert-dismissible fade show`;
+            alertMsg.textContent = mensaje;
+            alertDiv.classList.remove("d-none");
+            
+            // Auto cerrar después de 3 segundos
+            setTimeout(() => {
+                $(alertDiv).fadeOut();
+            }, 3000);
+        }
+    </script>
+}

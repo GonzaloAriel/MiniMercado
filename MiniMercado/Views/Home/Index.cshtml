@@ -168,14 +168,28 @@
 
     @if (User.IsInRole("AdminGlobal"))
     {
-        <div class="col-md-6">
-            <a asp-controller="Tenants" asp-action="Index"
-                   class="btn btn-danger w-100 action-btn">
-                🏢 Administrar Tenants
+        <div class="col-md-4">
+            <a asp-controller="AdminGlobal" asp-action="Dashboard"
+                   class="btn btn-primary w-100 action-btn">
+                📊 Dashboard Global de Ingresos
             </a>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <a asp-controller="AdminGlobal" asp-action="Tenants"
+                   class="btn btn-danger w-100 action-btn">
+                🏢 Administrar Tenants y Cobros
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="Tenants" asp-action="Create"
+                   class="btn btn-success w-100 action-btn">
+                ➕ Crear Nuevo Tenant
+            </a>
+        </div>
+
+        <div class="col-md-4">
             <a asp-controller="AdminGlobalUsuarios" asp-action="Tenants"
                    class="btn btn-dark w-100 action-btn">
                 🔐 Gestión Global de Usuarios

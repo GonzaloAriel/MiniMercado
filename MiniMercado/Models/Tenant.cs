@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
@@ -21,5 +23,18 @@ namespace MiniMercado.Models
         public string? MensajeTicket { get; set; } // ej: "Gracias por su compra!"
 
         public bool Activo { get; set; } = true;
+
+        [Display(Name = "Fecha de Vencimiento")]
+        public DateTime? FechaVencimiento { get; set; }
+
+        [Required(ErrorMessage = "El precio mensual es obligatorio")]
+        [Range(0, 9999999, ErrorMessage = "El precio no puede ser negativo")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioMensual { get; set; }
+
+        public bool Bloqueado { get; set; } = false;
+
+        [ValidateNever]
+        public virtual ICollection<CobroTenant> Cobros { get; set; } = new List<CobroTenant>();
     }
 }
