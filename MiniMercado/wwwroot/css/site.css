@@ -22,37 +22,118 @@ body {
     margin-bottom: 60px;
 }
 
-    /* Enlaces Nav */
-
-.navbar .nav-link:hover {
-    color: #0dcaf0 !important; /* celeste */
-    transition: 0.3s ease;
+/* NAVBAR PERSONALIZADA (ESTILO SAAS) */
+.navbar-custom {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    padding: 0.8rem 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
 }
-    
 
-    /* Modo oscuro */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    font-size: 1.35rem;
+    color: #f8fafc !important;
+}
+
+.navbar-brand img {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.05);
+}
+
+.nav-link {
+    font-weight: 500;
+    color: rgba(248, 250, 252, 0.75) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.5rem;
+    margin: 0 0.2rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    color: #38bdf8 !important; /* Sky 400 */
+    background-color: rgba(56, 189, 248, 0.1);
+}
+
+/* DROPDOWN USUARIO */
+.dropdown-menu-custom {
+    border: none;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-radius: 0.75rem;
+    margin-top: 10px;
+    background-color: #fff;
+}
+
+.dropdown-item {
+    border-radius: 0.4rem;
+    margin: 0.2rem 0.5rem;
+    width: calc(100% - 1rem);
+    padding: 0.5rem 0.8rem;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f5f9;
+}
+
+.dropdown-item i {
+    width: 1.5rem;
+    opacity: 0.7;
+}
+
+/* MODO OSCURO */
 body.dark-mode {
-    background-color: black;
-    color: #e0e0e0;
+    background-color: #000000; /* Fondo negro puro */
+    color: #f8fafc;
 }
 
 body.dark-mode .card {
-    background-color: #1e1e1e;
-    border-color: #333;
+    background-color: #121212; /* Gris muy oscuro para tarjetas */
+    border: 1px solid #2d2d2d;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
 }
 
 body.dark-mode .table {
-    color: #e0e0e0;
+    color: #e2e8f0;
+    border-color: #2d2d2d;
 }
 
-body.dark-mode .navbar {
-    background-color: dimgrey !important;
+body.dark-mode .dropdown-menu-custom {
+    background-color: #121212;
+    border: 1px solid #2d2d2d;
 }
 
-body.dark-mode .form-control {
-    background-color: #2a2a2a;
-    color: #fff;
-    border-color: #444;
+body.dark-mode .dropdown-item {
+    color: #f8fafc;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #334155;
+}
+
+/* RESPONSIVE */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background: #1e293b;
+        margin: 0 -1rem;
+        padding: 1rem;
+        border-radius: 0 0 1rem 1rem;
+    }
+    
+    .nav-link {
+        margin: 0.2rem 0;
+        padding: 0.8rem 1rem !important;
+    }
 }
 
 

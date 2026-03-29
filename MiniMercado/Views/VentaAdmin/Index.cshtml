@@ -5,8 +5,8 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-    <h2>📜 Historial de Ventas</h2>
-    <a href="/Venta/Create" class="btn btn-primary shadow-sm">
+    <h2>📜 Administrar Ventas</h2>
+    <a href="/Venta/Create" class="btn btn-success shadow-sm">
         <i class="bi bi-cart-plus"></i> Nueva Venta
     </a>
 </div>
@@ -69,15 +69,15 @@
                     <td class="text-center">
                         <div class="btn-group">
                             <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye"></i> Detalles
                             </a>
                             @if (!item.Activa)
                             {
                                 <button type="button" 
                                         onclick="prepararAnulacion(@item.Id)" 
-                                        class="btn btn-outline-danger btn-sm" 
+                                        class="btn btn-outline-danger btn-sm ms-1" 
                                         title="Anular">
-                                    <i class="bi bi-x-circle"></i>
+                                    <i class="bi bi-x-circle"></i> Anular
                                 </button>
                             }
                         </div>
@@ -89,7 +89,7 @@
 </div>
 
 <!-- Modal de Anulación -->
-<div class="modal fade" id="modalAnular" tabindex="-1" aria-hidden="true">
+<div class="modal fade text-black" id="modalAnular" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">

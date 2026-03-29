@@ -70,16 +70,16 @@
                                 <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <a asp-action="RegistrarPago" asp-route-id="@item.Id" class="btn btn-outline-success btn-sm">
-                                    <i class="bi bi-cash-coin"></i> Pago
+                                <a asp-action="RegistrarPago" asp-route-id="@item.Id" class="btn btn-outline-success btn-sm ms-1">
+                                    <i class="bi bi-cash-coin "></i> Pago
                                 </a>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm">
-                                    <i class="bi bi-pencil"></i>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm ms-1">
+                                    <i class="bi bi-pencil "></i> Editar
                                 </a>
                                 <button type="button" 
                                         onclick="confirmarDesactivacion(@item.Id, '@item.Nombre')" 
-                                        class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-trash"></i>
+                                        class="btn btn-outline-danger btn-sm ms-1">
+                                    <i class="bi bi-trash"></i> Eliminar
                                 </button>
                             </div>
                         </td>
