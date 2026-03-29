@@ -1,82 +1,277 @@
-﻿@model MiniMercado.Models.Producto
+@model MiniMercado.Models.Producto
 
 @{
     ViewData["Title"] = "Nuevo Producto";
 }
 
-<h2>Nuevo Producto</h2>
+<h2 class="mt-4">🛒 Nuevo Producto</h2>
 <hr />
 
-<div asp-validation-summary="All" class="text-danger"></div>
+<div class="card mb-4 border-info shadow-sm">
+    <div class="card-body bg-light">
+        <h5 class="card-title text-info"><i class="bi bi-globe"></i> Buscar en Catálogo Global</h5>
+        <p class="card-text small text-muted">Use este buscador para autocompletar los datos desde la base de datos global (220.000 productos).</p>
+        <div class="position-relative">
+            <input type="text" id="buscadorGlobal" class="form-control form-control-lg" placeholder="Escriba nombre, marca o escanee código..." autocomplete="off">
+            <div id="resultadosGlobal" class="list-group position-absolute w-100 shadow-lg d-none" style="z-index: 1050;"></div>
+        </div>
+    </div>
+</div>
 
-<form asp-action="Create" method="post">
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        Debe seleccionar o crear un rubro antes de continuar.
+    </div>
+}
 
-    <div class="mb-3">
-        <label asp-for="CodigoBarra" class="form-label"></label>
-        <input asp-for="CodigoBarra" class="form-control" />
-        <span asp-validation-for="CodigoBarra" class="text-danger"></span>
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="Create" method="post" class="card p-4 shadow-sm">
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="CodigoBarra" class="form-label fw-bold">Código de Barra</label>
+            <input asp-for="CodigoBarra" class="form-control" placeholder="Escanee o escriba el código" />
+            <span asp-validation-for="CodigoBarra" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Nombre" class="form-label fw-bold">Nombre del Producto</label>
+            <input asp-for="Nombre" class="form-control" placeholder="Ej: Coca Cola 1.5L" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Precio" class="form-label fw-bold">Precio de Venta</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input asp-for="Precio" class="form-control" step="0.01" />
+            </div>
+            <span asp-validation-for="Precio" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Stock" class="form-label fw-bold">Stock Inicial</label>
+            <input asp-for="Stock" class="form-control" step="0.01" />
+            <span asp-validation-for="Stock" class="text-danger"></span>
+        </div>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Nombre" class="form-label"></label>
-        <input asp-for="Nombre" class="form-control" />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
+        <label class="form-label fw-bold">Rubro / Categoría <span class="text-danger">*</span></label>
+        <div class="input-group">
+            <select asp-for="RubroId" id="RubroId" class="form-select">
+                <option value="">-- Seleccione un rubro --</option>
+                @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
+                {
+                    <option value="@r.Id">@r.Nombre</option>
+                }
+            </select>
+            <button type="button" class="btn btn-outline-primary" onclick="abrirModalRubro()">
+                ➕ Nuevo rubro
+            </button>
+        </div>
+        <span asp-validation-for="RubroId" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Precio" class="form-label"></label>
-        <input asp-for="Precio" class="form-control" />
-        <span asp-validation-for="Precio" class="text-danger"></span>
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="form-check form-switch mb-2">
+                <input asp-for="EsPorPeso" class="form-check-input" />
+                <label asp-for="EsPorPeso" class="form-check-label">Se vende por peso (Kg)</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-check form-switch mb-2">
+                <input asp-for="PrecioEditable" class="form-check-input" />
+                <label asp-for="PrecioEditable" class="form-check-label">Precio editable en caja</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-check form-switch mb-3">
+                <input asp-for="Activo" class="form-check-input" checked />
+                <label asp-for="Activo" class="form-check-label">Producto Activo</label>
+            </div>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Stock" class="form-label"></label>
-        <input asp-for="Stock" class="form-control" />
-        <span asp-validation-for="Stock" class="text-danger"></span>
+    <div class="mt-4 border-top pt-3">
+        <button type="submit" class="btn btn-success btn-lg">
+            💾 Guardar Producto
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">
+            ⬅ Volver al Listado
+        </a>
     </div>
-
-    <div class="mb-3">
-        <label class="form-label">Rubro</label>
-        <select name="RubroId" class="form-select">
-            <option value="">-- Sin rubro --</option>
-            @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
-            {
-                <option value="@r.Id">@r.Nombre</option>
-            }
-        </select>
-    </div>
-
-    <div class="form-check mb-2">
-        <input asp-for="EsPorPeso" class="form-check-input" />
-        <label asp-for="EsPorPeso" class="form-check-label">
-            Se vende por peso
-        </label>
-    </div>
-
-    <div class="form-check mb-2">
-        <input asp-for="PrecioEditable" class="form-check-input" />
-        <label asp-for="PrecioEditable" class="form-check-label">
-            Precio editable en venta
-        </label>
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="Activo" class="form-check-input" />
-        <label asp-for="Activo" class="form-check-label"></label>
-    </div>
-
-    <button type="submit" class="btn btn-success">
-        💾 Guardar
-    </button>
-
-    <a asp-action="Index" class="btn btn-secondary">
-        ⬅ Volver
-    </a>
 
 </form>
+
+<!-- MODAL NUEVO RUBRO -->
+<div class="modal fade" id="modalNuevoRubro" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">➕ Crear Nuevo Rubro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre del Rubro</label>
+                    <input type="text" id="nuevoRubroNombre" class="form-control" placeholder="Ej: Bebidas, Lácteos, etc." />
+                    <div id="errorRubro" class="text-danger d-none">El nombre es obligatorio.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarRubroRapido()">
+                    💾 Guardar y Seleccionar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        function abrirModalRubro() {
+            document.getElementById("nuevoRubroNombre").value = "";
+            document.getElementById("errorRubro").classList.add("d-none");
+            new bootstrap.Modal(document.getElementById("modalNuevoRubro")).show();
+            setTimeout(() => document.getElementById("nuevoRubroNombre").focus(), 500);
+        }
+
+        function guardarRubroRapido() {
+            const nombre = document.getElementById("nuevoRubroNombre").value.trim();
+
+            if (!nombre) {
+                document.getElementById("errorRubro").classList.remove("d-none");
+                return;
+            }
+
+            fetch("/Rubro/CrearRapido", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre: nombre })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    // Agregar al select y seleccionar
+                    const select = document.getElementById("RubroId");
+                    const option = new Option(data.nombre, data.id);
+                    select.add(option);
+                    select.value = data.id;
+
+                    // Cerrar modal
+                    bootstrap.Modal.getInstance(document.getElementById("modalNuevoRubro")).hide();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(() => alert("Error al conectar con el servidor."));
+        }
+
+        // --- LÓGICA BUSCADOR GLOBAL ---
+        const buscadorGlobal = document.getElementById("buscadorGlobal");
+        const resultadosGlobal = document.getElementById("resultadosGlobal");
+
+        buscadorGlobal.addEventListener("input", function() {
+            const q = this.value.trim();
+            if (q.length < 3) {
+                resultadosGlobal.classList.add("d-none");
+                return;
+            }
+
+            fetch(`/Productos/BuscarProductoBase?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    resultadosGlobal.innerHTML = "";
+                    if (data.length > 0) {
+                        data.forEach(pb => {
+                            const btn = document.createElement("button");
+                            btn.type = "button";
+                            btn.className = "list-group-item list-group-item-action";
+                            btn.innerHTML = `
+                                <div class="d-flex justify-content-between">
+                                    <strong>${pb.nombre}</strong>
+                                    <span class="badge bg-secondary">${pb.codigoBarras}</span>
+                                </div>
+                                <small class="text-muted">${pb.marca || ""} - ${pb.categoria || ""}</small>
+                            `;
+                            btn.onclick = () => autocompletar(pb);
+                            resultadosGlobal.appendChild(btn);
+                        });
+                        resultadosGlobal.classList.remove("d-none");
+                    } else {
+                        resultadosGlobal.classList.add("d-none");
+                    }
+                });
+        });
+
+        function autocompletar(pbItem) {
+            // 1. Llamar AJAX para obtener el ProductoBase completo
+            fetch(`/Productos/GetProductoBase?id=${pbItem.id}`)
+                .then(response => response.json())
+                .then(pb => {
+                    // 2. Completar campos básicos
+                    document.getElementById("Nombre").value = pb.nombre;
+                    document.getElementById("CodigoBarra").value = pb.codigo;
+                    document.getElementById("Precio").value = pb.precioReferencia || 0;
+
+                    // 3. Si tiene categoría, obtener o crear el rubro
+                    if (pb.categoria) {
+                        fetch("/Rubro/GetOrCreateByCategoria", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ categoria: pb.categoria })
+                        })
+                        .then(r => r.json())
+                        .then(resRubro => {
+                            if (resRubro.success) {
+                                const select = document.getElementById("RubroId");
+                                
+                                // Verificar si ya existe en el select para no duplicar visualmente
+                                let existe = false;
+                                for (let i = 0; i < select.options.length; i++) {
+                                    if (select.options[i].value == resRubro.id) {
+                                        select.value = resRubro.id;
+                                        existe = true;
+                                        break;
+                                    }
+                                }
+
+                                // 4. Si es nuevo o no estaba cargado, agregarlo al dropdown y seleccionar
+                                if (!existe) {
+                                    const nuevaOpcion = new Option(resRubro.nombre, resRubro.id, true, true);
+                                    select.add(nuevaOpcion);
+                                    select.value = resRubro.id;
+                                }
+                            }
+                        })
+                        .catch(err => console.error("Error al gestionar rubro:", err));
+                    }
+                    
+                    // UI Final
+                    resultadosGlobal.classList.add("d-none");
+                    buscadorGlobal.value = "";
+                    document.getElementById("Stock").focus();
+                })
+                .catch(err => alert("Error al obtener datos del producto base."));
+        }
+
+        // Cerrar resultados al hacer clic fuera
+        document.addEventListener("click", function(e) {
+            if (!buscadorGlobal.contains(e.target) && !resultadosGlobal.contains(e.target)) {
+                resultadosGlobal.classList.add("d-none");
+            }
+        });
+    </script>
 }

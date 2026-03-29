@@ -21,10 +21,18 @@ namespace MiniMercado.Data
         public DbSet<Rubro> Rubros { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<PagoFiado> PagosFiado { get; set; }
+        public DbSet<CobroTenant> CobrosTenants { get; set; }
+        public DbSet<ProductoBase> ProductosBase { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<CobroTenant>()
+                .HasOne(c => c.Tenant)
+                .WithMany(t => t.Cobros)
+                .HasForeignKey(c => c.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Producto>()
                 .HasOne(p => p.Tenant)
@@ -88,6 +96,31 @@ namespace MiniMercado.Data
                 .WithMany()
                 .HasForeignKey(p => p.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // --- OPTIMIZACIÓN: ÍNDICES ---
+
+            // Tenant
+            modelBuilder.Entity<Tenant>()
+                .HasIndex(t => t.FechaVencimiento);
+
+            // CobroTenant
+            modelBuilder.Entity<CobroTenant>()
+                .HasIndex(c => c.TenantId);
+
+            modelBuilder.Entity<CobroTenant>()
+                .HasIndex(c => c.FechaPago);
+
+            // ProductoBase (Catálogo Global)
+            modelBuilder.Entity<ProductoBase>()
+                .HasIndex(p => p.CodigoBarras)
+                .IsUnique();
+
+            // Producto -> ProductoBase (Opcional)
+            modelBuilder.Entity<Producto>()
+                .HasOne(p => p.ProductoBase)
+                .WithMany()
+                .HasForeignKey(p => p.ProductoBaseId)
+                .OnDelete(DeleteBehavior.SetNull);
 
            
         }

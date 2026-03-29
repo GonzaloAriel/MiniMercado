@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MiniMercado.Models
 {
-    public class Cliente
+    public class Cliente : ITenantEntity
     {
         public int Id { get; set; }
 
@@ -29,5 +30,8 @@ namespace MiniMercado.Models
 
         [ValidateNever]
         public List<PagoFiado> Pagos { get; set; } = new();
+
+        [ValidateNever]
+        public List<Venta> Ventas { get; set; } = new();
     }
 }

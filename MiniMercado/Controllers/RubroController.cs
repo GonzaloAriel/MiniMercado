@@ -119,6 +119,26 @@ namespace MiniMercado.Controllers
             return View(rubro);
         }
 
+        // DELETE AJAX
+        [HttpPost]
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DesactivarAjax(int id)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var rubro = _context.Rubros.FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
+
+            if (rubro == null) return Json(new { ok = false, error = "Rubro no encontrado" });
+
+            // Podríamos validar si tiene productos asociados aquí, pero el requerimiento es desactivar.
+            rubro.Activo = false;
+            _context.SaveChanges();
+
+            _auditoria.Registrar("Eliminar", "Rubros", rubro.Id, $"Desactivación AJAX: {rubro.Nombre}");
+
+            return Json(new { ok = true });
+        }
+
         // DELETE POST
         [HttpPost, ActionName("Delete")]
         [Authorize(Roles = "AdminGlobal, Admin")]
@@ -164,6 +184,70 @@ namespace MiniMercado.Controllers
             }
 
             return View(rubros.ToList());
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult CrearRapido([FromBody] RubroRapidoRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Nombre))
+                return Json(new { ok = false, error = "Nombre requerido" });
+
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var rubro = new Rubro
+            {
+                Nombre = request.Nombre,
+                TenantId = tenantId,
+                Activo = true
+            };
+
+            _context.Rubros.Add(rubro);
+            _context.SaveChanges();
+
+            _auditoria.Registrar("Crear", "Rubros", rubro.Id,
+                $"Se creó el rubro rápido: {rubro.Nombre}");
+
+            return Json(new { ok = true, id = rubro.Id, nombre = rubro.Nombre });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult GetOrCreateByCategoria([FromBody] CategoriaRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.Categoria))
+                return Json(new { success = false, error = "Categoría vacía" });
+
+            var tenantId = _tenantService.GetTenantId().Value;
+            var nombreNormalizado = request.Categoria.Trim();
+
+            // Buscar rubro existente para este tenant (insensible a mayúsculas)
+            var rubro = _context.Rubros
+                .FirstOrDefault(r => r.Nombre.ToLower() == nombreNormalizado.ToLower() && r.TenantId == tenantId && r.Activo);
+
+            if (rubro == null)
+            {
+                // Crear si no existe
+                rubro = new Rubro
+                {
+                    Nombre = nombreNormalizado,
+                    TenantId = tenantId,
+                    Activo = true
+                };
+                _context.Rubros.Add(rubro);
+                _context.SaveChanges();
+
+                _auditoria.Registrar("Crear", "Rubros", rubro.Id, $"Rubro creado automáticamente por categoría: {rubro.Nombre}");
+            }
+
+            return Json(new { success = true, id = rubro.Id, nombre = rubro.Nombre });
+        }
+
+        public class CategoriaRequest { public string Categoria { get; set; } }
+
+        public class RubroRapidoRequest
+        {
+            public string Nombre { get; set; }
         }
 
         // REACTIVAR

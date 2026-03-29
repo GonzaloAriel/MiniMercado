@@ -23,7 +23,8 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             ViewBag.Productos = _context.Productos
-                .Where(p => p.Activo && p.Stock > 0 && p.TenantId == tenantId)
+                .Include(p => p.ProductoBase)
+                .Where(p => p.Activo && p.TenantId == tenantId)
                 .ToList();
         }
 
@@ -40,7 +41,8 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             ViewBag.Productos = _context.Productos
-                .Where(p => p.Activo && p.Stock > 0 && p.TenantId == tenantId)
+                .Include(p => p.ProductoBase)
+                .Where(p => p.Activo && p.TenantId == tenantId)
                 .ToList();
 
             return View(new List<VentaDetalle> { new VentaDetalle() });
@@ -49,7 +51,7 @@ namespace MiniMercado.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(List<VentaDetalle> detalles)
+        public IActionResult Create(List<VentaDetalle> detalles, bool EsFiado, int? ClienteId)
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
@@ -73,12 +75,19 @@ namespace MiniMercado.Controllers
             .Where(d => d.ProductoId.HasValue)
             .ToList();
 
+            if (EsFiado && !ClienteId.HasValue)
+            {
+                ModelState.AddModelError("", "Debe seleccionar un cliente para realizar una venta al fiado.");
+            }
+
             if (!ModelState.IsValid || detalles == null || !detalles.Any())
             {
                 CargarProductos();
 
-                ModelState.AddModelError("",
-                    "Debe agregar al menos un producto a la venta.");
+                if (detalles == null || !detalles.Any())
+                {
+                    ModelState.AddModelError("", "Debe agregar al menos un producto a la venta.");
+                }
 
                 return View(detalles ?? new List<VentaDetalle> { new VentaDetalle() });
             }
@@ -101,15 +110,6 @@ namespace MiniMercado.Controllers
 
                 if (producto == null)
                     return BadRequest();
-
-                if (producto.Stock < item.Cantidad)
-                {
-                    ModelState.AddModelError("",
-                        $"No hay stock suficiente de {producto.Nombre}. Disponible: {producto.Stock.ToString("0.#")}");
-
-                    CargarProductos();
-                    return View(detalles);
-                }
 
                 item.PrecioUnitario = producto.PrecioEditable
                     ? decimal.Round(item.PrecioUnitario, 2)
@@ -152,11 +152,8 @@ namespace MiniMercado.Controllers
                 Detalles = detalles,
                 UsuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Usuario = _http.HttpContext.User?.Identity?.Name,
-                EsFiado = Request.Form["EsFiado"] == "true",
-                ClienteId = Request.Form["EsFiado"] == "true" &&
-                !string.IsNullOrEmpty(Request.Form["ClienteId"])
-                ? int.Parse(Request.Form["ClienteId"])
-                : (int?)null
+                EsFiado = EsFiado,
+                ClienteId = EsFiado ? ClienteId : null
             };
 
 
@@ -184,7 +181,15 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Confirmacion(int ventaId, string? NombreVenta)
         {
-            var venta = _context.Ventas.FirstOrDefault(v => v.Id == ventaId);
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var venta = _context.Ventas
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE Id = {0} AND TenantId = {1}", ventaId, tenantId)
+                .FirstOrDefault();
 
             if (venta == null)
                 return NotFound();
@@ -235,7 +240,11 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             var ventas = _context.Ventas
-                .Where(v => !v.Activa && v.TenantId == tenantId)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE Activa = 0 AND TenantId = {0}", tenantId)
                 .AsQueryable();
 
             if (ventaId.HasValue)
@@ -263,13 +272,20 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             var venta = _context.Ventas
-                .Where(v => v.Id == id && v.TenantId == tenantId)
-                .Include(v => v.Detalles)
-                    .ThenInclude(d => d.Producto)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE Id = {0} AND TenantId = {1}", id, tenantId)
                 .FirstOrDefault();
 
             if (venta == null || venta.Activa)
                 return NotFound();
+
+            venta.Detalles = _context.VentaDetalles
+                .Where(v => v.VentaId == id && v.TenantId == tenantId)
+                .Include(d => d.Producto)
+                .ToList();
 
             return View(venta);
         }
@@ -279,13 +295,20 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             var venta = _context.Ventas
-                .Where(v => v.Id == id && v.TenantId == tenantId)
-                .Include(v => v.Detalles)
-                    .ThenInclude(d => d.Producto)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE Id = {0} AND TenantId = {1}", id, tenantId)
                 .FirstOrDefault();
 
             if (venta == null || venta.Activa)
                 return NotFound();
+
+            venta.Detalles = _context.VentaDetalles
+                .Where(v => v.VentaId == id && v.TenantId == tenantId)
+                .Include(d => d.Producto)
+                .ToList();
 
             var tenant = _context.Tenants
                 .FirstOrDefault(t => t.Id == tenantId);
@@ -305,7 +328,11 @@ namespace MiniMercado.Controllers
             DateTime hasta = dia.Date.AddDays(1);
 
             var ventas = _context.Ventas
-                .Where(v => !v.Activa && v.TenantId == tenantId)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE Activa = 0 AND TenantId = {0}", tenantId)
                 .Where(v => v.Fecha >= desde && v.Fecha < hasta)
                 .OrderBy(v => v.Fecha)
                 .ToList();

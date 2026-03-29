@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MiniMercado.Models
 {
-    public class PagoFiado
+    public class PagoFiado : ITenantEntity
     {
         public int Id { get; set; }
 

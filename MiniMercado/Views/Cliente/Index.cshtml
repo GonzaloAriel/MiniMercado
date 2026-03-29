@@ -1,71 +1,152 @@
-﻿@model List<MiniMercado.Models.Cliente>
+@model IEnumerable<MiniMercado.Models.Cliente>
 
 @{
     ViewData["Title"] = "Clientes";
-    var deudas = ViewBag.Deudas as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
-    var pagos = ViewBag.Pagos as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var deudas = ViewBag.Deudas as Dictionary<int, decimal> ?? new();
+    var pagos = ViewBag.Pagos as Dictionary<int, decimal> ?? new();
 }
 
-<h2>👥 Clientes</h2>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2>👥 Listado de Clientes</h2>
+    <a asp-action="Create" class="btn btn-success shadow-sm">
+        <i class="bi bi-person-plus"></i> Nuevo Cliente
+    </a>
+</div>
 
 @if (TempData["Mensaje"] != null)
 {
-    <div class="alert alert-success">@TempData["Mensaje"]</div>
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
-<a asp-action="Create" class="btn btn-success mb-3">➕ Nuevo Cliente</a>
+<div id="ajaxAlert" class="alert d-none alert-dismissible fade show">
+    <span id="ajaxAlertMessage"></span>
+    <button type="button" class="btn-close" onclick="this.parentElement.classList.add('d-none')"></button>
+</div>
 
-<form method="get" class="mb-3">
-    <div class="input-group">
-        <input type="text"
-               name="filtro"
-               value="@Context.Request.Query["filtro"]"
-               class="form-control"
-               placeholder="Buscar por nombre o teléfono" />
-        <button class="btn btn-primary" type="submit">🔍 Buscar</button>
-    </div>
-</form>
+<div class="card p-3 mb-4 shadow-sm">
+    <form method="get" class="row g-2">
+        <div class="col-md-10">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" name="filtro" value="@Context.Request.Query["filtro"]" class="form-control" placeholder="Buscar por nombre o teléfono..." />
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">🔍 Buscar</button>
+        </div>
+    </form>
+</div>
 
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Nombre</th>
-            <th>Teléfono</th>
-            <th>Límite crédito</th>
-            <th>Deuda</th>
-            <th>Saldo pendiente</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            var deuda = deudas.TryGetValue(c.Id, out var d) ? d : 0;
-            var pagado = pagos.TryGetValue(c.Id, out var p) ? p : 0;
-            var saldo = deuda - pagado;
-
-            <tr class="@(saldo > 0 ? "table-warning" : "")">
-                <td>@c.Nombre</td>
-                <td>@(c.Telefono ?? "-")</td>
-                <td>@(c.LimiteCredito > 0 ? $"${c.LimiteCredito:0.##}" : "Sin límite")</td>
-                <td>$@deuda.ToString("0.##")</td>
-                <td>
-                    @if (saldo > 0)
-                    {
-                        <span class="badge bg-danger fs-6">$@saldo.ToString("0.##")</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success fs-6">Al día</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Detalle" asp-route-id="@c.Id" class="btn btn-info btn-sm">📋 Ficha</a>
-                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-warning btn-sm">✏️ Editar</a>
-                    <a asp-action="Desactivar" asp-route-id="@c.Id" class="btn btn-danger btn-sm"
-                       onclick="return confirm('¿Desactivar este cliente?')">❌</a>
-                </td>
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th class="text-end">Saldo Adeudado</th>
+                <th class="text-center">Acciones</th>
             </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    decimal deuda = deudas.ContainsKey(item.Id) ? deudas[item.Id] : 0;
+                    decimal pago = pagos.ContainsKey(item.Id) ? pagos[item.Id] : 0;
+                    decimal saldo = deuda - pago;
+
+                    <tr id="row-@item.Id">
+                        <td class="fw-bold">@item.Nombre</td>
+                        <td class="text-muted">@(item.Telefono ?? "-")</td>
+                        <td class="text-end fw-bold @(saldo > 0 ? "text-danger" : "text-success")">
+                            $ @saldo.ToString("N2")
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                                <a asp-action="RegistrarPago" asp-route-id="@item.Id" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-cash-coin"></i> Pago
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" 
+                                        onclick="confirmarDesactivacion(@item.Id, '@item.Nombre')" 
+                                        class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">No se encontraron clientes.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        function confirmarDesactivacion(id, nombre) {
+            if (confirm(`¿Está seguro de que desea eliminar al cliente "${nombre}"?`)) {
+                desactivarCliente(id);
+            }
         }
-    </tbody>
-</table>
+
+        function desactivarCliente(id) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const row = document.getElementById(`row-${id}`);
+            
+            row.style.opacity = "0.5";
+            row.style.pointerEvents = "none";
+
+            $.ajax({
+                url: '/Cliente/DesactivarAjax',
+                type: 'POST',
+                data: { 
+                    id: id,
+                    __RequestVerificationToken: token 
+                },
+                success: function(response) {
+                    if (response.ok) {
+                        $(row).fadeOut(400, function() {
+                            $(this).remove();
+                            mostrarAlerta("✅ Cliente eliminado correctamente.", "alert-success");
+                        });
+                    } else {
+                        row.style.opacity = "1";
+                        row.style.pointerEvents = "auto";
+                        mostrarAlerta("❌ Error: " + response.error, "alert-danger");
+                    }
+                },
+                error: function() {
+                    row.style.opacity = "1";
+                    row.style.pointerEvents = "auto";
+                    mostrarAlerta("❌ Error al conectar con el servidor.", "alert-danger");
+                }
+            });
+        }
+
+        function mostrarAlerta(mensaje, clase) {
+            const alertDiv = document.getElementById("ajaxAlert");
+            const alertMsg = document.getElementById("ajaxAlertMessage");
+            alertDiv.className = `alert ${clase} alert-dismissible fade show`;
+            alertMsg.textContent = mensaje;
+            alertDiv.classList.remove("d-none");
+            setTimeout(() => { $(alertDiv).fadeOut(); }, 3000);
+        }
+    </script>
+}

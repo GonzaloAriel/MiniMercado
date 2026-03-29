@@ -180,7 +180,12 @@ namespace MiniMercado.Controllers
                 return NotFound();
 
             var totalDeuda = _context.Ventas
-                .Where(v => v.ClienteId == id && v.EsFiado && !v.Activa && v.TenantId == tenantId)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE ClienteId = {0} AND EsFiado = 1 
+                              AND Activa = 0 AND TenantId = {1}", id, tenantId)
                 .Sum(v => v.Total);
 
             var totalPagado = _context.PagosFiado
@@ -240,6 +245,25 @@ namespace MiniMercado.Controllers
                 .ToList();
 
             return Json(clientes);
+        }
+
+        // DESACTIVAR AJAX
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DesactivarAjax(int id)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var cliente = _context.Clientes.FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
+
+            if (cliente == null) return Json(new { ok = false, error = "Cliente no encontrado" });
+
+            cliente.Activo = false;
+            _context.SaveChanges();
+
+            _auditoria.Registrar("Eliminar", "Clientes", id, $"Desactivación AJAX: {cliente.Nombre}");
+
+            return Json(new { ok = true });
         }
 
         // DESACTIVAR
