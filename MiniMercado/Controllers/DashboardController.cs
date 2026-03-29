@@ -30,8 +30,15 @@ namespace MiniMercado.Controllers
                 FechaHasta = fechaHasta
             };
 
-            model.ResumenCajas = _context.Ventas
-                .Where(v => v.Fecha >= fechaDesde && v.Fecha <= fechaHasta && v.TenantId == tenantId) 
+            var ventasRaw = _context.Ventas
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId 
+                              FROM Ventas 
+                              WHERE TenantId = {0}", tenantId);
+
+            model.ResumenCajas = ventasRaw
+                .Where(v => v.Fecha >= fechaDesde && v.Fecha <= fechaHasta) 
                 .GroupBy(v => new { v.Usuario, Fecha = v.Fecha.Date })
                 .Select(g => new ResumenCajaDia
                 {
@@ -44,8 +51,8 @@ namespace MiniMercado.Controllers
                 .OrderByDescending(x => x.Fecha)
                 .ToList();
 
-            model.HistorialVentas = _context.Ventas
-                .Where(v => v.Fecha >= fechaDesde && v.Fecha <= fechaHasta && v.TenantId == tenantId) 
+            model.HistorialVentas = ventasRaw
+                .Where(v => v.Fecha >= fechaDesde && v.Fecha <= fechaHasta) 
                 .OrderByDescending(v => v.Fecha)
                 .Select(v => new VentaHistorialItem
                 {

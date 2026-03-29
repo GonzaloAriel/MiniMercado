@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Middleware;
@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 // MVC + Razor Pages
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddMemoryCache();
 
 // DB
 builder.Services.AddDbContext<MiniMercadoContext>(options =>
@@ -34,8 +35,8 @@ builder.Services.AddScoped<
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantService, TenantService>();
-
 builder.Services.AddScoped<AuditoriaService>();
+builder.Services.AddScoped<ProductoService>();
 builder.Services.AddHttpContextAccessor();
 
 

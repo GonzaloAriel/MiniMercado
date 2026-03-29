@@ -4,100 +4,77 @@
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
+<div class="card mb-4 shadow-sm border-primary">
+    <div class="card-body bg-dark text-white">
+        <h5 class="card-title text-primary"><i class="bi bi-upc-scan"></i> SUPER BUSCADOR</h5>
+        <p class="small text-muted">Escriba nombre, código o escanee directamente. Presione ENTER para agregar.</p>
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-primary text-white border-primary"><i class="bi bi-search"></i></span>
+            <input type="text" id="superBuscador" class="form-control border-primary" placeholder="Escriba y presione ENTER..." autocomplete="off">
+        </div>
+        <div id="statusBusqueda" class="mt-2 small"></div>
+    </div>
+</div>
+
 <form method="post">
 
-    <div class="card mb-3">
+    <div class="card mb-3 shadow-sm">
         <div class="card-body p-0">
-
-            <div class="mb-3">
-                <input type="text"
-                       id="buscadorProducto"
-                       class="form-control form-control-lg"
-                       placeholder="🔎 Buscar producto o código de barras..." />
-            </div>
-
-            <table class="table table-bordered table-hover mb-0 mt-2" id="tablaVenta">
+            <table class="table table-bordered table-hover mb-0" id="tablaVenta">
                 <thead class="table-dark text-center">
                     <tr>
-                        <th style="width:35%">Producto</th>
+                        <th style="width:40%">Producto</th>
                         <th style="width:15%">Cantidad / Kg</th>
                         <th style="width:15%">Precio</th>
                         <th style="width:15%">Subtotal</th>
-                        <th style="width:10%"></th>
+                        <th style="width:15%"></th>
                     </tr>
                 </thead>
-
-                <tbody>
-                    @for (int i = 0; i < Model.Count; i++)
+                <tbody class="align-middle">
+                    @* Empezamos con la tabla vacía o con filas si vienen del modelo (ej: errores de validación) *@
+                    @if (Model != null && Model.Any(d => d.ProductoId.HasValue))
                     {
-                        <tr>
-                            <td>
-                                <select name="detalles[@i].ProductoId"
-                                        class="form-control producto-select">
-
-                                    <option value="">Seleccione</option>
-
-                                    @foreach (var p in ViewBag.Productos)
-                                    {
-                                        <option value="@p.Id"
-                                                data-precio="@p.Precio"
-                                                data-peso="@p.EsPorPeso"
-                                                data-editable="@p.PrecioEditable">
-
-                                            @p.Nombre (Stock: @p.Stock.ToString("0.##"))
-
-                                        </option>
-                                    }
-
-                                </select>
-                            </td>
-
-                            <td>
-                                <input type="number"
-                                       name="detalles[@i].Cantidad"
-                                       class="form-control cantidad"
-                                       value="1"
-                                       step="0.01"
-                                       min="0.01" />
-                            </td>
-
-                            <td>
-                                <input type="text"
-                                       name="detalles[@i].PrecioUnitario"
-                                       class="form-control precio"
-                                       readonly />
-                            </td>
-
-                            <td class="text-end fw-bold subtotal">$0</td>
-
-                            <td class="text-center">
-                                <button type="button"
-                                        class="btn btn-danger"
-                                        onclick="eliminarFila(this)">
-                                    ❌
-                                </button>
-                            </td>
-
-                        </tr>
+                        for (int i = 0; i < Model.Count; i++)
+                        {
+                            if (!Model[i].ProductoId.HasValue) continue;
+                            <tr>
+                                <td>
+                                    <span class="fw-bold">@Model[i].Producto?.Nombre</span>
+                                    <input type="hidden" name="detalles[@i].ProductoId" value="@Model[i].ProductoId" class="producto-id" />
+                                </td>
+                                <td>
+                                    <input type="number" name="detalles[@i].Cantidad" class="form-control cantidad text-center" value="@Model[i].Cantidad" step="0.01" min="0.01" />
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" name="detalles[@i].PrecioUnitario" class="form-control precio" value="@Model[i].PrecioUnitario" @(Model[i].Producto?.PrecioEditable == true ? "" : "readonly") />
+                                    </div>
+                                </td>
+                                <td class="text-end fw-bold subtotal">$@(Model[i].Cantidad * Model[i].PrecioUnitario)</td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarFila(this)">
+                                        <i class="bi bi-trash"></i> Quitar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
-
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center">
-
-        <button type="button"
-                class="btn btn-primary btn-lg"
-                onclick="agregarFila()">
-            ➕ Agregar producto
-        </button>
-
-        <div class="fs-3 fw-bold">
-            TOTAL: $ <span id="totalVenta">0</span>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            @* Botón opcional si quieren agregar manual, aunque el superbuscador debería bastar *@
         </div>
-
+        <div class="card bg-light border-0">
+            <div class="card-body py-2 px-4">
+                <span class="text-muted small me-2">TOTAL A PAGAR:</span>
+                <span class="fs-2 fw-bold text-success">$ <span id="totalVenta">0</span></span>
+            </div>
+        </div>
     </div>
 
     <!-- SECCIÓN FIADO -->
@@ -107,9 +84,9 @@
 
         <button type="button"
                 id="btnFiado"
-                class="btn btn-secondary btn-lg text-black"
+                class="btn btn-outline-secondary btn-lg"
                 onclick="toggleFiado()">
-            📙 Fiado
+            📋 Fiado
         </button>
 
         <div id="seccionFiado" class="d-none mt-3">
@@ -148,8 +125,151 @@
 </form>
 
 <script>
+    let index = @(Model?.Count ?? 0);
     let fiadoActivo = false;
 
+    // --- LÓGICA SUPER BUSCADOR ---
+    const superBuscador = document.getElementById("superBuscador");
+    const statusBusqueda = document.getElementById("statusBusqueda");
+
+    superBuscador.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const texto = this.value.trim();
+            if (texto.length < 2) return;
+
+            buscarYAgregar(texto);
+        }
+    });
+
+    function buscarYAgregar(texto) {
+        statusBusqueda.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> Buscando...</span>';
+
+        // Usamos FormData para enviar como form-urlencoded si es necesario, 
+        // o simplemente enviamos el texto en la URL o body.
+        fetch('/Venta/BuscarOAgregarProducto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `texto=${encodeURIComponent(texto)}`
+        })
+        .then(r => {
+            if (!r.ok) throw new Error("No encontrado");
+            return r.json();
+        })
+        .then(prod => {
+            statusBusqueda.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ${prod.nombre} agregado.</span>`;
+            agregarOIncrementar(prod);
+            superBuscador.value = "";
+            setTimeout(() => statusBusqueda.innerHTML = "", 2000);
+        })
+        .catch(err => {
+            statusBusqueda.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle"></i> Producto no encontrado.</span>';
+            superBuscador.select();
+        });
+    }
+
+    function agregarOIncrementar(prod) {
+        const filas = document.querySelectorAll("#tablaVenta tbody tr");
+        
+        // 1. Verificar si ya existe en la tabla
+        for (let fila of filas) {
+            const idInput = fila.querySelector(".producto-id");
+            if (idInput && idInput.value == prod.id) {
+                const cantidadInput = fila.querySelector(".cantidad");
+                cantidadInput.value = parseFloat(cantidadInput.value) + 1;
+                recalcularFila(fila);
+                resaltarFila(fila);
+                return;
+            }
+        }
+
+        // 2. Si no existe, agregar nueva fila
+        const tbody = document.querySelector("#tablaVenta tbody");
+        const nuevaFila = `
+            <tr class="table-success transition-all">
+                <td>
+                    <span class="fw-bold d-block">${prod.nombre}</span>
+                    <small class="text-muted">Cod: ${prod.id}</small>
+                    <input type="hidden" name="detalles[${index}].ProductoId" value="${prod.id}" class="producto-id" />
+                </td>
+                <td>
+                    <input type="number" name="detalles[${index}].Cantidad" class="form-control cantidad text-center" 
+                           value="1" step="0.01" min="0.01" oninput="recalcularFila(this.closest('tr'))" />
+                </td>
+                <td>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="text" name="detalles[${index}].PrecioUnitario" class="form-control precio" 
+                               value="${prod.precio}" readonly />
+                    </div>
+                </td>
+                <td class="text-end fw-bold subtotal">$${prod.precio}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarFila(this)">
+                        <i class="bi bi-trash"></i> Quitar
+                    </button>
+                </td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", nuevaFila);
+        index++;
+        
+        recalcularTotal();
+        
+        // Animación simple
+        setTimeout(() => {
+            tbody.lastElementChild.classList.remove("table-success");
+        }, 1000);
+
+        if (prod.stock <= 0) {
+            statusBusqueda.innerHTML += ` <span class="text-warning small">(Sin stock)</span>`;
+        }
+    }
+
+    function resaltarFila(fila) {
+        fila.classList.add("table-warning");
+        setTimeout(() => fila.classList.remove("table-warning"), 500);
+    }
+
+    // --- CÁLCULOS ---
+    function recalcularFila(fila) {
+        const cantidadInput = fila.querySelector(".cantidad");
+        const precioInput = fila.querySelector(".precio");
+        const subtotalTd = fila.querySelector(".subtotal");
+
+        const cantidad = parseFloat(cantidadInput.value) || 0;
+        const precio = parseFloat(precioInput.value) || 0;
+        const subtotal = cantidad * precio;
+
+        subtotalTd.innerText = "$" + subtotal.toFixed(0);
+        recalcularTotal();
+    }
+
+    function recalcularTotal() {
+        let total = 0;
+        document.querySelectorAll(".subtotal").forEach(s => {
+            total += parseFloat(s.innerText.replace("$", "")) || 0;
+        });
+        document.getElementById("totalVenta").innerText = total.toFixed(0);
+    }
+
+    function eliminarFila(btn) {
+        btn.closest("tr").remove();
+        renumerarFilas();
+        recalcularTotal();
+    }
+
+    function renumerarFilas() {
+        const filas = document.querySelectorAll("#tablaVenta tbody tr");
+        filas.forEach((fila, i) => {
+            fila.querySelector(".producto-id").name = `detalles[${i}].ProductoId`;
+            fila.querySelector(".cantidad").name = `detalles[${i}].Cantidad`;
+            fila.querySelector(".precio").name = `detalles[${i}].PrecioUnitario`;
+        });
+        index = filas.length;
+    }
+
+    // --- LÓGICA FIADO ---
     function toggleFiado() {
         fiadoActivo = !fiadoActivo;
         const seccion = document.getElementById("seccionFiado");
@@ -158,16 +278,14 @@
 
         if (fiadoActivo) {
             seccion.classList.remove("d-none");
-            btn.classList.remove("btn-outline-secondary");
-            btn.classList.add("btn-warning");
-            btn.textContent = "📙 Fiado ✅ (clic para cancelar)";
+            btn.classList.replace("btn-outline-secondary", "btn-warning");
+            btn.innerHTML = "📋 Fiado ✅ <small>(clic para cancelar)</small>";
             input.value = "true";
             document.getElementById("buscadorCliente").focus();
         } else {
             seccion.classList.add("d-none");
-            btn.classList.remove("btn-warning");
-            btn.classList.add("btn-outline-secondary");
-            btn.textContent = "📙 Fiado";
+            btn.classList.replace("btn-warning", "btn-outline-secondary");
+            btn.innerHTML = "📋 Fiado";
             input.value = "false";
             document.getElementById("clienteId").value = "";
             document.getElementById("clienteSeleccionado").classList.add("d-none");
@@ -176,7 +294,7 @@
         }
     }
 
-    document.getElementById("buscadorCliente")?.addEventListener("input", function () {
+    document.getElementById("buscadorCliente")?.addEventListener("input", function() {
         const q = this.value;
         if (q.length < 2) {
             document.getElementById("resultadosCliente").innerHTML = "";
@@ -193,12 +311,12 @@
                     item.href = "#";
                     item.className = "list-group-item list-group-item-action";
                     item.textContent = c.nombre + (c.telefono ? ` — ${c.telefono}` : "");
-                    item.addEventListener("click", function (e) {
+                    item.onclick = (e) => {
                         e.preventDefault();
                         seleccionarCliente(c);
                         lista.innerHTML = "";
                         document.getElementById("buscadorCliente").value = c.nombre;
-                    });
+                    };
                     lista.appendChild(item);
                 });
             });
@@ -216,359 +334,14 @@
                 if (data.saldo > 0) {
                     saldoEl.textContent = `⚠️ Saldo pendiente: $${data.saldo.toFixed(0)}`;
                     saldoEl.classList.add("text-danger");
-                    saldoEl.classList.remove("text-success");
                 } else {
                     saldoEl.textContent = "✅ Al día";
-                    saldoEl.classList.remove("text-danger");
-                    saldoEl.classList.add("text-success");
+                    saldoEl.classList.replace("text-danger", "text-success");
                 }
             });
     }
-</script>
 
-<script>
-
-    let index = @Model.Count;
-
-    const productos = [
-
-    @foreach (var p in ViewBag.Productos)
-    {
-                            @: {
-                            @: id: @p.Id,
-                            @: nombre: "@p.Nombre",
-                            @: codigo: "@p.CodigoBarra",
-                            @: precio: @p.Precio,
-                            @: peso: "@p.EsPorPeso",
-                            @: editable: "@p.PrecioEditable"
-                            @: },
-    }
-
-    ];
-
-</script>
-
-<script>
-
-    function agregarFila(){
-
-    const tbody = document.querySelector("#tablaVenta tbody");
-
-    const fila = `
-    <tr>
-
-    <td>
-
-    <select name="detalles[${index}].ProductoId"
-            class="form-control producto-select">
-
-    <option value="">Seleccione</option>
-
-    @foreach (var p in ViewBag.Productos)
-    {
-                            <text>
-                                    <option value="@p.Id"
-                    data-precio="@p.Precio"
-                    data-peso="@p.EsPorPeso"
-                    data-editable="@p.PrecioEditable">
-                                            @p.Nombre
-                                    </option>
-                            </text>
-    }
-
-    </select>
-
-    </td>
-
-    <td>
-    <input type="number"
-    name="detalles[${index}].Cantidad"
-    class="form-control cantidad"
-    value="1"
-    step="0.01"
-    min="0.01"/>
-    </td>
-
-    <td>
-    <input type="text"
-    name="detalles[${index}].PrecioUnitario"
-    class="form-control precio"
-    readonly/>
-    </td>
-
-    <td class="text-end fw-bold subtotal">$0</td>
-
-    <td class="text-center">
-    <button type="button"
-    class="btn btn-danger"
-    onclick="eliminarFila(this)">❌</button>
-    </td>
-
-    </tr>
-    `;
-
-    tbody.insertAdjacentHTML("beforeend",fila);
-
-    index++;
-
-    }
-
-</script>
-
-<script>
-
-    document.getElementById("buscadorProducto")
-    .addEventListener("keyup",function(){
-
-    const texto=this.value.toLowerCase();
-
-    if(texto.length<2) return;
-
-    const producto=productos.find(p=>
-
-    p.nombre.toLowerCase().includes(texto)
-    ||
-    p.codigo.includes(texto)
-
-    );
-
-    if(producto){
-
-    completarFila(producto);
-
-    this.value="";
-
-    }
-
-    });
-
-</script>
-
-<script>
-       function completarFila(prod)
-    {
-        const filas = document.querySelectorAll("#tablaVenta tbody tr");
-
-        // 1️⃣ buscar si el producto ya está en la tabla
-        for (let fila of filas)
-        {
-            const select = fila.querySelector(".producto-select");
-
-            if (select.value == prod.id)
-            {
-                const cantidadInput = fila.querySelector(".cantidad");
-
-                let cantidad = parseFloat(cantidadInput.value) || 0;
-
-                cantidadInput.value = cantidad + 1;
-
-                recalcularFila(fila);
-
-                return; // ya existe → no crear nueva fila
-            }
-        }
-
-        // 2️⃣ buscar fila libre
-        let filaLibre = null;
-
-        filas.forEach(f => {
-
-            const select = f.querySelector(".producto-select");
-
-            if (!select.value && !filaLibre)
-                filaLibre = f;
-        });
-
-        // 3️⃣ si no hay fila libre → crear
-        if (!filaLibre)
-        {
-            agregarFila();
-            filaLibre = document.querySelector("#tablaVenta tbody tr:last-child");
-        }
-
-        // 4️⃣ completar producto
-        const select = filaLibre.querySelector(".producto-select");
-
-        for (let option of select.options)
-        {
-            if (option.value == prod.id)
-            {
-                option.selected = true;
-                break;
-            }
-        }
-
-        select.dispatchEvent(new Event("change", { bubbles: true }));
-
-        document.getElementById("buscadorProducto").focus();
-    }
-</script>
-
-<script>
-
-    document.addEventListener("change",function(e){
-
-    if(e.target.classList.contains("producto-select")){
-
-    const fila=e.target.closest("tr");
-
-    const option=e.target.selectedOptions[0];
-
-    const precio=parseFloat(option.dataset.precio)||0;
-
-    const precioInput=fila.querySelector(".precio");
-
-    precioInput.value=precio.toFixed(0);
-
-    recalcularFila(fila);
-
-    }
-
-    });
-
-</script>
-
-<script>
-
-    function recalcularFila(fila){
-
-    const cantidad=parseFloat(
-    fila.querySelector(".cantidad").value.replace(",",".")
-    )||0;
-
-    const precio=parseFloat(
-    fila.querySelector(".precio").value.replace(",",".")
-    )||0;
-
-    const subtotal=cantidad*precio;
-
-    fila.querySelector(".subtotal").innerText="$"+subtotal.toFixed(0);
-
-    recalcularTotal();
-
-    }
-
-    function recalcularTotal(){
-
-    let total=0;
-
-    document.querySelectorAll(".subtotal").forEach(s=>{
-
-    total+=parseFloat(s.innerText.replace("$",""))||0;
-
-    });
-
-    document.getElementById("totalVenta").innerText=total.toFixed(0);
-
-    }
-
-</script>
-
-<script>
-    function eliminarFila(btn) {
-        btn.closest("tr").remove();
-        renumerarFilas();
-        recalcularTotal();
-    }
-
-    function renumerarFilas() {
-        const filas = document.querySelectorAll("#tablaVenta tbody tr");
-        filas.forEach(function (fila, i) {
-            const select = fila.querySelector(".producto-select");
-            const cantidad = fila.querySelector(".cantidad");
-            const precio = fila.querySelector(".precio");
-
-            if (select)   select.name   = `detalles[${i}].ProductoId`;
-            if (cantidad) cantidad.name = `detalles[${i}].Cantidad`;
-            if (precio)   precio.name   = `detalles[${i}].PrecioUnitario`;
-        });
-        index = filas.length;
-    }
-</script>
-
-<script>
-
-    document.querySelector("form")
-    .addEventListener("submit",function(){
-
-    document.querySelectorAll(".cantidad,.precio").forEach(i=>{
-
-    i.value=i.value.replace(",", ".");
-
-    });
-
-    });
-
-</script>
-
-<script>
-        window.onload = function ()
-    {
-        document.getElementById("buscadorProducto").focus();
-    };
-</script>
-
-<script>
-    document.addEventListener("input", function (e) {
-        if (e.target.classList.contains("cantidad")) {
-            const fila = e.target.closest("tr");
-            recalcularFila(fila);
-        }
-    });
-</script>
-
-<script>
-    // Bloquea punto y coma en productos por unidad
-    document.addEventListener("keydown", function (e) {
-        if (!e.target.classList.contains("cantidad")) return;
-
-        const fila = e.target.closest("tr");
-        const select = fila.querySelector(".producto-select");
-        const option = select?.selectedOptions[0];
-        const esPorPeso = option?.dataset.peso?.toLowerCase() === "true";
-
-        if (!esPorPeso && (e.key === "." || e.key === ",")) {
-            e.preventDefault();
-        }
-    });
-</script>
-
-<!-- MODAL CLIENTE RÁPIDO -->
-<div class="modal fade text-black rounded" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog rounded">
-        <div class="modal-content rounded">
-            <div class="modal-header bg-success rounded">
-                <h5 class="modal-title fw-bold">➕ Nuevo Cliente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
-                    <input type="text"
-                           id="nuevoClienteNombre"
-                           class="form-control form-control-lg"
-                           placeholder="Ej: Juan Pérez" />
-                    <div id="errorNombre" class="text-danger d-none">El nombre es obligatorio.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Teléfono <span class="text-muted">(opcional)</span></label>
-                    <input type="text"
-                           id="nuevoClienteTelefono"
-                           class="form-control form-control-lg"
-                           placeholder="Ej: 011-4444-5555" />
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success btn-lg" onclick="guardarClienteRapido()">
-                    💾 Guardar y seleccionar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
+    // --- CLIENTE RÁPIDO ---
     function abrirModalCliente() {
         document.getElementById("nuevoClienteNombre").value = "";
         document.getElementById("nuevoClienteTelefono").value = "";
@@ -594,36 +367,71 @@
         .then(r => r.json())
         .then(data => {
             if (data.ok) {
-                // Seleccionar el cliente recién creado
                 seleccionarCliente({ id: data.id, nombre: data.nombre });
                 document.getElementById("buscadorCliente").value = data.nombre;
-                bootstrap.Modal.getInstance(
-                    document.getElementById("modalNuevoCliente")).hide();
+                bootstrap.Modal.getInstance(document.getElementById("modalNuevoCliente")).hide();
             } else {
-                alert("Error al guardar el cliente: " + data.error);
+                alert("Error: " + data.error);
             }
-        })
-        .catch(() => alert("Error al conectar con el servidor."));
+        });
     }
-</script>
 
-<script>
-    // Limpia decimales en tiempo real si el producto es por unidad
-    document.addEventListener("input", function (e) {
-        if (!e.target.classList.contains("cantidad")) return;
+    // --- INICIALIZACIÓN ---
+    window.onload = () => {
+        superBuscador.focus();
+        recalcularTotal();
+    };
 
-        const fila = e.target.closest("tr");
-        const select = fila.querySelector(".producto-select");
-        const option = select?.selectedOptions[0];
-        const esPorPeso = option?.dataset.peso?.toLowerCase() === "true";
-
-        if (!esPorPeso) {
-            const val = e.target.value;
-            if (val.includes(".") || val.includes(",")) {
-                e.target.value = Math.floor(parseFloat(val) || 1);
-            }
+    // Escuchador global para cambios en cantidad o precio (manual)
+    document.addEventListener("input", function(e) {
+        if (e.target.classList.contains("cantidad") || e.target.classList.contains("precio")) {
+            const fila = e.target.closest("tr");
+            if (fila) recalcularFila(fila);
         }
-
-        recalcularFila(fila);
     });
+
+    // Prevenir submit accidental con ENTER en el buscador
+    document.querySelector("form").onkeypress = (e) => {
+        if (e.target.id === "superBuscador" && e.key === "Enter") return false;
+    };
+
+    document.querySelector("form").onsubmit = function(e) {
+        if (fiadoActivo && !document.getElementById("clienteId").value) {
+            e.preventDefault();
+            alert("Debe seleccionar un cliente para venta al fiado.");
+            return false;
+        }
+        
+        // Convertir comas a puntos para el ModelBinder si es necesario
+        document.querySelectorAll(".cantidad, .precio").forEach(i => {
+            i.value = i.value.replace(",", ".");
+        });
+    };
 </script>
+
+<!-- MODAL CLIENTE RÁPIDO -->
+<div class="modal fade text-black rounded" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog rounded">
+        <div class="modal-content rounded">
+            <div class="modal-header bg-success rounded">
+                <h5 class="modal-title fw-bold text-white">➕ Nuevo Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="fw-bold">Nombre completo <span class="text-danger">*</span></label>
+                    <input type="text" id="nuevoClienteNombre" class="form-control form-control-lg" placeholder="Ej: Juan Pérez" />
+                    <div id="errorNombre" class="text-danger d-none text-small">El nombre es obligatorio.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Teléfono <span class="text-muted">(opcional)</span></label>
+                    <input type="text" id="nuevoClienteTelefono" class="form-control form-control-lg" placeholder="Ej: 011-4444-5555" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success btn-lg" onclick="guardarClienteRapido()">💾 Guardar y seleccionar</button>
+            </div>
+        </div>
+    </div>
+</div>

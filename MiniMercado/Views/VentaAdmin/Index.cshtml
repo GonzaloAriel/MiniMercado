@@ -1,88 +1,175 @@
-﻿@model IEnumerable<MiniMercado.Models.Venta>
+@model IEnumerable<MiniMercado.Models.Venta>
 
 @{
-    ViewData["Title"] = "Administración de Ventas";
+    ViewData["Title"] = "Historial de Ventas";
 }
 
-<h2 class="mb-4">🛠 Administración de Ventas</h2>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2>📜 Historial de Ventas</h2>
+    <a href="/Venta/Create" class="btn btn-primary shadow-sm">
+        <i class="bi bi-cart-plus"></i> Nueva Venta
+    </a>
+</div>
 
-@if (TempData["Mensaje"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["Mensaje"]
-    </div>
-}
+<div id="ajaxAlert" class="alert d-none alert-dismissible fade show">
+    <span id="ajaxAlertMessage"></span>
+    <button type="button" class="btn-close" onclick="this.parentElement.classList.add('d-none')"></button>
+</div>
 
-<form method="get" class="row g-2 mb-3">
-    <div class="col-md-3">
-        <label class="form-label">Desde</label>
-        <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Hasta</label>
-        <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select">
-            <option value="">Todos</option>
-            <option value="activa" selected="@((ViewBag.Estado == "activa") ? "selected" : "")">Activas</option>
-            <option value="anulada" selected="@((ViewBag.Estado == "anulada") ? "selected" : "")">Anulada</option>
-        </select>
-    </div>
-    <div class="col-md-3 d-flex align-items-end gap-2">
-        <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
-        <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
-    </div>
-</form>
+<div class="card p-3 mb-4 shadow-sm">
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Desde</label>
+            <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Hasta</label>
+            <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-select">
+                <option value="">Todas</option>
+                <option value="activa" selected="@(ViewBag.Estado == "activa" ? "selected" : null)">Activas (Válidas)</option>
+                <option value="anulada" selected="@(ViewBag.Estado == "anulada" ? "selected" : null)">Anuladas</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Limpiar</a>
+        </div>
+    </form>
+</div>
 
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th style="width:200px;">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var venta in Model)
-        {
-            <tr class="@(venta.Activa ? "table-danger" : "")">
-                <td>@venta.Id</td>
-                <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>$@venta.Total.ToString("0")</td>
-                <td>
-                    @if (venta.Activa)
-                    {
-                        <span class="badge bg-danger">Anulada</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">Activa</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Detalle"
-                       asp-route-id="@venta.Id"
-                       class="btn btn-sm btn-info">
-                        👁 Detalle
-                    </a>
-
-                    @if (!venta.Activa)
-                    {
-                        <a asp-action="Anular"
-                           asp-route-id="@venta.Id"
-                           class="btn btn-sm btn-danger">
-                            ❌ Anular
-                        </a>
-                    }
-                </td>
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Vendedor</th>
+                <th class="text-end">Total</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
             </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr id="row-@item.Id" class="@(item.Activa ? "table-danger opacity-75" : "")">
+                    <td>#@item.Id</td>
+                    <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td><small>@item.Usuario</small></td>
+                    <td class="text-end fw-bold">$ @item.Total.ToString("N2")</td>
+                    <td class="text-center">
+                        <span id="badge-@item.Id" class="badge @(item.Activa ? "bg-danger" : "bg-success")">
+                            @(item.Activa ? "ANULADA" : "OK")
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if (!item.Activa)
+                            {
+                                <button type="button" 
+                                        onclick="prepararAnulacion(@item.Id)" 
+                                        class="btn btn-outline-danger btn-sm" 
+                                        title="Anular">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de Anulación -->
+<div class="modal fade" id="modalAnular" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">⚠ Anular Venta #<span id="modalVentaId"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea anular esta venta? El stock de los productos será restaurado.</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo de Anulación (opcional)</label>
+                    <textarea id="motivoAnulacion" class="form-control" rows="2" placeholder="Ej: Error de carga, Devolución..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="ejecutarAnulacion()">
+                    Confirmar Anulación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        let ventaParaAnular = null;
+
+        function prepararAnulacion(id) {
+            ventaParaAnular = id;
+            document.getElementById("modalVentaId").textContent = id;
+            document.getElementById("motivoAnulacion").value = "";
+            new bootstrap.Modal(document.getElementById("modalAnular")).show();
         }
-    </tbody>
-</table>
 
+        function ejecutarAnulacion() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const motivo = document.getElementById("motivoAnulacion").value;
+            const id = ventaParaAnular;
 
+            $.ajax({
+                url: '/VentaAdmin/AnularAjax',
+                type: 'POST',
+                data: { 
+                    id: id, 
+                    motivoAnulacion: motivo,
+                    __RequestVerificationToken: token 
+                },
+                success: function(response) {
+                    if (response.ok) {
+                        const row = document.getElementById(`row-${id}`);
+                        const badge = document.getElementById(`badge-${id}`);
+                        
+                        row.classList.add("table-danger", "opacity-75");
+                        badge.className = "badge bg-danger";
+                        badge.textContent = "ANULADA";
+                        
+                        // Ocultar botón de anular
+                        $(row).find('button').fadeOut();
+                        
+                        bootstrap.Modal.getInstance(document.getElementById("modalAnular")).hide();
+                        mostrarAlerta(`✅ Venta #${id} anulada correctamente.`, "alert-success");
+                    } else {
+                        alert("Error: " + response.error);
+                    }
+                },
+                error: function() {
+                    alert("Error al conectar con el servidor.");
+                }
+            });
+        }
 
+        function mostrarAlerta(mensaje, clase) {
+            const alertDiv = document.getElementById("ajaxAlert");
+            const alertMsg = document.getElementById("ajaxAlertMessage");
+            alertDiv.className = `alert ${clase} alert-dismissible fade show`;
+            alertMsg.textContent = mensaje;
+            alertDiv.classList.remove("d-none");
+            setTimeout(() => { $(alertDiv).fadeOut(); }, 4000);
+        }
+    </script>
+}

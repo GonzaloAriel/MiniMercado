@@ -14,12 +14,82 @@ namespace MiniMercado.Controllers
         private readonly MiniMercadoContext _context;
         private readonly ITenantService _tenantService;
         private readonly AuditoriaService _auditoria;
+        private readonly ProductoService _productoService;
 
-        public ProductosController(MiniMercadoContext context, ITenantService tenantService, AuditoriaService auditoria)
+        public ProductosController(MiniMercadoContext context, 
+                                   ITenantService tenantService, 
+                                   AuditoriaService auditoria,
+                                   ProductoService productoService)
         {
             _context = context;
             _tenantService = tenantService;
             _auditoria = auditoria;
+            _productoService = productoService;
+        }
+
+        // BÚSQUEDA EN CATÁLOGO GLOBAL (AJAX)
+        [HttpGet]
+        [Authorize(Roles = "AdminGlobal,Admin")]
+        public IActionResult BuscarProductoBase(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 3) return Json(new List<object>());
+
+            var resultados = _context.ProductosBase
+                .AsNoTracking()
+                .Where(pb => pb.Nombre.Contains(q) || pb.CodigoBarras.Contains(q) || pb.Marca.Contains(q))
+                .Take(10)
+                .Select(pb => new
+                {
+                    pb.Id,
+                    pb.Nombre,
+                    pb.CodigoBarras,
+                    pb.Marca,
+                    pb.Categoria,
+                    pb.PrecioReferencia
+                })
+                .ToList();
+
+            return Json(resultados);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult GetProductoBase(int id)
+        {
+            var pb = _context.ProductosBase.AsNoTracking().FirstOrDefault(x => x.Id == id);
+            if (pb == null) return NotFound();
+
+            return Json(new
+            {
+                nombre = pb.Nombre,
+                codigo = pb.CodigoBarras,
+                categoria = pb.Categoria,
+                precioReferencia = pb.PrecioReferencia
+            });
+        }
+
+        // BÚSQUEDA INTELIGENTE (Local -> Global)
+        [HttpGet]
+        [Authorize(Roles = "Caja,Admin")]
+        public IActionResult BuscarPorCodigo(string codigo)
+        {
+            if (string.IsNullOrWhiteSpace(codigo)) return BadRequest();
+
+            var tenantId = _tenantService.GetTenantId().Value;
+            var producto = _productoService.BuscarProductoPorCodigo(codigo, tenantId);
+
+            if (producto == null) return NotFound();
+
+            return Json(new
+            {
+                producto.Id,
+                Nombre = producto.NombreDisplay,
+                Codigo = producto.CodigoDisplay,
+                producto.Precio,
+                producto.Stock,
+                producto.EsPorPeso,
+                producto.PrecioEditable
+            });
         }
 
         // GET products by Rubro (filtered by current tenant)
@@ -55,6 +125,7 @@ namespace MiniMercado.Controllers
             var productosQuery = _context.Productos
                 .Where(p => p.Activo && p.TenantId == tenantId)
                 .Include(p => p.Rubro)
+                .Include(p => p.ProductoBase)
                 .AsQueryable();
 
             if (rubroId.HasValue)
@@ -100,12 +171,18 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Create(Producto producto)
         {
-            producto.TenantId = _tenantService.GetTenantId().Value;
+            var tenantId = _tenantService.GetTenantId().Value;
+            producto.TenantId = tenantId;
 
             ModelState.Remove(nameof(producto.TenantId));
 
             if (!ModelState.IsValid)
+            {
+                ViewBag.Rubros = _context.Rubros
+                    .Where(r => r.TenantId == tenantId)
+                    .ToList();
                 return View(producto);
+            }
 
             _context.Productos.Add(producto);
             _context.SaveChanges();
@@ -198,6 +275,25 @@ namespace MiniMercado.Controllers
                 return NotFound();
 
             return View(producto);
+        }
+
+        // DELETE AJAX
+        [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DesactivarAjax(int id)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var producto = _context.Productos.FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
+
+            if (producto == null) return Json(new { ok = false, error = "Producto no encontrado" });
+
+            producto.Activo = false;
+            _context.SaveChanges();
+
+            _auditoria.Registrar("Eliminar", "Productos", producto.Id, $"Desactivación AJAX: {producto.Nombre}");
+
+            return Json(new { ok = true });
         }
 
         // DELETE POST

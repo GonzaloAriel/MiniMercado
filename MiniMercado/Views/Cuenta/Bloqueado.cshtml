@@ -1,0 +1,50 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Acceso Bloqueado";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    <h1 class="display-5 fw-bold text-dark">Acceso Bloqueado</h1>
+                    <p class="lead mb-4 mt-3 text-secondary">
+                        Lamentamos informarte que tu suscripción en <strong>MiniMercado</strong> se encuentra vencida o bloqueada.
+                    </p>
+                    
+                    <div class="alert alert-warning border-0 bg-light-warning py-3">
+                        <p class="mb-0 text-dark fw-bold">
+                            Tu suscripción está vencida.
+                        </p>
+                    </div>
+
+                    <p class="text-muted mb-4 small">
+                        Para restablecer el acceso a tu sistema, por favor ponte en contacto con el administrador del servicio.
+                    </p>
+
+                    <div class="d-grid gap-2 col-lg-6 mx-auto">
+                        <a href="mailto:soporte@minimercado.com" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="bi bi-envelope-fill me-2"></i> Contactar Soporte
+                        </a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="mt-2">
+                             <button type="submit" class="btn btn-outline-secondary w-100">Cerrar Sesión</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-footer bg-light py-3 border-0">
+                    <p class="mb-0 text-muted small">&copy; @DateTime.Now.Year MiniMercado SaaS</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-warning {
+        background-color: #fff3cd !important;
+    }
+</style>

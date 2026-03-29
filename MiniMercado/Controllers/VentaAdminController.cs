@@ -15,10 +15,60 @@ public class VentaAdminController : Controller
 
     public VentaAdminController(
             MiniMercadoContext context,
-            ITenantService tenantService)
+            ITenantService tenantService,
+            AuditoriaService auditoria)
     {
         _context = context;
         _tenantService = tenantService;
+        _auditoria = auditoria;
+    }
+
+    // ANULAR AJAX
+    [HttpPost]
+    [Authorize(Roles = "Admin,Caja")]
+    [ValidateAntiForgeryToken]
+    public IActionResult AnularAjax(int id, string? motivoAnulacion)
+    {
+        var tenantId = _tenantService.GetTenantId().Value;
+        var venta = _context.Ventas
+            .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                 NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                 ClienteId, TenantId 
+                          FROM Ventas 
+                          WHERE Id = {0} AND TenantId = {1}", id, tenantId)
+            .FirstOrDefault();
+
+        if (venta == null) return Json(new { ok = false, error = "Venta no encontrada" });
+        if (venta.Activa) return Json(new { ok = false, error = "La venta ya estaba anulada" });
+
+        venta.Detalles = _context.VentaDetalles
+            .Where(d => d.VentaId == id && d.TenantId == tenantId)
+            .Include(d => d.Producto)
+            .ToList();
+
+        // Restaurar stock
+        foreach (var detalle in venta.Detalles)
+        {
+            var producto = detalle.Producto;
+            producto.Stock += detalle.Cantidad;
+
+            _context.MovimientosStock.Add(new MovimientoStock
+            {
+                ProductoId = producto.Id,
+                Cantidad = detalle.Cantidad,
+                Tipo = "ANULACION",
+                Fecha = DateTime.Now,
+                TenantId = tenantId
+            });
+        }
+
+        venta.Activa = true;
+        venta.MotivoAnulacion = motivoAnulacion;
+        _context.SaveChanges();
+
+        _auditoria.Registrar("Anular", "Ventas", venta.Id, "Anulación AJAX");
+
+        return Json(new { ok = true });
     }
 
     // =====================================================
@@ -30,8 +80,11 @@ public class VentaAdminController : Controller
         var tenantId = _tenantService.GetTenantId().Value;
 
         var ventas = _context.Ventas
-            .Where(v => v.TenantId == tenantId)
-            .Include(v => v.Detalles)
+            .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                 NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                 ClienteId, TenantId 
+                          FROM Ventas 
+                          WHERE TenantId = {0}", tenantId)
             .OrderByDescending(v => v.Fecha)
             .AsQueryable();
 
@@ -53,7 +106,17 @@ public class VentaAdminController : Controller
         ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
         ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
 
-        return View(ventas.ToList());
+        var listaVentas = ventas.ToList();
+
+        // Cargar detalles manualmente para evitar JOINs automáticos en la consulta base
+        foreach (var v in listaVentas)
+        {
+            v.Detalles = _context.VentaDetalles
+                .Where(d => d.VentaId == v.Id && d.TenantId == tenantId)
+                .ToList();
+        }
+
+        return View(listaVentas);
     }
 
     // =====================================================
@@ -65,13 +128,20 @@ public class VentaAdminController : Controller
         var tenantId = _tenantService.GetTenantId().Value;
 
         var venta = _context.Ventas
-            .Where(v => v.TenantId == tenantId && v.Id == id)
-            .Include(v => v.Detalles)
-                .ThenInclude(d => d.Producto)
+            .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                 NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                 ClienteId, TenantId 
+                          FROM Ventas 
+                          WHERE Id = {0} AND TenantId = {1}", id, tenantId)
             .FirstOrDefault();
 
         if (venta == null)
             return NotFound();
+
+        venta.Detalles = _context.VentaDetalles
+            .Where(v => v.VentaId == id && v.TenantId == tenantId)
+            .Include(d => d.Producto)
+            .ToList();
 
         return View(venta);
     }
@@ -85,7 +155,12 @@ public class VentaAdminController : Controller
         var tenantId = _tenantService.GetTenantId().Value;
 
         var venta = _context.Ventas
-            .FirstOrDefault(v => v.Id == id && v.TenantId == tenantId);
+            .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                 NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                 ClienteId, TenantId 
+                          FROM Ventas 
+                          WHERE Id = {0} AND TenantId = {1}", id, tenantId)
+            .FirstOrDefault();
 
         if (venta == null)
             return NotFound();
@@ -99,9 +174,9 @@ public class VentaAdminController : Controller
         return View(venta);
     }
 
-    // =====================================================
+    // ====================================================
     // CONFIRMAR ANULACIÓN (POST)
-    // =====================================================
+    // ====================================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin,Caja")]
@@ -110,9 +185,11 @@ public class VentaAdminController : Controller
         var tenantId = _tenantService.GetTenantId().Value;
 
         var venta = _context.Ventas
-            .Where(v => v.Id == id && v.TenantId == tenantId)
-            .Include(v => v.Detalles)
-                .ThenInclude(d => d.Producto)
+            .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                 NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                 ClienteId, TenantId 
+                          FROM Ventas 
+                          WHERE Id = {0} AND TenantId = {1}", id, tenantId)
             .FirstOrDefault();
 
         if (venta == null)
@@ -123,6 +200,11 @@ public class VentaAdminController : Controller
             TempData["Mensaje"] = "⚠ La venta ya estaba anulada.";
             return RedirectToAction(nameof(Index));
         }
+
+        venta.Detalles = _context.VentaDetalles
+            .Where(d => d.VentaId == id && d.TenantId == tenantId)
+            .Include(d => d.Producto)
+            .ToList();
 
         // Restaurar stock
         foreach (var detalle in venta.Detalles)
@@ -147,6 +229,14 @@ public class VentaAdminController : Controller
             : motivoAnulacion;
 
         _context.SaveChanges();
+
+        //Auditoria
+        _auditoria.Registrar(
+                    "Anular",
+                    "Ventas",
+                    venta.Id,
+                    "Se anulo una venta"
+         );
 
         TempData["Mensaje"] = $"✅ Venta #{venta.Id} anulada correctamente.";
 
