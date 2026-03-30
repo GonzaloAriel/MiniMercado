@@ -66,6 +66,7 @@
                 <th>Código</th>
                 <th class="text-end">Precio</th>
                 <th class="text-center">Stock</th>
+                <th class="text-center">Vencimiento</th>
                 <th>Rubro</th>
                 <th class="text-center">Acciones</th>
             </tr>
@@ -83,6 +84,28 @@
                             <span class="badge @(producto.Stock <= 5 ? "bg-danger" : "bg-info")">
                                 @producto.Stock.ToString("0.##")
                             </span>
+                        </td>
+                        <td class="text-center">
+                            @if (producto.FechaVencimiento.HasValue)
+                            {
+                                var dias = (producto.FechaVencimiento.Value.Date - DateTime.Today).TotalDays;
+                                if (dias < 0)
+                                {
+                                    <span class="badge bg-danger" title="Vencido">🔴 @producto.FechaVencimiento.Value.ToShortDateString()</span>
+                                }
+                                else if (dias <= 3)
+                                {
+                                    <span class="badge bg-warning text-dark" title="Por vencer">🟡 @producto.FechaVencimiento.Value.ToShortDateString()</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success" title="En fecha">🟢 @producto.FechaVencimiento.Value.ToShortDateString()</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">-</span>
+                            }
                         </td>
                         <td>
                             <span class="badge bg-light text-dark border">
@@ -108,7 +131,7 @@
             else
             {
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">
+                    <td colspan="7" class="text-center py-4 text-muted">
                         No se encontraron productos que coincidan con la búsqueda.
                     </td>
                 </tr>
@@ -150,7 +173,7 @@
                             
                             // Si no quedan filas, mostrar mensaje de vacío
                             if ($('tbody tr').length === 0) {
-                                $('tbody').append('<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron productos.</td></tr>');
+                                $('tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron productos.</td></tr>');
                             }
                         });
                     } else {

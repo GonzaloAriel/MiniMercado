@@ -136,4 +136,32 @@ body.dark-mode .dropdown-item:hover {
     }
 }
 
+/* NOTIFICACIONES */
+.notif-item {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.notif-item:hover {
+    background-color: #f8fafc;
+}
+
+body.dark-mode .notif-item:hover {
+    background-color: #1e293b;
+}
+
+.animated {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fadeIn {
+    animation-name: fadeIn;
+}
+
 

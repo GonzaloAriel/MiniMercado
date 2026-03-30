@@ -30,14 +30,21 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Rubro</label>
-        <select name="RubroId" class="form-select">
+        <label asp-for="FechaVencimiento" class="form-label fw-bold"></label>
+        <input asp-for="FechaVencimiento" class="form-control" type="date" />
+        <span asp-validation-for="FechaVencimiento" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Rubro</label>
+        <select asp-for="RubroId" class="form-select">
             <option value="">-- Sin rubro --</option>
             @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
             {
                 <option value="@r.Id">@r.Nombre</option>
             }
         </select>
+        <span asp-validation-for="RubroId" class="text-danger"></span>
     </div>
 
     <div class="form-check mb-2">

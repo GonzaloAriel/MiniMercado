@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+﻿using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -34,6 +35,10 @@ namespace MiniMercado.Models
         public bool PrecioEditable { get; set; } = false;
 
         public bool Activo { get; set; } = true;
+
+        [Display(Name = "Fecha de Vencimiento")]
+        [DataType(DataType.Date)]
+        public DateTime? FechaVencimiento { get; set; }
 
         [ValidateNever]
         public List<MovimientoStock> Movimientos { get; set; }

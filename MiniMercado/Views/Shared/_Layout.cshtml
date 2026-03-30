@@ -79,6 +79,37 @@
                     </ul>
 
                     <div class="d-flex align-items-center">
+                        <!-- 🔔 Notificaciones -->
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <div class="dropdown me-2">
+                                <button class="btn btn-link text-white-50 p-2 shadow-none border-0 position-relative"
+                                        type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell-fill fs-5"></i>
+                                    <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                        0
+                                    </span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom animated fadeIn p-0 text-light" 
+                                    aria-labelledby="notifDropdown" style="width: 320px; max-height: 450px; overflow-y: auto;">
+                                    <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold">Notificaciones</h6>
+                                        <span class="badge bg-primary rounded-pill" id="notifCountBadge">0</span>
+                                    </li>
+                                    <div id="notifList">
+                                        <!-- Se carga via AJAX -->
+                                        <li class="p-4 text-center text-muted">
+                                            <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
+                                            <p class="mb-0 small text-light">Cargando...</p>
+                                        </li>
+                                    </div>
+                                    <li class="text-center p-2 border-top">
+                                        <small class="text-muted text-light">Mostrando últimas no leídas</small>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+
                         <button id="toggleDark"
                                 class="btn btn-link text-white-50 p-2 me-3 shadow-none border-0"
                                 title="Cambiar modo">
@@ -147,6 +178,70 @@
             }
         });
     </script>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script>
+            function cargarNotificaciones() {
+                $.get("/Notificaciones/Get", function (data) {
+                    const list = $("#notifList");
+                    const count = $("#notifCount");
+                    const badge = $("#notifCountBadge");
+
+                    list.empty();
+
+                    if (data.length > 0) {
+                        count.text(data.length).removeClass("d-none");
+                        badge.text(data.length);
+
+                        data.forEach(n => {
+                            const fecha = new Date(n.fecha).toLocaleString();
+                            let icon = "bi-info-circle";
+                            let color = "text-primary";
+
+                            if (n.tipo === "Stock") { icon = "bi-exclamation-triangle"; color = "text-danger"; }
+                            if (n.tipo === "Pago") { icon = "bi-credit-card"; color = "text-warning"; }
+
+                            const item = `
+                                <li class="notif-item p-3 border-bottom position-relative" onclick="marcarLeida(${n.id}, '${n.url}')">
+                                    <div class="d-flex align-items-start">
+                                        <div class="${color} me-3 mt-1">
+                                            <i class="bi ${icon} fs-5"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="fw-bold small">${n.titulo}</span>
+                                                <span class="text-muted" style="font-size: 0.7rem;">${fecha}</span>
+                                            </div>
+                                            <p class="mb-0 text-muted small text-light">${n.mensaje}</p>
+                                        </div>
+                                    </div>
+                                </li>`;
+                            list.append(item);
+                        });
+                    } else {
+                        count.addClass("d-none");
+                        badge.text("0");
+                                list.append('<li class="p-4 text-center text-muted small text-light">No hay notificaciones nuevas</li>');
+                    }
+                });
+            }
+
+            function marcarLeida(id, url) {
+                $.post("/Notificaciones/MarcarLeida", { id: id }, function () {
+                    if (url && url !== "null") {
+                        window.location.href = url;
+                    } else {
+                        cargarNotificaciones();
+                    }
+                });
+            }
+
+            // Polling cada 10 seg
+            setInterval(cargarNotificaciones, 10000);
+            $(document).ready(cargarNotificaciones);
+        </script>
+    }
 
 </body>
 </html>

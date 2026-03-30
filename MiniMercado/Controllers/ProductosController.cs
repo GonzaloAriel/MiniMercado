@@ -249,6 +249,7 @@ namespace MiniMercado.Controllers
             productoDb.PrecioEditable = producto.PrecioEditable;
             productoDb.EsPorPeso = producto.EsPorPeso;
             productoDb.RubroId = producto.RubroId;
+            productoDb.FechaVencimiento = producto.FechaVencimiento;
 
             _context.SaveChanges();
 

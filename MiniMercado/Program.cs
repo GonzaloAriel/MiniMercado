@@ -33,10 +33,11 @@ builder.Services.AddScoped<
     IUserClaimsPrincipalFactory<ApplicationUser>,
     CustomClaimsPrincipalFactory>();
 
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<ProductoService>();
+builder.Services.AddScoped<INotificacionService, NotificacionService>();
+builder.Services.AddScoped<IVencimientoService, VencimientoService>();
 builder.Services.AddHttpContextAccessor();
 
 

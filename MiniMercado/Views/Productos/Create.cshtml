@@ -61,6 +61,15 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="FechaVencimiento" class="form-label fw-bold"></label>
+            <input asp-for="FechaVencimiento" class="form-control" type="date" />
+            <span asp-validation-for="FechaVencimiento" class="text-danger" title="Fecha de vencimiento actual del producto"></span>
+            <div class="form-text">Indique la fecha de vencimiento actual para alertas.</div>
+        </div>
+    </div>
+
     <div class="mb-3">
         <label class="form-label fw-bold">Rubro / Categoría <span class="text-danger">*</span></label>
         <div class="input-group">
