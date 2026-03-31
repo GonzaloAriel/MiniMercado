@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
 using System.Linq;
@@ -26,36 +27,51 @@ namespace MiniMercado.Controllers
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
-            ViewBag.Productos = new SelectList(
-                _context.Productos
-                    .Where(p => p.Activo && p.TenantId == tenantId),
-                "Id",
-                "Nombre"
-            );
-
+            // Eliminamos el SelectList pesado de productos
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BuscarProductos(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term)) return Json(new List<object>());
+            
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var productos = await _context.Productos
+                .Where(p => p.TenantId == tenantId && p.Activo &&
+                       (p.Nombre.Contains(term) || p.CodigoBarra.Contains(term)))
+                .OrderBy(p => p.Nombre)
+                .Take(10)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    text = p.Nombre + " (Stock: " + p.Stock + ")",
+                    codigo = p.CodigoBarra
+                })
+                .ToListAsync();
+
+            return Json(productos);
         }
 
 
         // POST: Guardar ingreso
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Ingreso(MovimientoStock movimiento)
+        public IActionResult Ingreso(MovimientoStock movimiento, DateTime? FechaVencimiento)
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
             movimiento.TenantId = tenantId;
             ModelState.Remove(nameof(movimiento.TenantId));
 
+            if (movimiento.ProductoId == null || movimiento.ProductoId == 0)
+            {
+                ModelState.AddModelError("ProductoId", "Debe seleccionar un producto de la lista");
+            }
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Productos = new SelectList(
-                    _context.Productos
-                        .Where(p => p.Activo && p.TenantId == tenantId),
-                    "Id",
-                    "Nombre"
-                );
-
                 return View(movimiento);
             }
 
@@ -67,12 +83,25 @@ namespace MiniMercado.Controllers
             if (producto == null)
                 return BadRequest();
 
+            // 1. Actualizar Stock Total
             producto.Stock += movimiento.Cantidad;
 
+            // 2. Crear LoteProducto
+            var lote = new LoteProducto
+            {
+                ProductoId = producto.Id,
+                TenantId = tenantId,
+                Cantidad = movimiento.Cantidad,
+                FechaVencimiento = FechaVencimiento,
+                FechaIngreso = DateTime.Now
+            };
+            _context.LotesProducto.Add(lote);
+
+            // 3. Registrar Movimiento
             _context.MovimientosStock.Add(movimiento);
             _context.SaveChanges();
 
-            TempData["Mensaje"] = "✅ Ingreso de stock registrado correctamente";
+            TempData["Mensaje"] = "✅ Ingreso de stock y lote registrados correctamente";
 
             return RedirectToAction("Index", "Productos");
         }

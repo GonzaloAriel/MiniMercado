@@ -333,6 +333,38 @@ namespace MiniMercado.Migrations
                     b.ToTable("CobrosTenants");
                 });
 
+            modelBuilder.Entity("MiniMercado.Models.LoteProducto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("FechaIngreso")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("LotesProducto");
+                });
+
             modelBuilder.Entity("MiniMercado.Models.MovimientoStock", b =>
                 {
                     b.Property<int>("Id")
@@ -778,6 +810,23 @@ namespace MiniMercado.Migrations
                         .IsRequired();
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.LoteProducto", b =>
+                {
+                    b.HasOne("MiniMercado.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MiniMercado.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("MiniMercado.Models.MovimientoStock", b =>

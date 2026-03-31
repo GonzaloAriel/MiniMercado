@@ -84,6 +84,38 @@ namespace MiniMercado.Controllers
                 .Take(5)
                 .ToList();
 
+            // --- STOCK INTELIGENTE (LOTES) ---
+            var hoy = DateTime.Now;
+            var limiteProximo = hoy.AddDays(3);
+
+            var lotesVencidos = _context.LotesProducto
+                .Include(l => l.Producto)
+                .Where(l => l.TenantId == tenantId && l.Cantidad > 0 && l.FechaVencimiento != null && l.FechaVencimiento < hoy)
+                .GroupBy(l => new { l.ProductoId, l.Producto.Nombre })
+                .Select(g => new
+                {
+                    Nombre = g.Key.Nombre,
+                    Cantidad = g.Sum(x => x.Cantidad),
+                    Fecha = g.Min(x => x.FechaVencimiento).Value
+                })
+                .OrderBy(x => x.Fecha)
+                .Take(5)
+                .ToList();
+
+            var lotesPorVencer = _context.LotesProducto
+                .Include(l => l.Producto)
+                .Where(l => l.TenantId == tenantId && l.Cantidad > 0 && l.FechaVencimiento != null && l.FechaVencimiento >= hoy && l.FechaVencimiento <= limiteProximo)
+                .GroupBy(l => new { l.ProductoId, l.Producto.Nombre })
+                .Select(g => new
+                {
+                    Nombre = g.Key.Nombre,
+                    Cantidad = g.Sum(x => x.Cantidad),
+                    Fecha = g.Min(x => x.FechaVencimiento).Value
+                })
+                .OrderBy(x => x.Fecha)
+                .Take(5)
+                .ToList();
+
             ViewBag.Anio = year;
             ViewBag.VentasPorMes = ventasPorMes;
             ViewBag.ProductosTop = productosTop;
@@ -91,6 +123,9 @@ namespace MiniMercado.Controllers
             ViewBag.TicketPromedio = ticketPromedio;
             ViewBag.BajoStock = bajoStock;
             ViewBag.TotalAnual = ventasDelAnio.Sum(v => v.Total);
+
+            ViewBag.ProductosVencidos = lotesVencidos;
+            ViewBag.ProductosPorVencer = lotesPorVencer;
 
             return View();
         }

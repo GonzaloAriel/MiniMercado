@@ -1,0 +1,16 @@
+<div class="form-group mb-3 position-relative">
+    <label class="fw-bold">@ViewBag.Label</label>
+    <input type="hidden" id="@ViewBag.InputId" name="@ViewBag.InputName" />
+    <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text"
+               id="@ViewBag.SearchId"
+               class="form-control form-control-lg"
+               placeholder="@(ViewBag.Placeholder ?? "🔎 Buscar producto...")"
+               autocomplete="off" />
+    </div>
+    <span id="validation-@ViewBag.InputId" class="text-danger small"></span>
+
+    <!-- Resultados del buscador -->
+    <div id="@ViewBag.ResultId" class="list-group shadow position-absolute w-100 d-none" style="z-index: 1050; top: 100%;"></div>
+</div>

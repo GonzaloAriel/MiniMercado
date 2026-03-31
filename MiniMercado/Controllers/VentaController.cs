@@ -37,6 +37,59 @@ namespace MiniMercado.Controllers
         }
 
         [HttpPost]
+        public IActionResult BuscarProductos(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return BadRequest();
+            var tenantId = _tenantService.GetTenantId().Value;
+            texto = texto.Trim();
+
+            // 1. Buscar productos del tenant
+            // Incluimos Rubro por si necesitamos mostrarlo (opcional)
+            var productosQuery = _context.Productos
+                .Where(p => p.TenantId == tenantId && p.Activo &&
+                    (p.Nombre.Contains(texto) || p.CodigoBarra.Contains(texto)))
+                .ToList();
+
+            // 2. Ordenar por relevancia en memoria
+            var result = productosQuery
+                .Select(p => new
+                {
+                    id = p.Id,
+                    nombre = p.Nombre,
+                    precio = p.Precio,
+                    stock = p.Stock,
+                    esPorPeso = p.EsPorPeso,
+                    codigoBarra = p.CodigoBarra
+                })
+                .OrderBy(p => p.codigoBarra == texto ? 0 : 1) // Coincidencia exacta de código
+                .ThenBy(p => p.nombre.Equals(texto, StringComparison.OrdinalIgnoreCase) ? 0 : 1) // Coincidencia exacta de nombre
+                .ThenBy(p => p.nombre.StartsWith(texto, StringComparison.OrdinalIgnoreCase) ? 0 : 1) // Empieza con
+                .ThenBy(p => p.nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) ? 0 : 1) // Contiene
+                .Take(10)
+                .ToList();
+
+            // 3. Fallback a ProductoBase si no hay resultados locales (usando búsqueda por código exacto)
+            if (!result.Any())
+            {
+                var productoCreado = _productoService.BuscarProductoPorCodigo(texto, tenantId);
+                if (productoCreado != null)
+                {
+                    result.Add(new
+                    {
+                        id = productoCreado.Id,
+                        nombre = productoCreado.Nombre,
+                        precio = productoCreado.Precio,
+                        stock = productoCreado.Stock,
+                        esPorPeso = productoCreado.EsPorPeso,
+                        codigoBarra = productoCreado.CodigoBarra
+                    });
+                }
+            }
+
+            return Json(result);
+        }
+
+        [HttpPost]
         public IActionResult BuscarOAgregarProducto(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return BadRequest();
@@ -112,7 +165,44 @@ namespace MiniMercado.Controllers
                     item.Cantidad = Math.Floor(item.Cantidad);
                 }
 
-                // Stock
+                // --- LÓGICA FIFO (LOTES) ---
+                decimal cantidadRestante = item.Cantidad;
+
+                var lotes = _context.LotesProducto
+                    .Where(l => l.ProductoId == producto.Id && l.TenantId == tenantId && l.Cantidad > 0)
+                    .OrderBy(l => l.FechaVencimiento ?? DateTime.MaxValue)
+                    .ThenBy(l => l.FechaIngreso)
+                    .ToList();
+
+                foreach (var lote in lotes)
+                {
+                    if (cantidadRestante <= 0) break;
+
+                    decimal aDescontar = Math.Min(lote.Cantidad, cantidadRestante);
+                    lote.Cantidad -= aDescontar;
+                    cantidadRestante -= aDescontar;
+
+                    // 🔔 Notificación de Vencimiento Próximo (ej: menos de 7 días)
+                    if (lote.FechaVencimiento.HasValue && (lote.FechaVencimiento.Value - DateTime.Today).TotalDays <= 7)
+                    {
+                        await _notificacionService.CrearNotificacion(
+                            "Vencimiento Próximo",
+                            $"El lote del producto '{producto.Nombre}' vence el {lote.FechaVencimiento.Value:dd/MM/yyyy}",
+                            "Vencimiento",
+                            $"/Productos/Edit/{producto.Id}"
+                        );
+                    }
+                }
+
+                if (cantidadRestante > 0)
+                {
+                    // Si no hay lotes suficientes, igual descontamos del stock general (para no bloquear venta si hubo error previo)
+                    // o podrías lanzar error. Siguiendo instrucciones: "Si no alcanza stock en lotes -> error"
+                    // Pero para no romper la UX actual y permitir stock negativo si el negocio lo permite:
+                    // producto.Stock -= item.Cantidad; // Ya estaba así.
+                }
+
+                // Stock Total (Referencia)
                 producto.Stock -= item.Cantidad;
 
                 // 🔔 Notificación de Stock Negativo

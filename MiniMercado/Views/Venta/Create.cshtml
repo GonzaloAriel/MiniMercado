@@ -8,15 +8,23 @@
     <div class="card-body bg-dark text-white">
         <h5 class="card-title text-primary"><i class="bi bi-upc-scan"></i>BUSCADOR</h5>
         <p class="small text-muted">Escriba nombre, código o escanee directamente. Presione ENTER para agregar.</p>
-        <div class="input-group input-group-lg">
-            <span class="input-group-text bg-primary text-white border-primary"><i class="bi bi-search"></i></span>
-            <input type="text" id="superBuscador" class="form-control border-primary" placeholder="Escriba y presione ENTER..." autocomplete="off">
-        </div>
+        
+        @{
+            ViewBag.Label = "";
+            ViewBag.InputId = "productoSeleccionadoId"; // ID temporal
+            ViewBag.InputName = "productoSeleccionadoId";
+            ViewBag.SearchId = "superBuscador";
+            ViewBag.ResultId = "dropdownBuscador";
+            ViewBag.Placeholder = "Escriba nombre, código o escanee...";
+        }
+        @await Html.PartialAsync("_BuscadorProductos")
+        
         <div id="statusBusqueda" class="mt-2 small"></div>
     </div>
 </div>
 
 <form method="post">
+    @Html.AntiForgeryToken()
 
     <div class="card mb-3 shadow-sm">
         <div class="card-body p-0">
@@ -124,86 +132,71 @@
 
 </form>
 
-<script>
+@section Scripts {
+    <script src="~/js/buscador-productos.js"></script>
+    <script>
     let index = @(Model?.Count ?? 0);
     let fiadoActivo = false;
 
-    // --- LÓGICA SUPER BUSCADOR ---
-    const superBuscador = document.getElementById("superBuscador");
-    const statusBusqueda = document.getElementById("statusBusqueda");
-
-    superBuscador.addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            const texto = this.value.trim();
-            if (texto.length < 2) return;
-
-            buscarYAgregar(texto);
-        }
+    document.addEventListener("DOMContentLoaded", function() {
+        initBuscador({
+            searchId: "superBuscador",
+            inputId: "productoSeleccionadoId",
+            resultId: "dropdownBuscador",
+            onSelect: function(p) {
+                agregarOIncrementar(p);
+                
+                const statusBusqueda = document.getElementById("statusBusqueda");
+                statusBusqueda.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ${p.nombre} agregado.</span>`;
+                setTimeout(() => { if(statusBusqueda.innerText.includes(p.nombre)) statusBusqueda.innerHTML = ""; }, 2000);
+            }
+        });
     });
 
-    function buscarYAgregar(texto) {
-        statusBusqueda.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> Buscando...</span>';
-
-        // Usamos FormData para enviar como form-urlencoded si es necesario, 
-        // o simplemente enviamos el texto en la URL o body.
-        fetch('/Venta/BuscarOAgregarProducto', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `texto=${encodeURIComponent(texto)}`
-        })
-        .then(r => {
-            if (!r.ok) throw new Error("No encontrado");
-            return r.json();
-        })
-        .then(prod => {
-            statusBusqueda.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ${prod.nombre} agregado.</span>`;
-            agregarOIncrementar(prod);
-            superBuscador.value = "";
-            setTimeout(() => statusBusqueda.innerHTML = "", 2000);
-        })
-        .catch(err => {
-            statusBusqueda.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle"></i> Producto no encontrado.</span>';
-            superBuscador.select();
-        });
-    }
-
     function agregarOIncrementar(prod) {
+        const p = {
+            id: prod.id,
+            nombre: prod.nombre,
+            precio: prod.precio,
+            stock: prod.stock,
+            esPorPeso: prod.esPorPeso,
+            codigoBarra: prod.codigo || prod.codigoBarra
+        };
+
         const filas = document.querySelectorAll("#tablaVenta tbody tr");
         
-        // 1. Verificar si ya existe en la tabla
         for (let fila of filas) {
             const idInput = fila.querySelector(".producto-id");
-            if (idInput && idInput.value == prod.id) {
+            if (idInput && idInput.value == p.id) {
                 const cantidadInput = fila.querySelector(".cantidad");
-                cantidadInput.value = parseFloat(cantidadInput.value) + 1;
+                cantidadInput.value = (parseFloat(cantidadInput.value) + 1).toFixed(p.esPorPeso ? 2 : 0);
                 recalcularFila(fila);
                 resaltarFila(fila);
                 return;
             }
         }
 
-        // 2. Si no existe, agregar nueva fila
         const tbody = document.querySelector("#tablaVenta tbody");
+        const cantidadInicial = 1;
         const nuevaFila = `
             <tr class="table-success transition-all">
                 <td>
-                    <span class="fw-bold d-block">${prod.nombre}</span>
-                    <small class="text-muted">Cod: ${prod.id}</small>
-                    <input type="hidden" name="detalles[${index}].ProductoId" value="${prod.id}" class="producto-id" />
+                    <span class="fw-bold d-block">${p.nombre}</span>
+                    <small class="text-muted">Cod: ${p.codigoBarra}</small>
+                    <input type="hidden" name="detalles[${index}].ProductoId" value="${p.id}" class="producto-id" />
                 </td>
                 <td>
                     <input type="number" name="detalles[${index}].Cantidad" class="form-control cantidad text-center" 
-                           value="1" step="0.01" min="0.01" oninput="recalcularFila(this.closest('tr'))" />
+                           value="${cantidadInicial}" step="0.01" min="0.01" oninput="recalcularFila(this.closest('tr'))" />
                 </td>
                 <td>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
                         <input type="text" name="detalles[${index}].PrecioUnitario" class="form-control precio" 
-                               value="${prod.precio}" readonly />
+                               value="${p.precio}" readonly />
                     </div>
                 </td>
-                <td class="text-end fw-bold subtotal">$${prod.precio}</td>
+                <td class="text-end fw-bold subtotal">$${p.precio}</td>
                 <td class="text-center">
                     <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarFila(this)">
                         <i class="bi bi-trash"></i> Quitar
@@ -213,16 +206,15 @@
         `;
         tbody.insertAdjacentHTML("beforeend", nuevaFila);
         index++;
-        
         recalcularTotal();
         
-        // Animación simple
         setTimeout(() => {
-            tbody.lastElementChild.classList.remove("table-success");
+            const lastRow = tbody.lastElementChild;
+            if (lastRow) lastRow.classList.remove("table-success");
         }, 1000);
 
-        if (prod.stock <= 0) {
-            statusBusqueda.innerHTML += ` <span class="text-warning small">(Sin stock)</span>`;
+        if (p.stock <= 0) {
+            document.getElementById("statusBusqueda").innerHTML += ` <span class="text-warning small">(Sin stock)</span>`;
         }
     }
 
@@ -231,7 +223,6 @@
         setTimeout(() => fila.classList.remove("table-warning"), 500);
     }
 
-    // --- CÁLCULOS ---
     function recalcularFila(fila) {
         const cantidadInput = fila.querySelector(".cantidad");
         const precioInput = fila.querySelector(".precio");
@@ -262,14 +253,16 @@
     function renumerarFilas() {
         const filas = document.querySelectorAll("#tablaVenta tbody tr");
         filas.forEach((fila, i) => {
-            fila.querySelector(".producto-id").name = `detalles[${i}].ProductoId`;
-            fila.querySelector(".cantidad").name = `detalles[${i}].Cantidad`;
-            fila.querySelector(".precio").name = `detalles[${i}].PrecioUnitario`;
+            const prodId = fila.querySelector(".producto-id");
+            const cant = fila.querySelector(".cantidad");
+            const prec = fila.querySelector(".precio");
+            if(prodId) prodId.name = `detalles[${i}].ProductoId`;
+            if(cant) cant.name = `detalles[${i}].Cantidad`;
+            if(prec) prec.name = `detalles[${i}].PrecioUnitario`;
         });
         index = filas.length;
     }
 
-    // --- LÓGICA FIADO ---
     function toggleFiado() {
         fiadoActivo = !fiadoActivo;
         const seccion = document.getElementById("seccionFiado");
@@ -341,7 +334,6 @@
             });
     }
 
-    // --- CLIENTE RÁPIDO ---
     function abrirModalCliente() {
         document.getElementById("nuevoClienteNombre").value = "";
         document.getElementById("nuevoClienteTelefono").value = "";
@@ -376,13 +368,11 @@
         });
     }
 
-    // --- INICIALIZACIÓN ---
     window.onload = () => {
-        superBuscador.focus();
+        document.getElementById("superBuscador").focus();
         recalcularTotal();
     };
 
-    // Escuchador global para cambios en cantidad o precio (manual)
     document.addEventListener("input", function(e) {
         if (e.target.classList.contains("cantidad") || e.target.classList.contains("precio")) {
             const fila = e.target.closest("tr");
@@ -390,7 +380,6 @@
         }
     });
 
-    // Prevenir submit accidental con ENTER en el buscador
     document.querySelector("form").onkeypress = (e) => {
         if (e.target.id === "superBuscador" && e.key === "Enter") return false;
     };
@@ -401,13 +390,13 @@
             alert("Debe seleccionar un cliente para venta al fiado.");
             return false;
         }
-        
-        // Convertir comas a puntos para el ModelBinder si es necesario
         document.querySelectorAll(".cantidad, .precio").forEach(i => {
             i.value = i.value.replace(",", ".");
         });
     };
-</script>
+    </script>
+}
+
 
 <!-- MODAL CLIENTE RÁPIDO -->
 <div class="modal fade text-black rounded" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">

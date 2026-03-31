@@ -7,20 +7,26 @@
 
     @Html.AntiForgeryToken()
 
-    <div class="form-group">
-        <label>Producto</label>
-        <select asp-for="ProductoId"
-                asp-items="ViewBag.Productos"
-                class="form-control">
-            <option value="0">Seleccione un producto</option>
-        </select>
-        <span asp-validation-for="ProductoId" class="text-danger"></span>
-    </div>
+    @{
+        ViewBag.Label = "Producto";
+        ViewBag.InputId = "ProductoId";
+        ViewBag.InputName = "ProductoId";
+        ViewBag.SearchId = "buscadorStock";
+        ViewBag.ResultId = "resultadosStock";
+        ViewBag.Placeholder = "🔎 Escriba nombre o escanee código...";
+    }
+
+    @await Html.PartialAsync("_BuscadorProductos")
 
     <div class="form-group">
         <label>Cantidad</label>
         <input asp-for="Cantidad" class="form-control" />
         <span asp-validation-for="Cantidad" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label>Fecha de Vencimiento (Opcional)</label>
+        <input type="date" name="FechaVencimiento" class="form-control" />
     </div>
 
     <input type="hidden" asp-for="Tipo" value="INGRESO" />
@@ -44,4 +50,18 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script src="~/js/buscador-productos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            initBuscador({
+                searchId: "buscadorStock",
+                inputId: "ProductoId",
+                resultId: "resultadosStock",
+                onSelect: function(p) {
+                    document.querySelector("input[name='Cantidad']").focus();
+                }
+            });
+        });
+    </script>
 }

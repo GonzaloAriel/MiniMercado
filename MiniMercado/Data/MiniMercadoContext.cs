@@ -24,10 +24,23 @@ namespace MiniMercado.Data
         public DbSet<CobroTenant> CobrosTenants { get; set; }
         public DbSet<ProductoBase> ProductosBase { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
+        public DbSet<LoteProducto> LotesProducto { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<LoteProducto>()
+                .HasOne(l => l.Producto)
+                .WithMany()
+                .HasForeignKey(l => l.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LoteProducto>()
+                .HasOne<Tenant>()
+                .WithMany()
+                .HasForeignKey(l => l.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Notificacion>()
                 .HasOne(n => n.Tenant)
