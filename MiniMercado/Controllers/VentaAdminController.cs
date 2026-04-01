@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
@@ -33,7 +33,7 @@ public class VentaAdminController : Controller
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                 ClienteId, TenantId 
+                                 ClienteId, TenantId, CajaId 
                           FROM Ventas 
                           WHERE Id = {0} AND TenantId = {1}", id, tenantId)
             .FirstOrDefault();
@@ -82,7 +82,7 @@ public class VentaAdminController : Controller
         var ventas = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                 ClienteId, TenantId 
+                                 ClienteId, TenantId, CajaId 
                           FROM Ventas 
                           WHERE TenantId = {0}", tenantId)
             .OrderByDescending(v => v.Fecha)
@@ -130,7 +130,7 @@ public class VentaAdminController : Controller
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                 ClienteId, TenantId 
+                                 ClienteId, TenantId, CajaId 
                           FROM Ventas 
                           WHERE Id = {0} AND TenantId = {1}", id, tenantId)
             .FirstOrDefault();
@@ -157,7 +157,7 @@ public class VentaAdminController : Controller
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                 ClienteId, TenantId 
+                                 ClienteId, TenantId, CajaId 
                           FROM Ventas 
                           WHERE Id = {0} AND TenantId = {1}", id, tenantId)
             .FirstOrDefault();
@@ -187,7 +187,7 @@ public class VentaAdminController : Controller
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                 ClienteId, TenantId 
+                                 ClienteId, TenantId, CajaId 
                           FROM Ventas 
                           WHERE Id = {0} AND TenantId = {1}", id, tenantId)
             .FirstOrDefault();
@@ -243,5 +243,3 @@ public class VentaAdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 }
-
-

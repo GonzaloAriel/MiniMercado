@@ -44,6 +44,19 @@
         <input asp-for="MensajeTicket" class="form-control" placeholder="Ej: ¡Gracias por su compra!" />
     </div>
 
+    <div class="card mb-3 border-primary">
+        <div class="card-body">
+            <h5 class="card-title text-primary">💰 Sistema de Cajas</h5>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="UsarCaja" name="UsarCaja" value="true" @(ViewBag.UsarCaja ? "checked" : "")>
+                <label class="form-check-label" for="UsarCaja">Activar control de apertura y cierre de caja</label>
+            </div>
+            <small class="text-muted">
+                Si está desactivado, el sistema funcionará en modo simple sin pedir apertura de caja.
+            </small>
+        </div>
+    </div>
+
     <button type="submit" class="btn btn-success">
         💾 Guardar configuración
     </button>

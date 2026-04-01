@@ -34,6 +34,9 @@ namespace MiniMercado.Models
 
         public int? ClienteId { get; set; }
 
+        public int? CajaId { get; set; }
+        public Caja? Caja { get; set; }
+
         
 
     }

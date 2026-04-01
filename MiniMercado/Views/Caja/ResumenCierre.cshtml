@@ -1,0 +1,86 @@
+@model MiniMercado.Models.Caja
+
+@{
+    ViewData["Title"] = "Resumen de Cierre";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white text-center py-3">
+                <h4>✅ Caja Cerrada Correctamente</h4>
+                <small>@Model.FechaCierre?.ToString("dd/MM/yyyy HH:mm")</small>
+            </div>
+            <div class="card-body p-4">
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <small class="text-muted d-block fw-bold text-uppercase">Monto Inicial</small>
+                            <span class="h4 fw-bold text-dark">$ @Model.MontoInicial.ToString("N2")</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <small class="text-muted d-block fw-bold text-uppercase">Total Ventas</small>
+                            <span class="h4 fw-bold text-success">$ @Model.TotalVentas.ToString("N2")</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <small class="text-muted d-block fw-bold text-uppercase">Esperado</small>
+                            <span class="h4 fw-bold text-primary">$ @((Model.MontoInicial + Model.TotalVentas).ToString("N2"))</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if (ViewBag.VentasFueraCantidad > 0)
+                {
+                    <div class="alert alert-warning border-warning shadow-sm mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold">⚠️ Ventas realizadas fuera de caja</h6>
+                                <p class="mb-0 small">Se registraron <strong>@ViewBag.VentasFueraCantidad</strong> ventas por un total de <strong>$ @ViewBag.VentasFueraTotal.ToString("N2")</strong> mientras esta caja no estaba abierta.</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <hr />
+
+                <div class="row align-items-center my-4">
+                    <div class="col-md-6 text-center">
+                        <small class="text-muted d-block">Monto Real Ingresado</small>
+                        <span class="h2 text-primary">$ @Model.MontoReal?.ToString("N2")</span>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <small class="text-muted d-block">Diferencia</small>
+                        <span class="h2 @(Model.Diferencia < 0 ? "text-danger" : (Model.Diferencia > 0 ? "text-warning" : "text-success"))">
+                            $ @Model.Diferencia?.ToString("N2")
+                        </span>
+                        <div>
+                            @if (Model.Diferencia < 0)
+                            {
+                                <span class="badge bg-danger">FALTANTE</span>
+                            }
+                            else if (Model.Diferencia > 0)
+                            {
+                                <span class="badge bg-warning text-dark">SOBRANTE</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">SIN DIFERENCIA</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-5">
+                    <a asp-action="Index" asp-controller="Home" class="btn btn-outline-dark btn-lg">
+                        🏠 Volver al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

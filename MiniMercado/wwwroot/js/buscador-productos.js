@@ -8,6 +8,7 @@ function initBuscador(config) {
     const resultDiv = document.getElementById(config.resultId);
     let selectedIndex = -1;
     let timeout = null;
+    let abortController = null; // Para cancelar peticiones previas
 
     input.addEventListener("input", function () {
         clearTimeout(timeout);
@@ -19,10 +20,21 @@ function initBuscador(config) {
         }
 
         timeout = setTimeout(() => {
-            fetch(`/api/productosapi/buscar?term=${encodeURIComponent(query)}`)
+            // Cancelamos la petición anterior si existe
+            if (abortController) {
+                abortController.abort();
+            }
+            abortController = new AbortController();
+
+            fetch(`/api/productosapi/buscar?term=${encodeURIComponent(query)}`, { signal: abortController.signal })
                 .then(res => res.json())
                 .then(data => {
                     renderizarResultados(data);
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.error("Error en búsqueda:", err);
+                    }
                 });
         }, 300);
     });
@@ -45,11 +57,9 @@ function initBuscador(config) {
         } else if (e.key === "Enter") {
             e.preventDefault();
             if (selectedIndex > -1 && items[selectedIndex]) {
-                // Seleccionamos el producto asociado al item activo
                 const p = JSON.parse(items[selectedIndex].getAttribute("data-producto"));
                 ejecutarSeleccion(p);
             } else if (items.length === 1) {
-                // Si hay uno solo, lo seleccionamos directamente
                 const p = JSON.parse(items[0].getAttribute("data-producto"));
                 ejecutarSeleccion(p);
             }
@@ -100,8 +110,6 @@ function initBuscador(config) {
 
     function ejecutarSeleccion(p) {
         if (p.tipo === "base") {
-            console.log("Iniciando creación de producto base:", p.id);
-            
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
             fetch('/api/productosapi/crear-desde-base', {
@@ -114,22 +122,15 @@ function initBuscador(config) {
                 body: JSON.stringify({ baseId: parseInt(p.id) })
             })
             .then(res => {
-                if (!res.ok) {
-                    return res.text().then(text => {
-                        console.error("ERROR SERVER:", text);
-                        alert("ERROR REAL DEL SERVIDOR:\n" + text);
-                        throw new Error(text);
-                    });
-                }
+                if (!res.ok) throw new Error("Error en servidor");
                 return res.json();
             })
             .then(nuevoProducto => {
-                console.log("Producto vinculado con éxito:", nuevoProducto);
                 finalizar(nuevoProducto);
             })
             .catch(err => {
                 console.error("Error al crear producto:", err);
-                alert("No se pudo vincular el producto del catálogo global. Verifique la consola para más detalles.");
+                alert("No se pudo vincular el producto.");
             });
         } else {
             finalizar(p);
@@ -137,9 +138,20 @@ function initBuscador(config) {
     }
 
     function finalizar(p) {
+        // Limpiamos todo
+        clearTimeout(timeout);
+        if (abortController) abortController.abort();
+        
         hidden.value = p.id;
-        input.value = p.nombre;
-        ocultarResultados();
+        input.value = ""; 
+        
+        // Un delay mínimo para asegurar que nada re-llene el input
+        setTimeout(() => {
+            input.value = "";
+            ocultarResultados();
+            input.focus();
+        }, 50);
+
         if (config.onSelect) {
             config.onSelect(p);
         }

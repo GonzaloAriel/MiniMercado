@@ -79,6 +79,9 @@
                     </ul>
 
                     <div class="d-flex align-items-center">
+                        <!-- 💰 Estado de Caja -->
+                        @await Component.InvokeAsync("CajaStatus")
+
                         <!-- 🔔 Notificaciones -->
                         @if (User.Identity.IsAuthenticated)
                         {

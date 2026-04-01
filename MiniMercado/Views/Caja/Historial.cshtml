@@ -1,0 +1,120 @@
+@model List<MiniMercado.Models.Caja>
+
+@{
+    ViewData["Title"] = "Historial de Cajas";
+    decimal totalVentas = Model.Sum(c => c.TotalVentas);
+    decimal totalDiferencia = Model.Sum(c => c.Diferencia ?? 0);
+    int cajasCerradas = Model.Count(c => c.Estado == "CERRADA");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📈 Estado e Historial de Cajas</h2>
+        <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary">Volver al Inicio</a>
+    </div>
+
+    <!-- Dashboard Rápido -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-uppercase small opacity-75">Total Ventas (Periodo)</h6>
+                    <h3 class="fw-bold">$ @totalVentas.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card @(totalDiferencia < 0 ? "bg-danger" : (totalDiferencia > 0 ? "bg-warning text-dark" : "bg-success")) text-white shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-uppercase small opacity-75">Diferencia Total</h6>
+                    <h3 class="fw-bold">$ @totalDiferencia.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark text-white shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-uppercase small opacity-75">Cajas Cerradas</h6>
+                    <h3 class="fw-bold">@cajasCerradas</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Desde</label>
+                    <input type="date" name="desde" class="form-control" value="@(((DateTime)ViewBag.Desde).ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Hasta</label>
+                    <input type="date" name="hasta" class="form-control" value="@(((DateTime)ViewBag.Hasta).ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-primary">🔍 Filtrar Historial</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Historial -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Apertura</th>
+                            <th>Cierre</th>
+                            <th>Usuario</th>
+                            <th class="text-end">Monto Inicial</th>
+                            <th class="text-end">Ventas</th>
+                            <th class="text-end">Monto Real</th>
+                            <th class="text-end">Diferencia</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var caja in Model)
+                        {
+                            <tr>
+                                <td class="small">@caja.FechaApertura.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="small">@caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@caja.Usuario</td> @* Podrías cargar el nombre si haces un include *@
+                                <td class="text-end">$ @caja.MontoInicial.ToString("N2")</td>
+                                <td class="text-end fw-bold">$ @caja.TotalVentas.ToString("N2")</td>
+                                <td class="text-end text-primary">$ @(caja.MontoReal?.ToString("N2") ?? "-")</td>
+                                <td class="text-end fw-bold @(caja.Diferencia < 0 ? "text-danger" : (caja.Diferencia > 0 ? "text-warning" : "text-success"))">
+                                    $ @(caja.Diferencia?.ToString("N2") ?? "-")
+                                </td>
+                                <td>
+                                    @if (caja.Estado == "ABIERTA")
+                                    {
+                                        <span class="badge bg-success">ABIERTA</span>
+                                    }
+                                    else if (caja.Estado == "AUTOMATICA")
+                                    {
+                                        <span class="badge bg-info">AUTOMATICA</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">CERRADA</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="ResumenCierre" asp-route-id="@caja.Id" class="btn btn-outline-dark btn-sm">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

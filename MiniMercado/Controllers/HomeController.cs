@@ -35,7 +35,7 @@ namespace MiniMercado.Controllers
             var ventasHoy = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Activa = 0 AND TenantId = {0}", tenantId.Value)
                 .Where(v => v.Fecha >= hoy && v.Fecha < mañana)

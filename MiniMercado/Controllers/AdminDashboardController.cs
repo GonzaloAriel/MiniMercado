@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
@@ -26,7 +26,7 @@ namespace MiniMercado.Controllers
             var ventasRaw = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE TenantId = {0}", tenantId);
 

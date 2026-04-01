@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Apertura de Caja";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h3>💰 Apertura de Caja</h3>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.ErrorCaja != null)
+                {
+                    <div class="alert alert-danger">@ViewBag.ErrorCaja</div>
+                }
+
+                <form asp-action="AbrirCaja" method="post">
+                    <div class="mb-3 text-center">
+                        <label for="montoInicial" class="form-label h5">Monto Inicial en Caja</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="montoInicial" id="montoInicial" step="0.01" class="form-control text-center" value="0" autofocus required />
+                        </div>
+                        <small class="text-muted">Ingrese el efectivo disponible al inicio del turno.</small>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            🚀 Abrir Caja y Comenzar a Vender
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

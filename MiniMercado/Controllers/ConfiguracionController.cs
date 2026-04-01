@@ -28,11 +28,21 @@ namespace MiniMercado.Controllers
             if (tenant == null)
                 return NotFound();
 
+            var config = _context.Configuraciones.FirstOrDefault(c => c.TenantId == tenantId);
+            if (config == null)
+            {
+                config = new Configuracion { TenantId = tenantId, UsarCaja = false };
+                _context.Configuraciones.Add(config);
+                _context.SaveChanges();
+            }
+
+            ViewBag.UsarCaja = config.UsarCaja;
+
             return View(tenant);
         }
 
         [HttpPost]
-        public IActionResult Index(Tenant tenant)
+        public IActionResult Index(Tenant tenant, bool UsarCaja)
         {
             var tenantId = _tenantService.GetTenantId().Value;
 
@@ -53,6 +63,17 @@ namespace MiniMercado.Controllers
             tenantDb.Email = tenant.Email;
             tenantDb.CUIT = tenant.CUIT;
             tenantDb.MensajeTicket = tenant.MensajeTicket;
+
+            var config = _context.Configuraciones.FirstOrDefault(c => c.TenantId == tenantId);
+            if (config == null)
+            {
+                config = new Configuracion { TenantId = tenantId, UsarCaja = UsarCaja };
+                _context.Configuraciones.Add(config);
+            }
+            else
+            {
+                config.UsarCaja = UsarCaja;
+            }
 
             _context.SaveChanges();
 

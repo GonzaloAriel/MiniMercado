@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
@@ -41,12 +41,12 @@ namespace MiniMercado.Controllers
             var lista = clientes.ToList();
 
             var ventasFiadas = _context.Ventas
-                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion,
-                             NombreVenta, UsuarioId, Usuario, EsFiado,
-                             ClienteId, TenantId
-                      FROM Ventas
-                      WHERE EsFiado = 1 AND Activa = 0 
-                      AND TenantId = {0} AND ClienteId IS NOT NULL", tenantId)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId, CajaId 
+                              FROM Ventas 
+                              WHERE EsFiado = 1 AND Activa = 0 
+                              AND TenantId = {0} AND ClienteId IS NOT NULL", tenantId)
                 .ToList()
                 .GroupBy(v => v.ClienteId!.Value)
                 .ToDictionary(g => g.Key, g => g.Sum(v => v.Total));
@@ -141,12 +141,12 @@ namespace MiniMercado.Controllers
                 return NotFound();
 
             var ventasFiadas = _context.Ventas
-                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion,
-                             NombreVenta, UsuarioId, Usuario, EsFiado,
-                             ClienteId, TenantId
-                      FROM Ventas
-                      WHERE ClienteId = {0} AND EsFiado = 1 
-                      AND Activa = 0 AND TenantId = {1}", id, tenantId)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId, CajaId 
+                              FROM Ventas 
+                              WHERE ClienteId = {0} AND EsFiado = 1 
+                              AND Activa = 0 AND TenantId = {1}", id, tenantId)
                 .OrderByDescending(v => v.Fecha)
                 .ToList();
 
@@ -182,7 +182,7 @@ namespace MiniMercado.Controllers
             var totalDeuda = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE ClienteId = {0} AND EsFiado = 1 
                               AND Activa = 0 AND TenantId = {1}", id, tenantId)
@@ -293,12 +293,12 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
 
             var totalDeuda = _context.Ventas
-                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion,
-                             NombreVenta, UsuarioId, Usuario, EsFiado,
-                             ClienteId, TenantId
-                      FROM Ventas
-                      WHERE ClienteId = {0} AND EsFiado = 1 
-                      AND Activa = 0 AND TenantId = {1}", id, tenantId)
+                .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
+                                     NombreVenta, UsuarioId, Usuario, EsFiado, 
+                                     ClienteId, TenantId, CajaId 
+                              FROM Ventas 
+                              WHERE ClienteId = {0} AND EsFiado = 1 
+                              AND Activa = 0 AND TenantId = {1}", id, tenantId)
                 .Sum(v => v.Total);
 
             var totalPagado = _context.PagosFiado

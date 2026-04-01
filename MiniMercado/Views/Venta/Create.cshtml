@@ -145,9 +145,11 @@
             resultId: "dropdownBuscador",
             onSelect: function(p) {
                 agregarOIncrementar(p);
-                
-                const statusBusqueda = document.getElementById("statusBusqueda");
-                statusBusqueda.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ${p.nombre} agregado.</span>`;
+
+                // Limpieza extra por seguridad
+                document.getElementById("superBuscador").value = "";
+
+                const statusBusqueda = document.getElementById("statusBusqueda");                statusBusqueda.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ${p.nombre} agregado.</span>`;
                 setTimeout(() => { if(statusBusqueda.innerText.includes(p.nombre)) statusBusqueda.innerHTML = ""; }, 2000);
             }
         });

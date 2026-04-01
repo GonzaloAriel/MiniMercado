@@ -121,6 +121,19 @@ namespace MiniMercado.Controllers
 
         public IActionResult Create()
         {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var config = _context.Configuraciones.FirstOrDefault(c => c.TenantId == tenantId);
+            if (config != null && config.UsarCaja)
+            {
+                var caja = _context.Cajas.FirstOrDefault(c => c.TenantId == tenantId && c.UsuarioId == userId && c.Estado == "ABIERTA");
+                if (caja == null)
+                {
+                    ViewBag.ErrorCaja = "⚠️ No hay una caja abierta. La venta se registrará fuera de caja.";
+                }
+            }
+
             return View(new List<VentaDetalle>());
         }
 
@@ -129,8 +142,42 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Create(List<VentaDetalle> detalles, bool EsFiado, int? ClienteId)
         {
             var tenantId = _tenantService.GetTenantId().Value;
-            
-            // ... (rest of logic before stock reduction)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // 1. Obtener configuración
+            var config = _context.Configuraciones.FirstOrDefault(c => c.TenantId == tenantId);
+            if (config == null)
+            {
+                config = new Configuracion { TenantId = tenantId, UsarCaja = false };
+                _context.Configuraciones.Add(config);
+                await _context.SaveChangesAsync();
+            }
+
+            Caja? caja = null;
+            if (config.UsarCaja)
+            {
+                // MODO CAJA: Buscar caja ABIERTA del usuario
+                caja = _context.Cajas.FirstOrDefault(c => c.TenantId == tenantId && c.UsuarioId == userId && c.Estado == "ABIERTA");
+            }
+            else
+            {
+                // MODO SIMPLE: Buscar o crear caja AUTOMATICA del día
+                var hoy = DateTime.Today;
+                caja = _context.Cajas.FirstOrDefault(c => c.TenantId == tenantId && c.Estado == "AUTOMATICA" && c.FechaApertura >= hoy);
+                if (caja == null)
+                {
+                    caja = new Caja
+                    {
+                        TenantId = tenantId,
+                        UsuarioId = userId,
+                        FechaApertura = DateTime.Now,
+                        Estado = "AUTOMATICA",
+                        MontoInicial = 0,
+                        TotalVentas = 0
+                    };
+                    _context.Cajas.Add(caja);
+                }
+            }
 
             decimal total = 0;
 
@@ -244,12 +291,20 @@ namespace MiniMercado.Controllers
                 UsuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Usuario = _http.HttpContext.User?.Identity?.Name,
                 EsFiado = EsFiado,
-                ClienteId = EsFiado ? ClienteId : null
+                ClienteId = EsFiado ? ClienteId : null,
+                CajaId = caja?.Id > 0 ? caja.Id : null
             };
 
 
             //Registramos la venta
             _context.Ventas.Add(venta);
+
+            // Actualizamos la caja
+            if (caja != null)
+            {
+                caja.TotalVentas += venta.Total;
+                if (caja.Id == 0) _context.Cajas.Add(caja); // Si era nueva (AUTOMATICA)
+            }
 
             //Guardamos los cambios en la base de datos
             await _context.SaveChangesAsync();
@@ -277,7 +332,7 @@ namespace MiniMercado.Controllers
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Id = {0} AND TenantId = {1}", ventaId, tenantId)
                 .FirstOrDefault();
@@ -305,7 +360,7 @@ namespace MiniMercado.Controllers
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                              NombreVenta, UsuarioId, Usuario, EsFiado, 
-                             ClienteId, TenantId 
+                             ClienteId, TenantId, CajaId 
                       FROM Ventas 
                       WHERE Id = {0} AND TenantId = {1}", ventaId, tenantId)
                 .FirstOrDefault();
@@ -333,7 +388,7 @@ namespace MiniMercado.Controllers
             var ventas = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Activa = 0 AND TenantId = {0}", tenantId)
                 .AsQueryable();
@@ -365,7 +420,7 @@ namespace MiniMercado.Controllers
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Id = {0} AND TenantId = {1}", id, tenantId)
                 .FirstOrDefault();
@@ -388,7 +443,7 @@ namespace MiniMercado.Controllers
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Id = {0} AND TenantId = {1}", id, tenantId)
                 .FirstOrDefault();
@@ -421,7 +476,7 @@ namespace MiniMercado.Controllers
             var ventas = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
-                                     ClienteId, TenantId 
+                                     ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Activa = 0 AND TenantId = {0}", tenantId)
                 .Where(v => v.Fecha >= desde && v.Fecha < hasta)
