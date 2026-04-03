@@ -9,6 +9,7 @@ function initBuscador(config) {
     let selectedIndex = -1;
     let timeout = null;
     let abortController = null; // Para cancelar peticiones previas
+    const cache = {}; // Caché local en memoria
 
     input.addEventListener("input", function () {
         clearTimeout(timeout);
@@ -16,6 +17,12 @@ function initBuscador(config) {
 
         if (query.length < 2) {
             ocultarResultados();
+            return;
+        }
+
+        // Si ya tenemos el resultado en caché, lo mostramos de inmediato
+        if (cache[query]) {
+            renderizarResultados(cache[query]);
             return;
         }
 
@@ -29,6 +36,7 @@ function initBuscador(config) {
             fetch(`/api/productosapi/buscar?term=${encodeURIComponent(query)}`, { signal: abortController.signal })
                 .then(res => res.json())
                 .then(data => {
+                    cache[query] = data; // Guardamos en caché
                     renderizarResultados(data);
                 })
                 .catch(err => {

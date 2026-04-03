@@ -30,13 +30,21 @@ namespace MiniMercado.Controllers
 
             var tenantId = _tenantService.GetTenantId().Value;
             term = term.Trim();
+            var terms = term.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             // 1. Buscar productos locales del tenant
-            var productosLocales = await _context.Productos
-                .Where(p => p.TenantId == tenantId && p.Activo &&
-                       (p.Nombre.Contains(term) || p.CodigoBarra.Contains(term)))
-                .OrderBy(p => p.Nombre)
-                .Take(10)
+            var queryLocales = _context.Productos
+                .Where(p => p.TenantId == tenantId && p.Activo);
+
+            foreach (var t in terms)
+            {
+                queryLocales = queryLocales.Where(p => p.Nombre.Contains(t) || p.CodigoBarra.Contains(t));
+            }
+
+            var productosLocalesRaw = await queryLocales
+                .ToListAsync();
+
+            var productosLocales = productosLocalesRaw
                 .Select(p => new
                 {
                     id = p.Id,
@@ -47,18 +55,28 @@ namespace MiniMercado.Controllers
                     esPorPeso = p.EsPorPeso,
                     tipo = "local"
                 })
-                .ToListAsync();
+                .OrderByDescending(p => p.codigo == term) // Coincidencia exacta de código
+                .ThenByDescending(p => p.nombre.StartsWith(term, StringComparison.OrdinalIgnoreCase)) // Empieza con
+                .ThenBy(p => p.nombre)
+                .Take(10)
+                .ToList();
 
             // 2. Si hay menos de 5 resultados locales, buscamos en el catálogo global (ProductoBase)
             if (productosLocales.Count < 5)
             {
                 var codigosLocales = productosLocales.Select(p => p.codigo).ToList();
+                var queryBase = _context.ProductosBase.AsQueryable();
 
-                var productosBase = await _context.ProductosBase
-                    .Where(pb => (pb.Nombre.Contains(term) || pb.CodigoBarras.Contains(term)) 
-                                 && !codigosLocales.Contains(pb.CodigoBarras))
-                    .OrderBy(pb => pb.Nombre)
-                    .Take(10 - productosLocales.Count)
+                foreach (var t in terms)
+                {
+                    queryBase = queryBase.Where(pb => pb.Nombre.Contains(t) || pb.CodigoBarras.Contains(t));
+                }
+
+                var productosBaseRaw = await queryBase
+                    .Where(pb => !codigosLocales.Contains(pb.CodigoBarras))
+                    .ToListAsync();
+
+                var productosBase = productosBaseRaw
                     .Select(pb => new
                     {
                         id = pb.Id,
@@ -69,12 +87,16 @@ namespace MiniMercado.Controllers
                         esPorPeso = false,
                         tipo = "base"
                     })
-                    .ToListAsync();
+                    .OrderByDescending(p => p.codigo == term)
+                    .ThenByDescending(p => p.nombre.StartsWith(term, StringComparison.OrdinalIgnoreCase))
+                    .ThenBy(p => p.nombre)
+                    .Take(10 - productosLocales.Count)
+                    .ToList();
 
                 productosLocales.AddRange(productosBase);
             }
 
-            return Ok(productosLocales);
+            return Ok(productosLocales.Take(10));
         }
 
         [HttpPost("crear-desde-base")]

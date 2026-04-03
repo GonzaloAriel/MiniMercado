@@ -23,7 +23,19 @@
     </div>
 </div>
 
-<form method="post">
+<!-- Toast para feedback visual -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle-fill me-2"></i> <span id="toastMessage">✔ Producto agregado</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="formVenta">
     @Html.AntiForgeryToken()
 
     <div class="card mb-3 shadow-sm">
@@ -137,23 +149,67 @@
     <script>
     let index = @(Model?.Count ?? 0);
     let fiadoActivo = false;
+    let toastBootstrap;
+    let ultimaFilaEliminada = null;
+
+    // PRECARGA DE AUDIOS
+    const beep = new Audio('/sounds/beep.mp3');
+    const errorSound = new Audio('/sounds/error.mp3');
 
     document.addEventListener("DOMContentLoaded", function() {
+        toastBootstrap = bootstrap.Toast.getOrCreateInstance(document.getElementById('liveToast'));
+
         initBuscador({
             searchId: "superBuscador",
             inputId: "productoSeleccionadoId",
             resultId: "dropdownBuscador",
             onSelect: function(p) {
                 agregarOIncrementar(p);
-
+                mostrarToast(`✔ ${p.nombre} agregado`);
+                
                 // Limpieza extra por seguridad
                 document.getElementById("superBuscador").value = "";
+                setTimeout(() => document.getElementById("superBuscador").focus(), 50);
+            }
+        });
 
-                const statusBusqueda = document.getElementById("statusBusqueda");                statusBusqueda.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ${p.nombre} agregado.</span>`;
-                setTimeout(() => { if(statusBusqueda.innerText.includes(p.nombre)) statusBusqueda.innerHTML = ""; }, 2000);
+        // ATAJOS DE TECLADO
+        document.addEventListener("keydown", function(e) {
+            // Ctrl + Z -> Deshacer eliminación
+            if (e.ctrlKey && e.key === "z") {
+                if (ultimaFilaEliminada) {
+                    const tbody = document.querySelector("#tablaVenta tbody");
+                    tbody.insertAdjacentHTML("beforeend", ultimaFilaEliminada);
+                    ultimaFilaEliminada = null;
+                    renumerarFilas();
+                    recalcularTotal();
+                    mostrarToast("↺ Producto recuperado");
+                }
+            }
+            // F2 -> Toggle Fiado
+            if (e.key === "F2") {
+                e.preventDefault();
+                toggleFiado();
+            }
+            // F10 o End -> Confirmar Venta
+            if (e.key === "F10" || e.key === "End") {
+                e.preventDefault();
+                document.getElementById("formVenta").submit();
+            }
+            // Escape -> Limpiar y cerrar buscador
+            if (e.key === "Escape") {
+                const buscador = document.getElementById("superBuscador");
+                buscador.value = "";
+                document.getElementById("dropdownBuscador").classList.add("d-none");
+                buscador.focus();
             }
         });
     });
+
+    function mostrarToast(mensaje) {
+        document.getElementById("toastMessage").innerText = mensaje;
+        toastBootstrap.show();
+    }
 
     function agregarOIncrementar(prod) {
         const p = {
@@ -215,8 +271,14 @@
             if (lastRow) lastRow.classList.remove("table-success");
         }, 1000);
 
+        // FEEDBACK SONORO
         if (p.stock <= 0) {
-            document.getElementById("statusBusqueda").innerHTML += ` <span class="text-warning small">(Sin stock)</span>`;
+            mostrarToast(`⚠ ${p.nombre} agregado (Sin stock)`);
+            errorSound.currentTime = 0;
+            errorSound.play().catch(() => { });
+        } else {
+            beep.currentTime = 0;
+            beep.play().catch(() => { });
         }
     }
 
@@ -247,9 +309,12 @@
     }
 
     function eliminarFila(btn) {
-        btn.closest("tr").remove();
+        const fila = btn.closest("tr");
+        ultimaFilaEliminada = fila.outerHTML;
+        fila.remove();
         renumerarFilas();
         recalcularTotal();
+        document.getElementById("superBuscador").focus();
     }
 
     function renumerarFilas() {

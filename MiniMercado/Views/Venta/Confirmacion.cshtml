@@ -75,7 +75,7 @@
 
 <!-- Botones de acción -->
 <div class="mt-4">
-    <a asp-action="Create" class="btn btn-success mt-4 me-2">
+    <a id="btnNuevaVenta" asp-action="Create" class="btn btn-success mt-4 me-2">
         🛒 Nueva Venta
     </a>
     <a asp-action="Ticket"
@@ -96,3 +96,15 @@
         ❌ Anular
     </a>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("keydown", function(e) {
+            // Si presiona Enter y no está escribiendo en el input de nombre/nota
+            if (e.key === "Enter" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+                e.preventDefault();
+                document.getElementById("btnNuevaVenta").click();
+            }
+        });
+    </script>
+}

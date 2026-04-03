@@ -1,0 +1,100 @@
+@model IEnumerable<MiniMercado.Models.Venta>
+
+@{
+    ViewData["Title"] = "Ventas fuera de caja";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> Ventas fuera de caja</h4>
+                    <span class="badge bg-dark">@ViewBag.Cantidad ventas detectadas</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0 shadow-sm">
+                        <div class="d-flex">
+                            <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                            <div>
+                                <h5 class="alert-heading">¿Qué es esto?</h5>
+                                <p class="mb-0">Estas ventas fueron realizadas antes de abrir caja o con el sistema de caja desactivado. Podés asignarlas a una nueva caja ahora o simplemente abrir la caja normalmente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center my-4 p-4 bg-light rounded shadow-sm">
+                        <p class="text-muted mb-1">Monto total acumulado</p>
+                        <h2 class="display-4 fw-bold text-primary">$ @ViewBag.TotalMonto.ToString("N2")</h2>
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Monto Inicial de la nueva caja</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" name="montoInicial" class="form-control" value="0.00" required />
+                            </div>
+                            <small class="text-muted">Ingresá el dinero que tenés físicamente al iniciar.</small>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button type="submit" asp-action="AbrirCajaYAsignar" class="btn btn-primary btn-lg py-3 shadow">
+                                <i class="bi bi-plus-circle-dotted me-2"></i> Abrir caja y asignar ventas anteriores
+                            </button>
+                            <button type="submit" asp-action="AbrirCajaSinAsignar" class="btn btn-outline-secondary btn-lg py-3">
+                                <i class="bi bi-unlock me-2"></i> Abrir caja sin asignar (quedarán como "fuera de caja")
+                            </button>
+                        </div>
+                    </form>
+
+                    @if (Model.Any())
+                    {
+                        <hr class="my-5" />
+                        <h5 class="mb-3 text-muted"><i class="bi bi-list-ul me-2"></i> Detalle de ventas pendientes</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Usuario</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var venta in Model)
+                                    {
+                                        <tr>
+                                            <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@venta.Usuario</td>
+                                            <td class="text-end fw-bold">$ @venta.Total.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-white border-0 text-center py-3">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">
+                        <i class="bi bi-arrow-left me-1"></i> Volver al inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    .btn-lg {
+        font-weight: 600;
+        border-radius: 10px;
+    }
+</style>
