@@ -6,6 +6,7 @@ function initBuscador(config) {
     const input = document.getElementById(config.searchId);
     const hidden = document.getElementById(config.inputId);
     const resultDiv = document.getElementById(config.resultId);
+    const nameInput = config.nameInputId ? document.getElementById(config.nameInputId) : null;
     let selectedIndex = -1;
     let timeout = null;
     let abortController = null; // Para cancelar peticiones previas
@@ -33,7 +34,14 @@ function initBuscador(config) {
             }
             abortController = new AbortController();
 
-            fetch(`/api/productosapi/buscar?term=${encodeURIComponent(query)}`, { signal: abortController.signal })
+            let url = `/api/productosapi/buscar?term=${encodeURIComponent(query)}`;
+            if (config.params) {
+                for (const key in config.params) {
+                    url += `&${key}=${config.params[key]}`;
+                }
+            }
+
+            fetch(url, { signal: abortController.signal })
                 .then(res => res.json())
                 .then(data => {
                     cache[query] = data; // Guardamos en caché
@@ -151,6 +159,10 @@ function initBuscador(config) {
         if (abortController) abortController.abort();
         
         hidden.value = p.id;
+        if (nameInput) {
+            nameInput.value = p.nombre;
+        }
+        
         input.value = ""; 
         
         // Un delay mínimo para asegurar que nada re-llene el input

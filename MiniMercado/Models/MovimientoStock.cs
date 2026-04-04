@@ -24,7 +24,7 @@ namespace MiniMercado.Models
         public decimal Cantidad { get; set; }
 
         [Required]
-        [StringLength(20)]
+        [StringLength(50)]
         public string Tipo { get; set; }
 
         [StringLength(200)]

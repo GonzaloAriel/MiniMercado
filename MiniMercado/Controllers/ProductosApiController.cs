@@ -24,7 +24,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpGet("buscar")]
-        public async Task<IActionResult> Buscar(string term)
+        public async Task<IActionResult> Buscar(string term, bool soloLocales = false)
         {
             if (string.IsNullOrWhiteSpace(term)) return Ok(new List<object>());
 
@@ -55,15 +55,16 @@ namespace MiniMercado.Controllers
                     esPorPeso = p.EsPorPeso,
                     tipo = "local"
                 })
-                .OrderByDescending(p => p.codigo == term) // Coincidencia exacta de código
-                .ThenByDescending(p => p.nombre.StartsWith(term, StringComparison.OrdinalIgnoreCase)) // Empieza con
+                .OrderByDescending(p => p.codigo == term)
+                .ThenByDescending(p => p.nombre.StartsWith(term, StringComparison.OrdinalIgnoreCase))
                 .ThenBy(p => p.nombre)
                 .Take(10)
                 .ToList();
 
-            // 2. Si hay menos de 5 resultados locales, buscamos en el catálogo global (ProductoBase)
-            if (productosLocales.Count < 5)
+            // 2. Si hay menos de 5 resultados locales y NO se pidió solo locales, buscamos en el catálogo global
+            if (!soloLocales && productosLocales.Count < 5)
             {
+                // ... (resto de la lógica igual)
                 var codigosLocales = productosLocales.Select(p => p.codigo).ToList();
                 var queryBase = _context.ProductosBase.AsQueryable();
 

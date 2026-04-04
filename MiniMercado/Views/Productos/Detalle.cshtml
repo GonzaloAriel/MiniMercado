@@ -1,0 +1,146 @@
+@model MiniMercado.Models.Producto
+
+@{
+    ViewData["Title"] = "Detalle de Producto";
+    var lotes = (List<MiniMercado.Models.LoteProducto>)ViewBag.Lotes;
+    var stockTotal = (decimal)ViewBag.StockTotal;
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">📦 Detalle: @Model.NombreDisplay</h3>
+            <span class="badge bg-light text-dark fs-5">Stock Total: @stockTotal</span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Código:</strong> @Model.CodigoDisplay</p>
+                    <p><strong>Rubro:</strong> @(Model.Rubro?.Nombre ?? "Sin Rubro")</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Precio:</strong> $@Model.Precio</p>
+                    <p><strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")</p>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>📋 Lotes Disponibles</h4>
+            </div>
+
+            @if (lotes.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Cantidad</th>
+                                <th>Fecha Ingreso</th>
+                                <th>Vencimiento</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lote in lotes)
+                            {
+                                var diasParaVencer = lote.FechaVencimiento.HasValue 
+                                    ? (lote.FechaVencimiento.Value - DateTime.Now).TotalDays 
+                                    : double.MaxValue;
+                                
+                                string rowClass = diasParaVencer < 0 ? "table-danger" : (diasParaVencer < 7 ? "table-warning" : "");
+
+                                <tr class="@rowClass">
+                                    <td class="fw-bold">@lote.Cantidad</td>
+                                    <td>@lote.FechaIngreso.ToShortDateString()</td>
+                                    <td>@(lote.FechaVencimiento?.ToShortDateString() ?? "N/A")</td>
+                                    <td>
+                                        @if (diasParaVencer < 0) { <span class="badge bg-danger">Vencido</span> }
+                                        else if (diasParaVencer < 7) { <span class="badge bg-warning text-dark">Próximo</span> }
+                                        else { <span class="badge bg-success">Vigente</span> }
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-warning" onclick="abrirModalEditar(@lote.Id, @lote.Cantidad, '@(lote.FechaVencimiento?.ToString("yyyy-MM-dd"))')">Editar</button>
+                                        <button class="btn btn-sm btn-danger" onclick="confirmarEliminar(@lote.Id)">Eliminar</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">No hay lotes con stock disponible.</div>
+            }
+        </div>
+        <div class="card-footer">
+            <a asp-action="Index" class="btn btn-secondary">Volver al Listado</a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+    <div class="modal-dialog">
+        <form asp-action="EditarLote" method="post" class="modal-content">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="editLoteId" />
+            <div class="modal-header"><h5>Editar Lote</h5></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Cantidad</label>
+                    <input type="number" name="cantidad" id="editCantidad" class="form-control" step="0.01" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Vencimiento</label>
+                    <input type="date" name="fechaVencimiento" id="editFecha" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <form asp-action="EliminarLote" method="post" class="modal-content">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="deleteLoteId" />
+            <div class="modal-header bg-danger text-white"><h5>Eliminar Lote</h5></div>
+            <div class="modal-body">
+                <p>¿Motivo de eliminación?</p>
+                <select name="motivo" class="form-select">
+                    <option value="MERMA">Merma (Roto/Pérdida)</option>
+                    <option value="VENCIDO">Vencido</option>
+                    <option value="ERROR">Error de Carga</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger">Confirmar Eliminación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function abrirModalEditar(id, cant, fecha) {
+            document.getElementById('editLoteId').value = id;
+            document.getElementById('editCantidad').value = cant;
+            document.getElementById('editFecha').value = fecha || "";
+            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+        }
+        function confirmarEliminar(id) {
+            document.getElementById('deleteLoteId').value = id;
+            new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+        }
+    </script>
+}

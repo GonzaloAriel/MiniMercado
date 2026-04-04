@@ -184,18 +184,35 @@ namespace MiniMercado.Controllers
                 return View(producto);
             }
 
-            _context.Productos.Add(producto);
-            _context.SaveChanges();
+            // 🔹 Validación previa: Verificar si ya existe el código en el mismo tenant
+            var existe = _context.Productos
+                .Any(p => p.CodigoBarra == producto.CodigoBarra && p.TenantId == tenantId);
 
-            _auditoria.Registrar
-            (
-              "Crear",
-              "Productos",
-               producto.Id,
-              "Se creo un producto"
-            );
+            if (existe)
+            {
+                ModelState.AddModelError("CodigoBarra", "Ya existe un producto con ese código de barras.");
+                ViewBag.Rubros = _context.Rubros
+                    .Where(r => r.TenantId == tenantId)
+                    .ToList();
+                return View(producto);
+            }
 
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.Productos.Add(producto);
+                _context.SaveChanges();
+
+                _auditoria.Registrar("Crear", "Productos", producto.Id, "Se creo un producto");
+
+                // Redirigir a carga de stock inicial por lotes
+                return RedirectToAction("Ingreso", "MovimientoStock", new { productoId = producto.Id });
+            }
+            catch (DbUpdateException)
+            {
+                ModelState.AddModelError("CodigoBarra", "Error: Ya existe un producto con ese código de barras.");
+                ViewBag.Rubros = _context.Rubros.Where(r => r.TenantId == tenantId).ToList();
+                return View(producto);
+            }
         }
 
         // EDIT GET
@@ -241,23 +258,23 @@ namespace MiniMercado.Controllers
             if (productoDb == null)
                 return NotFound();
 
+            // Actualizar SOLO campos permitidos
             productoDb.Nombre = producto.Nombre;
             productoDb.Precio = producto.Precio;
             productoDb.CodigoBarra = producto.CodigoBarra;
-            productoDb.Stock = producto.Stock;
             productoDb.Activo = producto.Activo;
             productoDb.PrecioEditable = producto.PrecioEditable;
             productoDb.EsPorPeso = producto.EsPorPeso;
             productoDb.RubroId = producto.RubroId;
-            productoDb.FechaVencimiento = producto.FechaVencimiento;
 
-            _context.SaveChanges();
+            // Recalcular stock desde lotes antes de guardar
+            _productoService.SincronizarStock(productoDb);
 
             _auditoria.Registrar(
                 "Modificar",
                 "Productos",
                 producto.Id,
-                "Se modificó el precio o stock"
+                "Se modificó el producto (Stock sincronizado)"
             );
 
             return RedirectToAction(nameof(Index));
@@ -362,6 +379,96 @@ namespace MiniMercado.Controllers
             _context.SaveChanges();
 
             return RedirectToAction("Inactivos");
+        }
+
+        // DETALLE DE PRODUCTO CON LOTES
+        [Authorize(Roles = "AdminGlobal,Admin")]
+        public IActionResult Detalle(int id)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var producto = _context.Productos
+                .Include(p => p.Rubro)
+                .Include(p => p.ProductoBase)
+                .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
+
+            if (producto == null) return NotFound();
+
+            var lotes = _context.LotesProducto
+                .Where(l => l.ProductoId == id && l.TenantId == tenantId && l.Cantidad > 0)
+                .OrderBy(l => l.FechaVencimiento ?? DateTime.MaxValue)
+                .ToList();
+
+            ViewBag.Lotes = lotes;
+            ViewBag.StockTotal = lotes.Sum(l => l.Cantidad);
+
+            return View(producto);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarLote(int id, string motivo)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var lote = await _context.LotesProducto.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
+            
+            if (lote == null) return NotFound();
+
+            var productoId = lote.ProductoId;
+            var cantidad = lote.Cantidad;
+
+            // Registrar movimiento de merma/vencido
+            var movimiento = new MovimientoStock
+            {
+                ProductoId = productoId,
+                TenantId = tenantId,
+                Cantidad = cantidad,
+                Tipo = string.IsNullOrEmpty(motivo) ? "MERMA" : motivo.ToUpper(),
+                Fecha = DateTime.Now,
+                Observacion = $"Eliminación de lote ID: {lote.Id}. Motivo: {motivo}"
+            };
+
+            _context.MovimientosStock.Add(movimiento);
+            _context.LotesProducto.Remove(lote);
+            await _context.SaveChangesAsync();
+
+            SincronizarStock(productoId, tenantId);
+
+            TempData["Mensaje"] = "✅ Lote eliminado y stock sincronizado.";
+            return RedirectToAction(nameof(Detalle), new { id = productoId });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarLote(int id, decimal cantidad, DateTime? fechaVencimiento)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var lote = await _context.LotesProducto.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
+            
+            if (lote == null) return NotFound();
+
+            lote.Cantidad = cantidad;
+            lote.FechaVencimiento = fechaVencimiento;
+            
+            await _context.SaveChangesAsync();
+            SincronizarStock(lote.ProductoId, tenantId);
+
+            TempData["Mensaje"] = "✅ Lote actualizado correctamente.";
+            return RedirectToAction(nameof(Detalle), new { id = lote.ProductoId });
+        }
+
+        private void SincronizarStock(int productoId, int tenantId)
+        {
+            var producto = _context.Productos.FirstOrDefault(p => p.Id == productoId && p.TenantId == tenantId);
+            if (producto != null)
+            {
+                producto.Stock = _context.LotesProducto
+                    .Where(l => l.ProductoId == productoId && l.TenantId == tenantId)
+                    .Sum(l => (decimal?)l.Cantidad) ?? 0;
+                _context.SaveChanges();
+            }
         }
 
     }

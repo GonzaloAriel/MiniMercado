@@ -1,5 +1,9 @@
-﻿@model MiniMercado.Models.MovimientoStock
+@model MiniMercado.Models.MovimientoStock
 
+@{
+    var preselected = ViewBag.ProductoPreseleccionado as MiniMercado.Models.Producto;
+    bool isPreselected = preselected != null;
+}
 
 <h2>Ingreso de Stock</h2>
 
@@ -16,22 +20,58 @@
         ViewBag.Placeholder = "🔎 Escriba nombre o escanee código...";
     }
 
-    @await Html.PartialAsync("_BuscadorProductos")
+    <div class="form-group mb-3 position-relative">
+        <label class="fw-bold">@ViewBag.Label</label>
+        <input type="hidden" id="@ViewBag.InputId" name="@ViewBag.InputName" value="@(preselected?.Id)" />
+        
+        @if (!isPreselected)
+        {
+            <div class="input-group mb-2">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text"
+                       id="@ViewBag.SearchId"
+                       class="form-control form-control-lg"
+                       placeholder="@(ViewBag.Placeholder ?? "🔎 Buscar producto...")"
+                       autocomplete="off" />
+            </div>
+        }
 
-    <div class="form-group">
+        <div class="input-group">
+            <span class="input-group-text bg-light">@(isPreselected ? "Producto:" : "Seleccionado:")</span>
+            <input type="text" id="ProductoNombreDisplay" readonly class="form-control bg-light" 
+                   value="@(isPreselected ? preselected.NombreDisplay : "")"
+                   placeholder="Ningún producto seleccionado" />
+            
+            @if (isPreselected)
+            {
+                <a asp-action="Ingreso" class="btn btn-outline-secondary" title="Cambiar producto">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            }
+        </div>
+
+        <span asp-validation-for="ProductoId" class="text-danger small"></span>
+
+        @if (!isPreselected)
+        {
+            <div id="@ViewBag.ResultId" class="list-group shadow position-absolute w-100 d-none" style="z-index: 1050; top: 100%;"></div>
+        }
+    </div>
+
+    <div class="form-group mb-3">
         <label>Cantidad</label>
-        <input asp-for="Cantidad" class="form-control" />
+        <input asp-for="Cantidad" class="form-control" step="0.01" />
         <span asp-validation-for="Cantidad" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
+    <div class="form-group mb-3">
         <label>Fecha de Vencimiento (Opcional)</label>
         <input type="date" name="FechaVencimiento" class="form-control" />
     </div>
 
     <input type="hidden" asp-for="Tipo" value="INGRESO" />
 
-    <div class="form-group">
+    <div class="form-group mb-3">
         <label>Observación</label>
         <textarea asp-for="Observacion" class="form-control"></textarea>
     </div>
@@ -54,14 +94,24 @@
     <script src="~/js/buscador-productos.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            initBuscador({
-                searchId: "buscadorStock",
-                inputId: "ProductoId",
-                resultId: "resultadosStock",
-                onSelect: function(p) {
-                    document.querySelector("input[name='Cantidad']").focus();
-                }
-            });
+            // Solo inicializar buscador si no hay preseleccionado
+            if (document.getElementById("@ViewBag.SearchId")) {
+                initBuscador({
+                    searchId: "buscadorStock",
+                    inputId: "ProductoId",
+                    nameInputId: "ProductoNombreDisplay",
+                    resultId: "resultadosStock",
+                    params: { soloLocales: true },
+                    onSelect: function(p) {
+                        document.querySelector("input[name='Cantidad']").focus();
+                    }
+                });
+            }
+
+            // Si hay un preseleccionado, poner el foco en cantidad
+            if (document.getElementById("ProductoId").value) {
+                document.querySelector("input[name='Cantidad']").focus();
+            }
         });
     </script>
 }

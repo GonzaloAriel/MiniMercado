@@ -55,36 +55,21 @@
         </div>
 
         <div class="col-md-6 mb-3">
-            <label asp-for="Stock" class="form-label fw-bold">Stock Inicial</label>
-            <input asp-for="Stock" class="form-control" step="0.01" />
-            <span asp-validation-for="Stock" class="text-danger"></span>
+            <label class="form-label fw-bold">Rubro / Categoría <span class="text-danger">*</span></label>
+            <div class="input-group">
+                <select asp-for="RubroId" id="RubroId" class="form-select">
+                    <option value="">-- Seleccione un rubro --</option>
+                    @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
+                    {
+                        <option value="@r.Id">@r.Nombre</option>
+                    }
+                </select>
+                <button type="button" class="btn btn-outline-primary" onclick="abrirModalRubro()">
+                    ➕ Nuevo rubro
+                </button>
+            </div>
+            <span asp-validation-for="RubroId" class="text-danger"></span>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="FechaVencimiento" class="form-label fw-bold"></label>
-            <input asp-for="FechaVencimiento" class="form-control" type="date" />
-            <span asp-validation-for="FechaVencimiento" class="text-danger" title="Fecha de vencimiento actual del producto"></span>
-            <div class="form-text">Indique la fecha de vencimiento actual para alertas.</div>
-        </div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label fw-bold">Rubro / Categoría <span class="text-danger">*</span></label>
-        <div class="input-group">
-            <select asp-for="RubroId" id="RubroId" class="form-select">
-                <option value="">-- Seleccione un rubro --</option>
-                @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
-                {
-                    <option value="@r.Id">@r.Nombre</option>
-                }
-            </select>
-            <button type="button" class="btn btn-outline-primary" onclick="abrirModalRubro()">
-                ➕ Nuevo rubro
-            </button>
-        </div>
-        <span asp-validation-for="RubroId" class="text-danger"></span>
     </div>
 
     <div class="row mt-3">
@@ -161,7 +146,7 @@
             const nombre = document.getElementById("nuevoRubroNombre").value.trim();
 
             if (!nombre) {
-                document.getElementById("errorRubro").classList.remove("d-none");
+                document.getElementById("errorRubro").classList.add("d-none");
                 return;
             }
 
@@ -173,13 +158,10 @@
             .then(r => r.json())
             .then(data => {
                 if (data.ok) {
-                    // Agregar al select y seleccionar
                     const select = document.getElementById("RubroId");
                     const option = new Option(data.nombre, data.id);
                     select.add(option);
                     select.value = data.id;
-
-                    // Cerrar modal
                     bootstrap.Modal.getInstance(document.getElementById("modalNuevoRubro")).hide();
                 } else {
                     alert("Error: " + data.error);
@@ -188,7 +170,6 @@
             .catch(() => alert("Error al conectar con el servidor."));
         }
 
-        // --- LÓGICA BUSCADOR GLOBAL ---
         const buscadorGlobal = document.getElementById("buscadorGlobal");
         const resultadosGlobal = document.getElementById("resultadosGlobal");
 
@@ -226,16 +207,13 @@
         });
 
         function autocompletar(pbItem) {
-            // 1. Llamar AJAX para obtener el ProductoBase completo
             fetch(`/Productos/GetProductoBase?id=${pbItem.id}`)
                 .then(response => response.json())
                 .then(pb => {
-                    // 2. Completar campos básicos
                     document.getElementById("Nombre").value = pb.nombre;
                     document.getElementById("CodigoBarra").value = pb.codigo;
                     document.getElementById("Precio").value = pb.precioReferencia || 0;
 
-                    // 3. Si tiene categoría, obtener o crear el rubro
                     if (pb.categoria) {
                         fetch("/Rubro/GetOrCreateByCategoria", {
                             method: "POST",
@@ -246,8 +224,6 @@
                         .then(resRubro => {
                             if (resRubro.success) {
                                 const select = document.getElementById("RubroId");
-                                
-                                // Verificar si ya existe en el select para no duplicar visualmente
                                 let existe = false;
                                 for (let i = 0; i < select.options.length; i++) {
                                     if (select.options[i].value == resRubro.id) {
@@ -256,8 +232,6 @@
                                         break;
                                     }
                                 }
-
-                                // 4. Si es nuevo o no estaba cargado, agregarlo al dropdown y seleccionar
                                 if (!existe) {
                                     const nuevaOpcion = new Option(resRubro.nombre, resRubro.id, true, true);
                                     select.add(nuevaOpcion);
@@ -267,16 +241,13 @@
                         })
                         .catch(err => console.error("Error al gestionar rubro:", err));
                     }
-                    
-                    // UI Final
                     resultadosGlobal.classList.add("d-none");
                     buscadorGlobal.value = "";
-                    document.getElementById("Stock").focus();
+                    document.getElementById("Precio").focus();
                 })
                 .catch(err => alert("Error al obtener datos del producto base."));
         }
 
-        // Cerrar resultados al hacer clic fuera
         document.addEventListener("click", function(e) {
             if (!buscadorGlobal.contains(e.target) && !resultadosGlobal.contains(e.target)) {
                 resultadosGlobal.classList.add("d-none");

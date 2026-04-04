@@ -1,4 +1,4 @@
-﻿@model MiniMercado.Models.Producto
+@model MiniMercado.Models.Producto
 
 <h2>Editar Producto</h2>
 
@@ -22,17 +22,6 @@
         <label asp-for="Precio"></label>
         <input asp-for="Precio" class="form-control" />
         <span asp-validation-for="Precio" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Stock"></label>
-        <input asp-for="Stock" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="FechaVencimiento" class="form-label fw-bold"></label>
-        <input asp-for="FechaVencimiento" class="form-control" type="date" />
-        <span asp-validation-for="FechaVencimiento" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
@@ -63,8 +52,10 @@
 
 
     <div class="mb-3">
-        <input asp-for="Activo" />
-        <label asp-for="Activo"></label>
+        <div class="form-check">
+            <input asp-for="Activo" class="form-check-input" />
+            <label asp-for="Activo" class="form-check-label">Activo</label>
+        </div>
     </div>
 
     <button type="submit" class="btn btn-primary">

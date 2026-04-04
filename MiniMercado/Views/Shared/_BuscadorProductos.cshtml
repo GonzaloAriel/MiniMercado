@@ -1,7 +1,8 @@
 <div class="form-group mb-3 position-relative">
     <label class="fw-bold">@ViewBag.Label</label>
     <input type="hidden" id="@ViewBag.InputId" name="@ViewBag.InputName" />
-    <div class="input-group">
+    
+    <div class="input-group mb-2">
         <span class="input-group-text"><i class="bi bi-search"></i></span>
         <input type="text"
                id="@ViewBag.SearchId"
@@ -9,6 +10,13 @@
                placeholder="@(ViewBag.Placeholder ?? "🔎 Buscar producto...")"
                autocomplete="off" />
     </div>
+
+    <!-- Campo visible solo lectura para mostrar el producto seleccionado -->
+    <div class="input-group">
+        <span class="input-group-text bg-light">Seleccionado:</span>
+        <input type="text" id="ProductoNombreDisplay" readonly class="form-control bg-light" placeholder="Ningún producto seleccionado" />
+    </div>
+
     <span id="validation-@ViewBag.InputId" class="text-danger small"></span>
 
     <!-- Resultados del buscador -->

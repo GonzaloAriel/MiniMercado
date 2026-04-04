@@ -20,7 +20,13 @@ namespace MiniMercado.ViewComponents
         {
             if (!User.Identity.IsAuthenticated) return Content(string.Empty);
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            // Obtención segura del TenantId
+            var tenantIdResult = _tenantService.GetTenantId();
+            
+            // Si es AdminGlobal (null), no mostramos el estado de caja
+            if (!tenantIdResult.HasValue) return Content(string.Empty);
+
+            var tenantId = tenantIdResult.Value;
             var userId = ((ClaimsPrincipal)User).FindFirstValue(ClaimTypes.NameIdentifier);
 
             var config = _context.Configuraciones.FirstOrDefault(c => c.TenantId == tenantId);

@@ -13,27 +13,19 @@ namespace MiniMercado.Services
             _context = context;
         }
 
-        /// <summary>
-        /// Busca un producto en el tenant local. Si no existe, lo busca en el catálogo global
-        /// y lo crea automáticamente para el tenant actual.
-        /// </summary>
         public Producto? BuscarProductoPorCodigo(string codigo, int tenantId)
         {
-            // 1. Buscar en local (Tenant)
             var producto = _context.Productos
                 .Include(p => p.ProductoBase)
                 .FirstOrDefault(p => p.CodigoBarra == codigo && p.TenantId == tenantId);
 
             if (producto != null) return producto;
 
-            // 2. Si no existe localmente, buscar en el Catálogo Global (ProductoBase)
             var baseInfo = _context.ProductosBase
                 .FirstOrDefault(pb => pb.CodigoBarras == codigo);
 
-            // 3. Si existe en el catálogo global, lo autocreamos para este tenant
             if (baseInfo != null)
             {
-                // Buscamos o creamos el rubro basado en la categoría
                 int? rubroId = null;
                 if (!string.IsNullOrWhiteSpace(baseInfo.Categoria))
                 {
@@ -53,13 +45,6 @@ namespace MiniMercado.Services
                     }
                     rubroId = rubro.Id;
                 }
-                else
-                {
-                    // Fallback: Buscamos el primer rubro activo del tenant para no romper la validación [Required]
-                    var primerRubro = _context.Rubros
-                        .FirstOrDefault(r => r.TenantId == tenantId && r.Activo);
-                    rubroId = primerRubro?.Id;
-                }
 
                 producto = new Producto
                 {
@@ -75,12 +60,42 @@ namespace MiniMercado.Services
 
                 _context.Productos.Add(producto);
                 _context.SaveChanges();
-
                 return producto;
             }
 
-            // 4. No existe en ningún lado
             return null;
+        }
+
+        public decimal GetStockReal(int productoId, int tenantId)
+        {
+            return _context.LotesProducto
+                .Where(l => l.ProductoId == productoId 
+                         && l.TenantId == tenantId 
+                         && l.Cantidad > 0)
+                .Sum(l => (decimal?)l.Cantidad) ?? 0;
+        }
+
+        public void SincronizarStock(int productoId, int tenantId)
+        {
+            var producto = _context.Productos.Find(productoId);
+            if (producto != null && producto.TenantId == tenantId)
+            {
+                SincronizarStock(producto);
+            }
+        }
+
+        public void SincronizarStock(Producto producto)
+        {
+            var totalLotes = GetStockReal(producto.Id, producto.TenantId);
+
+            // 🔥 Solo sincronizar si hay lotes. 
+            // Si no hay lotes, respetamos el stock actual (que puede ser negativo).
+            if (totalLotes > 0)
+            {
+                producto.Stock = totalLotes;
+            }
+            
+            _context.SaveChanges();
         }
     }
 }

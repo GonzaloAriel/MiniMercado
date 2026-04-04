@@ -1,15 +1,22 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Models;
+using MiniMercado.Services;
 
 namespace MiniMercado.Data
 {
-    public class MiniMercadoContext
-        : IdentityDbContext<ApplicationUser>
+    public class MiniMercadoContext : IdentityDbContext<ApplicationUser>
     {
-        public MiniMercadoContext(DbContextOptions<MiniMercadoContext> options)
+        // 1. Propiedad pública para el TenantId actual
+        public int? CurrentTenantId { get; set; }
+
+        public MiniMercadoContext(
+            DbContextOptions<MiniMercadoContext> options,
+            ITenantService tenantService)
             : base(options)
         {
+            // 2. Asignación directa en el constructor
+            CurrentTenantId = tenantService.GetTenantId();
         }
 
         public DbSet<Producto> Productos { get; set; }
@@ -31,6 +38,25 @@ namespace MiniMercado.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // 3. FILTROS GLOBALES (MANUALES Y ESTABLES)
+            // Lógica: Si CurrentTenantId es null (AdminGlobal), devuelve true.
+            // De lo contrario, compara TenantId.
+
+            modelBuilder.Entity<Producto>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Venta>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<VentaDetalle>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<MovimientoStock>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Rubro>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Cliente>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<PagoFiado>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<CobroTenant>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Notificacion>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<LoteProducto>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Caja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Configuracion>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+
+            // CONFIGURACIONES FLUENT API EXISTENTES
 
             modelBuilder.Entity<Caja>()
                 .HasOne(c => c.Tenant)
@@ -98,7 +124,6 @@ namespace MiniMercado.Data
                 .HasForeignKey(ms => ms.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Rubro - Producto : Uno a Muchos
             modelBuilder.Entity<Rubro>()
                 .HasMany(r => r.Productos)
                 .WithOne(p => p.Rubro)
@@ -116,8 +141,6 @@ namespace MiniMercado.Data
                 .WithMany()
                 .HasForeignKey(v => v.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // Cliente - Venta : Uno a Muchos
 
             modelBuilder.Entity<Cliente>()
                 .HasOne(c => c.Tenant)
@@ -137,32 +160,21 @@ namespace MiniMercado.Data
                 .HasForeignKey(p => p.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // --- OPTIMIZACIÓN: ÍNDICES ---
+            // ÍNDICES
+            modelBuilder.Entity<Tenant>().HasIndex(t => t.FechaVencimiento);
+            modelBuilder.Entity<CobroTenant>().HasIndex(c => c.TenantId);
+            modelBuilder.Entity<CobroTenant>().HasIndex(c => c.FechaPago);
+            modelBuilder.Entity<ProductoBase>().HasIndex(p => p.CodigoBarras).IsUnique();
 
-            // Tenant
-            modelBuilder.Entity<Tenant>()
-                .HasIndex(t => t.FechaVencimiento);
-
-            // CobroTenant
-            modelBuilder.Entity<CobroTenant>()
-                .HasIndex(c => c.TenantId);
-
-            modelBuilder.Entity<CobroTenant>()
-                .HasIndex(c => c.FechaPago);
-
-            // ProductoBase (Catálogo Global)
-            modelBuilder.Entity<ProductoBase>()
-                .HasIndex(p => p.CodigoBarras)
+            modelBuilder.Entity<Producto>()
+                .HasIndex(p => new { p.TenantId, p.CodigoBarra })
                 .IsUnique();
 
-            // Producto -> ProductoBase (Opcional)
             modelBuilder.Entity<Producto>()
                 .HasOne(p => p.ProductoBase)
                 .WithMany()
                 .HasForeignKey(p => p.ProductoBaseId)
                 .OnDelete(DeleteBehavior.SetNull);
-
-           
         }
     }
 }

@@ -460,8 +460,8 @@ namespace MiniMercado.Migrations
 
                     b.Property<string>("Tipo")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -600,7 +600,8 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("RubroId");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("TenantId", "CodigoBarra")
+                        .IsUnique();
 
                     b.ToTable("Productos");
                 });
