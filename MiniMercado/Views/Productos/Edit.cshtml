@@ -26,13 +26,18 @@
 
     <div class="mb-3">
         <label class="form-label fw-bold">Rubro</label>
-        <select asp-for="RubroId" class="form-select">
-            <option value="">-- Sin rubro --</option>
-            @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
-            {
-                <option value="@r.Id">@r.Nombre</option>
-            }
-        </select>
+        <div class="input-group">
+            <select asp-for="RubroId" class="form-select">
+                <option value="">-- Sin rubro --</option>
+                @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
+                {
+                    <option value="@r.Id">@r.Nombre</option>
+                }
+            </select>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalRubro">
+                Nuevo Rubro
+            </button>
+        </div>
         <span asp-validation-for="RubroId" class="text-danger"></span>
     </div>
 
@@ -67,8 +72,74 @@
     </a>
 </form>
 
+<!-- Modal Nuevo Rubro -->
+<div class="modal fade text-black rounded" id="modalRubro" tabindex="-1">
+    <div class="modal-dialog rounded">
+        <div class="modal-content rounded">
+
+            <div class="modal-header bg-success rounded">
+                <h5 class="modal-title">Nuevo Rubro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nombre del rubro</label>
+                    <input type="text" id="nuevoRubroNombre" class="form-control" placeholder="Ej: Bebidas, Lácteos..." />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearRubro()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        function crearRubro() {
+            var nombre = document.getElementById("nuevoRubroNombre").value;
+
+            if (!nombre) {
+                alert("Por favor, ingrese un nombre para el rubro.");
+                return;
+            }
+
+            fetch('/Rubro/CrearDesdeModal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'nombre=' + encodeURIComponent(nombre)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(text => { throw new Error(text) });
+                }
+                return res.json();
+            })
+            .then(data => {
+                var select = document.querySelector("select[name='RubroId']");
+
+                var option = new Option(data.nombre, data.id, true, true);
+                select.add(option);
+
+                // Limpiar y cerrar modal
+                document.getElementById("nuevoRubroNombre").value = "";
+                var modalElement = document.getElementById('modalRubro');
+                var modal = bootstrap.Modal.getInstance(modalElement);
+                modal.hide();
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+        }
+    </script>
 }

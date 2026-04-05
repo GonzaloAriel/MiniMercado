@@ -188,6 +188,36 @@ namespace MiniMercado.Controllers
 
         [HttpPost]
         [Authorize(Roles = "AdminGlobal, Admin")]
+        public IActionResult CrearDesdeModal(string nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+                return BadRequest("El nombre del rubro es obligatorio");
+
+            var tenantId = _tenantService.GetTenantId().Value;
+
+            var existe = _context.Rubros
+                .Any(r => r.Nombre == nombre && r.TenantId == tenantId && r.Activo);
+
+            if (existe)
+                return BadRequest("El rubro ya existe");
+
+            var rubro = new Rubro
+            {
+                Nombre = nombre,
+                TenantId = tenantId,
+                Activo = true
+            };
+
+            _context.Rubros.Add(rubro);
+            _context.SaveChanges();
+
+            _auditoria.Registrar("Crear", "Rubros", rubro.Id, $"Se creó un rubro desde modal: {rubro.Nombre}");
+
+            return Json(new { id = rubro.Id, nombre = rubro.Nombre });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult CrearRapido([FromBody] RubroRapidoRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Nombre))

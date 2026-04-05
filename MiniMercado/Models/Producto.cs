@@ -69,5 +69,8 @@ namespace MiniMercado.Models
         [NotMapped]
         public string CodigoDisplay => ProductoBase?.CodigoBarras ?? CodigoBarra;
 
+        [NotMapped]
+        public DateTime? FechaProximoVencimiento { get; set; }
+
     }
 }

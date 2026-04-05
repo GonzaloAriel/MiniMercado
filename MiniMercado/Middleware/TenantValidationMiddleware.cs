@@ -22,7 +22,7 @@ namespace MiniMercado.Middleware
                                      MiniMercadoContext dbContext,
                                      SignInManager<ApplicationUser> signInManager,
                                      INotificacionService notificacionService,
-                                     IVencimientoService vencimientoService)
+                                     AlertasService alertasService)
         {
             var path = context.Request.Path.Value;
 
@@ -108,10 +108,10 @@ namespace MiniMercado.Middleware
                             }
                         }
                     }
-                }
 
-                // 🔔 Verificar vencimientos de productos del tenant actual
-                await vencimientoService.VerificarProductosVencidos();
+                    // 🔔 Verificar alertas del tenant actual
+                    await alertasService.VerificarYCrearNotificaciones(tenantId);
+                }
             }
 
             await _next(context);

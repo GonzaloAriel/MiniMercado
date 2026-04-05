@@ -1,194 +1,356 @@
-﻿@{
+@{
     ViewData["Title"] = "Dashboard Anual";
     var ventasPorMes = ViewBag.VentasPorMes;
     var productosTop = ViewBag.ProductosTop;
 }
 
-<h2 class="mt-3">📊 Dashboard Año @ViewBag.Anio</h2>
+<h2 class="mt-3 fw-bold">📊 Dashboard Año @ViewBag.Anio</h2>
 
 <hr />
 
-<div class="row text-center mb-4">
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+
     <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Total Facturado</h5>
-            <h3>$ @ViewBag.TotalAnual.ToString("N0")</h3>
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <small class="text-muted d-block">Total Facturado</small>
+                <h3 class="text-success fw-bold mt-2">$ @ViewBag.TotalAnual.ToString("N0")</h3>
+            </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Ventas Anuladas</h5>
-            <h3>@ViewBag.Anuladas</h3>
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <small class="text-muted d-block">Ventas Anuladas</small>
+                <h3 class="text-danger fw-bold mt-2">@ViewBag.Anuladas</h3>
+            </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Ticket Promedio</h5>
-            <h3>$ @ViewBag.TicketPromedio.ToString("N0")</h3>
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <small class="text-muted d-block">Ticket Promedio</small>
+                <h3 class="text-primary fw-bold mt-2">$ @ViewBag.TicketPromedio.ToString("N0")</h3>
+            </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Productos Bajo Stock</h5>
-            <h3>@ViewBag.BajoStock.Count</h3>
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <small class="text-muted d-block">Bajo Stock</small>
+                <h3 class="text-warning fw-bold mt-2">@ViewBag.StockBajoCount</h3>
+                <a href="/Alertas/StockBajo" class="btn btn-sm btn-link text-decoration-none">Ver detalles</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ALERTAS CRÍTICAS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 bg-info bg-opacity-10">
+            <div class="card-body text-center">
+                <small class="text-muted d-block">Lotes por Vencer (7 días)</small>
+                <h3 class="text-info fw-bold mt-2">@ViewBag.VencimientosCount</h3>
+                <a href="/Alertas/Vencimientos" class="btn btn-sm btn-info text-white">Gestionar Vencimientos</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 bg-danger bg-opacity-10">
+            <div class="card-body text-center">
+                <small class="text-muted d-block">Productos Stock Negativo</small>
+                <h3 class="text-danger fw-bold mt-2">@ViewBag.NegativosCount</h3>
+                <a href="/Alertas/StockNegativo" class="btn btn-sm btn-danger">Regularizar ahora</a>
+            </div>
         </div>
     </div>
 </div>
 
-<hr />
+<!-- GRÁFICOS (50 / 50) -->
+<div class="row g-3 mb-5">
 
-<h4>📈 Ventas por Mes</h4>
-<canvas id="ventasChart"></canvas>
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">📈 Ventas por Mes</h5>
+                <canvas id="ventasChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-<hr />
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">🏆 Productos Más Vendidos</h5>
+                <canvas id="productosChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-<h4>🏆 Productos Más Vendidos</h4>
-<canvas id="productosChart"></canvas>
+</div>
 
-<hr />
+<!-- TABLA BAJO STOCK -->
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body">
 
-<h4>⚠ Productos con Bajo Stock</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">⚠ Productos con Bajo Stock</h5>
+            <a href="/Alertas/StockBajo" class="btn btn-sm btn-outline-warning">
+                Ver todos
+            </a>
+        </div>
 
-<table class="table table-bordered table-hover">
-    <thead class="table-primary">
-        <tr>
-            <th>Producto</th>
-            <th>Stock</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in ViewBag.BajoStock)
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var p in ViewBag.BajoStock)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@p.Nombre</td>
+
+                            <td class="text-center">
+                                <span class="badge bg-warning text-dark px-3 py-2">
+                                    @p.Stock
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <a href="/MovimientoStock/Ingreso?productoId=@p.Id"
+                                       class="btn btn-sm btn-outline-success">
+                                    ➕ Reponer
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<!-- PRODUCTOS SIN ROTACIÓN (STOCK MUERTO) -->
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body">
+        <h5 class="fw-bold mb-3">📉 Productos sin rotación (Stock muerto)</h5>
+        
+        @if (ViewBag.ProductosSinVenta == null || ViewBag.ProductosSinVenta.Count == 0)
         {
-            <tr>
-                <td>@p.Nombre</td>
-                <td>@p.Stock</td>
-            </tr>
+            <p class="text-muted text-center my-4">No hay productos sin rotación</p>
         }
-    </tbody>
-</table>
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in ViewBag.ProductosSinVenta)
+                        {
+                            <tr>
+                                <td class="fw-bold">@p.Nombre</td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary px-3 py-2">@p.Stock</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="/Productos/Detalle/@p.Id" class="btn btn-sm btn-outline-secondary">
+                                        Ver detalle
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    const ventasData = {
-        labels: [
-            @foreach (var m in ventasPorMes)
-            {
-                    @: "@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m.Mes)",
-            }
-        ],
-        datasets: [{
-            label: 'Total Facturado',
-            data: [
-                @foreach (var m in ventasPorMes)
-                {
-                        @: @m.Total,
-                }
-            ],
-            borderWidth: 2
-        }]
-    };
-
-    new Chart(document.getElementById('ventasChart'), {
-        type: 'line',
-        data: ventasData
-    });
-
-    const productosData = {
-        labels: [
-            @foreach (var p in productosTop)
-            {
-                    @: "@p.Producto",
-            }
-        ],
-        datasets: [{
-            label: 'Cantidad Vendida',
-            data: [
-                @foreach (var p in productosTop)
-                {
-                        @: @p.CantidadVendida,
-                }
-            ],
-            borderWidth: 1
-        }]
-    };
-
-    new Chart(document.getElementById('productosChart'), {
-        type: 'bar',
-        data: productosData
-    });
-</script>
-
-<hr />
-
-<h4 class="mt-4">📦 Stock Inteligente</h4>
-
-<div class="row">
+<!-- STOCK INTELIGENTE -->
+<div class="row g-3">
 
     <!-- VENCIDOS -->
     <div class="col-md-6">
-        <div class="card border-danger shadow-sm h-100">
+        <div class="card shadow-sm border-0 h-100">
+
             <div class="card-header bg-danger text-white fw-bold">
                 🔴 Productos Vencidos
             </div>
+
             <div class="card-body">
 
                 @if (ViewBag.ProductosVencidos.Count == 0)
                 {
-                    <p class="text-muted italic text-center my-4">Sin productos vencidos</p>
+                    <p class="text-muted text-center my-4">Sin productos vencidos</p>
                 }
                 else
                 {
                     <ul class="list-group list-group-flush">
                         @foreach (var p in ViewBag.ProductosVencidos)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">@p.Nombre</span>
-                                <span class="badge bg-danger rounded-pill">
-                                    @p.Cantidad (venció: @p.Fecha.ToString("dd/MM"))
-                                </span>
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark">
+
+                                <div>
+                                    <div class="fw-bold">@p.Nombre</div>
+                                    <small class="text-danger">
+                                        Venció: @p.Fecha.ToString("dd/MM/yyyy")
+                                    </small>
+                                </div>
+
+                                <div class="text-end">
+                                    <span class="badge bg-danger mb-1">
+                                        @p.Cantidad
+                                    </span>
+                                    <br />
+                                    <a href="/Productos/Detalle/@p.ProductoId"
+                                           class="btn btn-sm btn-outline-danger">
+                                        Lotes
+                                    </a>
+                                </div>
+
                             </li>
                         }
                     </ul>
                 }
 
             </div>
+
+            <div class="card-footer text-center">
+                <a href="/Alertas/Vencimientos" class="btn btn-sm btn-outline-danger">
+                    Ver todos
+                </a>
+            </div>
+
         </div>
     </div>
 
     <!-- POR VENCER -->
     <div class="col-md-6">
-        <div class="card border-warning shadow-sm h-100">
+        <div class="card shadow-sm border-0 h-100">
+
             <div class="card-header bg-warning fw-bold">
-                🟡 Próximos a Vencer (3 días)
+                🟡 Próximos a Vencer
             </div>
+
             <div class="card-body">
 
                 @if (ViewBag.ProductosPorVencer.Count == 0)
                 {
-                    <p class="text-muted italic text-center my-4">Sin productos próximos a vencer</p>
+                    <p class="text-muted text-center my-4">Sin productos próximos a vencer</p>
                 }
                 else
                 {
                     <ul class="list-group list-group-flush">
                         @foreach (var p in ViewBag.ProductosPorVencer)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">@p.Nombre</span>
-                                <span class="badge bg-warning text-dark rounded-pill">
-                                    @p.Cantidad (vence: @p.Fecha.ToString("dd/MM"))
-                                </span>
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark">
+
+                                <div>
+                                    <div class="fw-bold">@p.Nombre</div>
+                                    <small>
+                                        Vence: @p.Fecha.ToString("dd/MM/yyyy")
+                                    </small>
+                                </div>
+
+                                <div class="text-end">
+                                    <span class="badge bg-warning text-dark mb-1">
+                                        @p.Cantidad
+                                    </span>
+                                    <br />
+                                    <a href="/Productos/Detalle/@p.ProductoId"
+                                           class="btn btn-sm btn-outline-warning">
+                                        Lotes
+                                    </a>
+                                </div>
+
                             </li>
                         }
                     </ul>
                 }
 
             </div>
+
+            <div class="card-footer text-center">
+                <a href="/Alertas/Vencimientos" class="btn btn-sm btn-outline-warning">
+                    Ver todos
+                </a>
+            </div>
+
         </div>
     </div>
 
 </div>
 
+<!-- SCRIPTS (LOS DEJAMOS IGUAL PARA EVITAR BUG) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ventasData = {
+    labels: [
+    @foreach (var m in ventasPorMes)
+    {
+        @: "@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m.Mes)",
+    }
+    ],
+    datasets: [{
+    label: 'Total Facturado',
+    data: [
+    @foreach (var m in ventasPorMes)
+    {
+        @: @m.Total,
+    }
+    ],
+    borderWidth: 2
+    }]
+    };
+
+    new Chart(document.getElementById('ventasChart'), {
+    type: 'line',
+    data: ventasData
+    });
+
+    const productosData = {
+    labels: [
+    @foreach (var p in productosTop)
+    {
+        @: "@p.Producto",
+    }
+    ],
+    datasets: [{
+    label: 'Cantidad Vendida',
+    data: [
+    @foreach (var p in productosTop)
+    {
+        @: @p.CantidadVendida,
+    }
+    ],
+    borderWidth: 1
+    }]
+    };
+
+    new Chart(document.getElementById('productosChart'), {
+    type: 'bar',
+    data: productosData
+    });
+</script>

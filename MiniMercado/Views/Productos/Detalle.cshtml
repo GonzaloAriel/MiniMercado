@@ -54,8 +54,8 @@
 
                                 <tr class="@rowClass">
                                     <td class="fw-bold">@lote.Cantidad</td>
-                                    <td>@lote.FechaIngreso.ToShortDateString()</td>
-                                    <td>@(lote.FechaVencimiento?.ToShortDateString() ?? "N/A")</td>
+                                    <td>@lote.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                                    <td>@(lote.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "N/A")</td>
                                     <td>
                                         @if (diasParaVencer < 0) { <span class="badge bg-danger">Vencido</span> }
                                         else if (diasParaVencer < 7) { <span class="badge bg-warning text-dark">Próximo</span> }

@@ -143,9 +143,19 @@ namespace MiniMercado.Controllers
                 .Where(r => r.TenantId == tenantId)
                 .ToList();
 
+            var productos = productosQuery.ToList();
+
+            // 🎯 Calcular vencimiento más próximo para cada producto basado en Lotes con stock
+            foreach (var p in productos)
+            {
+                p.FechaProximoVencimiento = _context.LotesProducto
+                    .Where(l => l.ProductoId == p.Id && l.Cantidad > 0 && l.FechaVencimiento != null && l.TenantId == tenantId)
+                    .Min(l => l.FechaVencimiento);
+            }
+
             var model = new ProductoIndexViewModel
             {
-                Productos = productosQuery.ToList(),
+                Productos = productos,
                 Rubros = rubros,
                 FiltroRubro = rubroId
             };

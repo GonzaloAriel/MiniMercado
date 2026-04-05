@@ -86,20 +86,20 @@
                             </span>
                         </td>
                         <td class="text-center">
-                            @if (producto.FechaVencimiento.HasValue)
+                            @if (producto.FechaProximoVencimiento.HasValue)
                             {
-                                var dias = (producto.FechaVencimiento.Value.Date - DateTime.Today).TotalDays;
+                                var dias = (producto.FechaProximoVencimiento.Value.Date - DateTime.Today).TotalDays;
                                 if (dias < 0)
                                 {
-                                    <span class="badge bg-danger" title="Vencido">🔴 @producto.FechaVencimiento.Value.ToShortDateString()</span>
+                                    <span class="badge bg-danger" title="Vencido">🔴 @producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span>
                                 }
                                 else if (dias <= 3)
                                 {
-                                    <span class="badge bg-warning text-dark" title="Por vencer">🟡 @producto.FechaVencimiento.Value.ToShortDateString()</span>
+                                    <span class="badge bg-warning text-dark" title="Por vencer">🟡 @producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-success" title="En fecha">🟢 @producto.FechaVencimiento.Value.ToShortDateString()</span>
+                                    <span class="badge bg-success" title="En fecha">🟢 @producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span>
                                 }
                             }
                             else
@@ -114,7 +114,10 @@
                         </td>
                         <td class="text-center">
                             <div class="btn-group">
-                                <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn btn-outline-info btn-sm" title="Ver Lotes">
+                                <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn btn-outline-info btn-sm ms-1" title="Ingresar Stock">
+                                    <i class="bi bi-box-seam"></i> Stock
+                                </a>
+                                <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn btn-outline-success btn-sm ms-1" title="Ver Lotes">
                                     <i class="bi bi-box-seam"></i> Lotes
                                 </a>
                                 <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-outline-warning btn-sm ms-1" title="Editar">

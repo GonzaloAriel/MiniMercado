@@ -31,9 +31,18 @@ namespace MiniMercado.Controllers
             if (productoId.HasValue)
             {
                 var tenantId = _tenantService.GetTenantId().Value;
-                var p = _context.Productos.FirstOrDefault(x => x.Id == productoId.Value && x.TenantId == tenantId);
-                ViewBag.ProductoPreseleccionado = p;
+
+                var producto = _context.Productos
+                    .FirstOrDefault(p => p.Id == productoId && p.TenantId == tenantId);
+
+                if (producto != null)
+                {
+                    ViewBag.ProductoId = producto.Id;
+                    ViewBag.ProductoNombre = producto.Nombre;
+                    ViewBag.StockActual = producto.Stock;
+                }
             }
+
             return View();
         }
 

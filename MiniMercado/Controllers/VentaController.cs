@@ -228,17 +228,6 @@ namespace MiniMercado.Controllers
                     decimal aDescontar = Math.Min(lote.Cantidad, cantidadRestante);
                     lote.Cantidad -= aDescontar;
                     cantidadRestante -= aDescontar;
-
-                    // 🔔 Notificación de Vencimiento Próximo (ej: menos de 7 días)
-                    if (lote.FechaVencimiento.HasValue && (lote.FechaVencimiento.Value - DateTime.Today).TotalDays <= 7)
-                    {
-                        await _notificacionService.CrearNotificacion(
-                            "Vencimiento Próximo",
-                            $"El lote del producto '{producto.Nombre}' vence el {lote.FechaVencimiento.Value:dd/MM/yyyy}",
-                            "Vencimiento",
-                            $"/Productos/Edit/{producto.Id}"
-                        );
-                    }
                 }
 
                 if (cantidadRestante > 0)
@@ -251,17 +240,6 @@ namespace MiniMercado.Controllers
 
                 // Stock Total (Referencia)
                 producto.Stock -= item.Cantidad;
-
-                // 🔔 Notificación de Stock Negativo
-                if (producto.Stock < 1)
-                {
-                    await _notificacionService.CrearNotificacion(
-                        "Stock Negativo",
-                        $"El producto '{producto.Nombre}' quedó con stock: {producto.Stock}",
-                        "Stock",
-                        $"/Productos/Edit/{producto.Id}"
-                    );
-                }
 
                 // Total
                 total += item.PrecioUnitario * item.Cantidad;

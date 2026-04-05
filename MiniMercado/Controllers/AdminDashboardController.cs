@@ -11,11 +11,13 @@ namespace MiniMercado.Controllers
     {
         private readonly MiniMercadoContext _context;
         private readonly ITenantService _tenantService;
+        private readonly AlertasService _alertasService;
 
-        public AdminDashboardController(MiniMercadoContext context, ITenantService tenantService)
+        public AdminDashboardController(MiniMercadoContext context, ITenantService tenantService, AlertasService alertasService)
         {
             _context = context;
             _tenantService = tenantService;
+            _alertasService = alertasService;
         }
 
         public IActionResult Index(int? anio)
@@ -78,43 +80,17 @@ namespace MiniMercado.Controllers
                 : 0;
 
             // Bajo stock
-            var bajoStock = _context.Productos
-                .Where(p => p.Activo && p.TenantId == tenantId && p.Stock <= 5)
-                .OrderBy(p => p.Stock)
-                .Take(5)
-                .ToList();
+            var bajoStock = _alertasService.GetStockBajo(tenantId);
+            var negativos = _alertasService.GetStockNegativo(tenantId);
+            var vencimientos = _alertasService.GetVencimientos(tenantId);
+
+            ViewBag.StockBajoCount = bajoStock.Count;
+            ViewBag.NegativosCount = negativos.Count;
+            ViewBag.VencimientosCount = vencimientos.Count;
 
             // --- STOCK INTELIGENTE (LOTES) ---
-            var hoy = DateTime.Now;
-            var limiteProximo = hoy.AddDays(3);
-
-            var lotesVencidos = _context.LotesProducto
-                .Include(l => l.Producto)
-                .Where(l => l.TenantId == tenantId && l.Cantidad > 0 && l.FechaVencimiento != null && l.FechaVencimiento < hoy)
-                .GroupBy(l => new { l.ProductoId, l.Producto.Nombre })
-                .Select(g => new
-                {
-                    Nombre = g.Key.Nombre,
-                    Cantidad = g.Sum(x => x.Cantidad),
-                    Fecha = g.Min(x => x.FechaVencimiento).Value
-                })
-                .OrderBy(x => x.Fecha)
-                .Take(5)
-                .ToList();
-
-            var lotesPorVencer = _context.LotesProducto
-                .Include(l => l.Producto)
-                .Where(l => l.TenantId == tenantId && l.Cantidad > 0 && l.FechaVencimiento != null && l.FechaVencimiento >= hoy && l.FechaVencimiento <= limiteProximo)
-                .GroupBy(l => new { l.ProductoId, l.Producto.Nombre })
-                .Select(g => new
-                {
-                    Nombre = g.Key.Nombre,
-                    Cantidad = g.Sum(x => x.Cantidad),
-                    Fecha = g.Min(x => x.FechaVencimiento).Value
-                })
-                .OrderBy(x => x.Fecha)
-                .Take(5)
-                .ToList();
+            var lotesVencidos = _alertasService.GetProductosVencidos(tenantId);
+            var lotesPorVencer = _alertasService.GetProductosPorVencer(tenantId);
 
             ViewBag.Anio = year;
             ViewBag.VentasPorMes = ventasPorMes;
@@ -126,6 +102,44 @@ namespace MiniMercado.Controllers
 
             ViewBag.ProductosVencidos = lotesVencidos;
             ViewBag.ProductosPorVencer = lotesPorVencer;
+
+            // --- PRODUCTOS SIN ROTACIÓN (LOTES + VENTAS RECIENTES) ---
+            var fechaLimite = DateTime.Today.AddMonths(-6);
+
+            // 1. Obtener IDs de productos vendidos en los últimos 6 meses
+            var productosVendidosRecientesIds = _context.Ventas
+                .Where(v => v.TenantId == tenantId && !v.Activa && v.Fecha >= fechaLimite)
+                .SelectMany(v => v.Detalles)
+                .Select(d => d.ProductoId)
+                .Distinct()
+                .ToList();
+
+            // 2. Obtener stock real desde lotes (agrupado por producto)
+            var productosConStockReal = _context.LotesProducto
+                .Where(l => l.TenantId == tenantId && l.Cantidad > 0)
+                .GroupBy(l => l.ProductoId)
+                .Select(g => new
+                {
+                    ProductoId = g.Key,
+                    StockTotal = g.Sum(x => x.Cantidad)
+                })
+                .ToList();
+
+            // 3. Filtrar productos que tienen stock pero NO han tenido ventas recientes
+            var productosSinRotacionIds = productosConStockReal
+                .Where(p => !productosVendidosRecientesIds.Contains(p.ProductoId))
+                .OrderByDescending(p => p.StockTotal)
+                .Take(5)
+                .Select(p => p.ProductoId)
+                .ToList();
+
+            // 4. Obtener los datos completos de los productos para la vista
+            var productosSinRotacion = _context.Productos
+                .Where(p => productosSinRotacionIds.Contains(p.Id))
+                .Include(p => p.ProductoBase) // Cargar nombres si usa catálogo global
+                .ToList();
+
+            ViewBag.ProductosSinRotacion = productosSinRotacion;
 
             return View();
         }

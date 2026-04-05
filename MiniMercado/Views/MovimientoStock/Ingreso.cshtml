@@ -1,31 +1,57 @@
 @model MiniMercado.Models.MovimientoStock
 
 @{
-    var preselected = ViewBag.ProductoPreseleccionado as MiniMercado.Models.Producto;
-    bool isPreselected = preselected != null;
+    bool isPreselected = ViewBag.ProductoId != null;
 }
 
 <h2>Ingreso de Stock</h2>
+
+@if (ViewBag.ProductoId != null)
+{
+    <div class="alert alert-info">
+        Stock actual: <strong>@ViewBag.StockActual</strong>
+    </div>
+
+    @if (ViewBag.StockActual < 0)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Este producto tiene stock negativo. Ingresá mercadería para regularizar.
+        </div>
+    }
+}
 
 <form asp-action="Ingreso" method="post">
 
     @Html.AntiForgeryToken()
 
-    @{
+    @if (isPreselected)
+    {
+        <input type="hidden" name="ProductoId" value="@ViewBag.ProductoId" />
+
+        <div class="form-group mb-3">
+            <label class="fw-bold">Producto</label>
+            <div class="input-group">
+                <input type="text" class="form-control bg-light" value="@ViewBag.ProductoNombre" readonly />
+                <a asp-action="Ingreso" class="btn btn-outline-secondary" title="Cambiar producto">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
         ViewBag.Label = "Producto";
         ViewBag.InputId = "ProductoId";
         ViewBag.InputName = "ProductoId";
         ViewBag.SearchId = "buscadorStock";
         ViewBag.ResultId = "resultadosStock";
         ViewBag.Placeholder = "🔎 Escriba nombre o escanee código...";
-    }
 
-    <div class="form-group mb-3 position-relative">
-        <label class="fw-bold">@ViewBag.Label</label>
-        <input type="hidden" id="@ViewBag.InputId" name="@ViewBag.InputName" value="@(preselected?.Id)" />
-        
-        @if (!isPreselected)
-        {
+        <div class="form-group mb-3 position-relative">
+            <label class="fw-bold">@ViewBag.Label</label>
+            <input type="hidden" id="@ViewBag.InputId" name="@ViewBag.InputName" value="" />
+            
             <div class="input-group mb-2">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text"
@@ -34,29 +60,19 @@
                        placeholder="@(ViewBag.Placeholder ?? "🔎 Buscar producto...")"
                        autocomplete="off" />
             </div>
-        }
 
-        <div class="input-group">
-            <span class="input-group-text bg-light">@(isPreselected ? "Producto:" : "Seleccionado:")</span>
-            <input type="text" id="ProductoNombreDisplay" readonly class="form-control bg-light" 
-                   value="@(isPreselected ? preselected.NombreDisplay : "")"
-                   placeholder="Ningún producto seleccionado" />
-            
-            @if (isPreselected)
-            {
-                <a asp-action="Ingreso" class="btn btn-outline-secondary" title="Cambiar producto">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            }
-        </div>
+            <div class="input-group">
+                <span class="input-group-text bg-light">Seleccionado:</span>
+                <input type="text" id="ProductoNombreDisplay" readonly class="form-control bg-light" 
+                       value=""
+                       placeholder="Ningún producto seleccionado" />
+            </div>
 
-        <span asp-validation-for="ProductoId" class="text-danger small"></span>
+            <span asp-validation-for="ProductoId" class="text-danger small"></span>
 
-        @if (!isPreselected)
-        {
             <div id="@ViewBag.ResultId" class="list-group shadow position-absolute w-100 d-none" style="z-index: 1050; top: 100%;"></div>
-        }
-    </div>
+        </div>
+    }
 
     <div class="form-group mb-3">
         <label>Cantidad</label>
@@ -91,11 +107,11 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-    <script src="~/js/buscador-productos.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Solo inicializar buscador si no hay preseleccionado
-            if (document.getElementById("@ViewBag.SearchId")) {
+    @if (!isPreselected)
+    {
+        <script src="~/js/buscador-productos.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
                 initBuscador({
                     searchId: "buscadorStock",
                     inputId: "ProductoId",
@@ -106,12 +122,15 @@
                         document.querySelector("input[name='Cantidad']").focus();
                     }
                 });
-            }
-
-            // Si hay un preseleccionado, poner el foco en cantidad
-            if (document.getElementById("ProductoId").value) {
+            });
+        </script>
+    }
+    else
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
                 document.querySelector("input[name='Cantidad']").focus();
-            }
-        });
-    </script>
+            });
+        </script>
+    }
 }
