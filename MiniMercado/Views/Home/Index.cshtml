@@ -62,40 +62,41 @@
 }
 
 <!-- 🚀 ACCIONES PRINCIPALES -->
-
 @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
 {
-    <div class="col-md-12">
+    <div class="col-md-12 mb-3">
         <a asp-controller="Venta" asp-action="Create"
-               class="btn btn-success w-100 action-btn fs-4">
+               class="btn btn-primary w-100 action-btn fs-4">
             🛍️ Nueva Venta!!
         </a>
     </div>
 }
 
-<hr />
 
-<div class="row g-4 mb-5">
+<div class="row g-4">
 
     @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
     {
+        <hr />
+        <h4 class="mt-1">📒 Administracion</h4>
+
         <div class="col-md-4">
             <a asp-controller="Venta" asp-action="Index"
-                   class="btn btn-primary w-100 action-btn">
+                   class="btn btn-info w-100 action-btn">
                 📄 Historial de Ventas
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="Venta" asp-action="Caja"
-                   class="btn btn-danger w-100 action-btn">
+                   class="btn btn-info w-100 action-btn">
                 📊 Caja Diaria
             </a>
         </div>
 
         <div class="col-md-4">
             <a asp-controller="VentaAdmin" asp-action="Index"
-                   class="btn btn-warning w-100 action-btn">
+                   class="btn btn-info w-100 action-btn">
                 ✏ Administracion de Venta
             </a>
         </div>
@@ -105,7 +106,7 @@
     {
         <div class="col-md-4">
             <a asp-controller="Productos" asp-action="Index"
-                   class="btn btn-dark w-100 action-btn">
+                   class="btn btn-info w-100 action-btn">
                 📦 Gestión de Productos
             </a>
         </div>
@@ -117,9 +118,9 @@
             </a>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-4 mb-1">
             <a asp-controller="Rubro" asp-action="Index"
-                   class="btn btn-secondary w-100 action-btn">
+                   class="btn btn-info w-100 action-btn">
                 🏷️ Gestión de Rubros
             </a>
         </div>
@@ -127,49 +128,53 @@
 
         <hr />
 
-        <h4>⚙️ Administración</h4>
+        <div class="row g-4 mt-1">
+            <h4 class="mt-1">⚙️ Configuraciones</h4>
 
-        <div class="col-md-4">
-            <a asp-controller="Usuarios" asp-action="Index"
-                   class="btn btn-dark w-100 action-btn">
-                👤 Usuarios
-            </a>
-        </div>
+            <div class="col-md-4">
+                <a asp-controller="Usuarios" asp-action="Index"
+                       class="btn btn-primary w-100 action-btn">
+                    👤 Usuarios
+                </a>
+            </div>
 
-        <div class="col-md-4">
-            <a asp-controller="AdminDashboard" asp-action="Index"
-                   class="btn btn-dark w-100 action-btn">
-                📈 Metricas y economia
-            </a>
-        </div>
+            <div class="col-md-4">
+                <a asp-controller="AdminDashboard" asp-action="Index"
+                       class="btn btn-primary w-100 action-btn">
+                    📈 Metricas y economia
+                </a>
+            </div>
 
-        <div class="col-md-4">
-            <a asp-controller="Dashboard" asp-action="AuditoriaCajas"
-                   class="btn btn-dark w-100 action-btn">
-                📈 Auditorias
-            </a>
-        </div>
+            <div class="col-md-4">
+                <a asp-controller="Dashboard" asp-action="AuditoriaCajas"
+                       class="btn btn-primary w-100 action-btn">
+                    📈 Auditorias
+                </a>
+            </div>
 
-        <div class="col-md-4">
-            <a asp-controller="Cliente" asp-action="Index"
-                   class="btn btn-dark w-100 action-btn">
-                👥 Clientes y Fiados
-            </a>
-        </div>
+            <div class="col-md-4">
+                <a asp-controller="Cliente" asp-action="Index"
+                       class="btn btn-primary w-100 action-btn">
+                    👥 Clientes y Fiados
+                </a>
+            </div>
 
-        <div class="col-md-4">
-            <a asp-controller="Caja" asp-action="Historial"
-                   class="btn btn-dark w-100 action-btn">
-                📈 Estado de cajas
-            </a>
-        </div>
+            <div class="col-md-4">
+                <a asp-controller="Caja" asp-action="Historial"
+                       class="btn btn-primary w-100 action-btn">
+                    📈 Estado de cajas
+                </a>
+            </div>
 
-        <div class="col-md-4">
-            <a asp-controller="Configuracion" asp-action="Index"
-                   class="btn btn-dark w-100 action-btn">
-                🛠 Configuracion negocio
-            </a>
+            <div class="col-md-4">
+                <a asp-controller="Configuracion" asp-action="Index"
+                       class="btn btn-primary w-100 action-btn">
+                    🛠 Configuracion negocio
+                </a>
+            </div>
         </div>
+        
+        <hr />
     }
 
 
@@ -209,8 +214,6 @@
 
 @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
 {
-    <hr />
-
     <!-- 🔔 RESUMEN DEL DÍA -->
     <div class="row mb-4 pt-xxl-5">
 
