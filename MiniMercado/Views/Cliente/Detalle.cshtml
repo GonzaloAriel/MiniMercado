@@ -1,7 +1,7 @@
-﻿@model MiniMercado.Models.Cliente
+@model MiniMercado.Models.Cliente
 
 @{
-    ViewData["Title"] = "Ficha del cliente";
+    ViewData["Title"] = "Ficha del Cliente";
     var ventasFiadas = ViewBag.VentasFiadas as List<MiniMercado.Models.Venta>;
     var pagos = ViewBag.Pagos as List<MiniMercado.Models.PagoFiado>;
     decimal saldo = ViewBag.Saldo;
@@ -9,92 +9,260 @@
     decimal totalPagado = ViewBag.TotalPagado;
 }
 
-<h2>📙 Ficha de @Model.Nombre</h2>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-<div class="row mb-3">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body rounded">
-                <p><strong>Teléfono:</strong> @(Model.Telefono ?? "-")</p>
-                <p><strong>Límite:</strong> @(Model.LimiteCredito > 0 ? $"${Model.LimiteCredito:0.##}" : "Sin límite")</p>
-                <p><strong>Total fiado:</strong> $@totalDeuda.ToString("0.##")</p>
-                <p><strong>Total pagado:</strong> $@totalPagado.ToString("0.##")</p>
-                <hr />
-                <h4>
-                    Saldo pendiente:
-                    @if (saldo > 0)
-                    {
-                        <span class="badge bg-danger fs-5">$@saldo.ToString("0.##")</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success fs-5">Al día ✅</span>
-                    }
-                </h4>
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1100px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .kpi-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .1em;
+    }
+
+    .kpi-value {
+        font-family: 'DM Mono', monospace;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .kpi-value.red { color: var(--red-text); }
+    .kpi-value.green { color: var(--green-text); }
+    .kpi-value.blue { color: var(--blue-text); }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-modern.success { background: var(--green); color: #fff; border: none; }
+    .btn-modern.outline { background: var(--bg-surface); color: var(--text-secondary); }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        margin: 32px 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        margin-bottom: 32px;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 14px 20px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .badge-modern {
+        font-family: 'DM Mono', monospace;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 30px;
+    }
+
+    .badge-modern.red { background: var(--red-bg); color: var(--red-text); }
+    .badge-modern.green { background: var(--green-bg); color: var(--green-text); }
+
+    .mono-text { font-family: 'DM Mono', monospace; font-weight: 600; }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>@Model.Nombre</h1>
+            <p>Teléfono: @(Model.Telefono ?? "Sin registro") · Límite: @(Model.LimiteCredito > 0 ? $"${Model.LimiteCredito:N0}" : "Ilimitado")</p>
+        </div>
+        <div class="header-actions">
+            <a asp-action="RegistrarPago" asp-route-id="@Model.Id" class="btn-modern success">
+                <i class="bi bi-cash-coin"></i> Registrar Entrega
+            </a>
+            <a asp-action="Index" class="btn-modern outline">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Saldo Pendiente</span>
+            @if (saldo > 0)
+            {
+                <span class="kpi-value red">$ @saldo.ToString("N0")</span>
+            }
+            else
+            {
+                <span class="kpi-value green">AL DÍA ✅</span>
+            }
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Total Compras Fiadas</span>
+            <span class="kpi-value blue">$ @totalDeuda.ToString("N0")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Total Pagado</span>
+            <span class="kpi-value green">$ @totalPagado.ToString("N0")</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <p class="section-title">🛒 Historial de Compras</p>
+            <div class="data-card">
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th class="text-end">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ventasFiadas != null && ventasFiadas.Any())
+                        {
+                            foreach (var v in ventasFiadas)
+                            {
+                                <tr>
+                                    <td><span class="text-muted small mono-text">#@v.Id</span></td>
+                                    <td><span class="small">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                    <td class="text-end"><span class="mono-text">$@v.Total.ToString("N0")</span></td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="3" class="text-center py-4 text-muted small">Sin ventas fiadas registradas.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <p class="section-title">🏦 Entregas y Pagos</p>
+            <div class="data-card">
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pagos != null && pagos.Any())
+                        {
+                            foreach (var p in pagos)
+                            {
+                                <tr>
+                                    <td><span class="small">@p.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                    <td><span class="mono-text text-success">$@p.Monto.ToString("N0")</span></td>
+                                    <td><span class="text-muted small">@(p.Observacion ?? "-")</span></td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="3" class="text-center py-4 text-muted small">No se registran pagos a cuenta.</td></tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
-
-<a asp-action="RegistrarPago" asp-route-id="@Model.Id" class="btn btn-success mb-3">
-    💵 Registrar pago
-</a>
-<a asp-action="Index" class="btn btn-secondary mb-3">⬅ Volver</a>
-
-<!-- Ventas fiadas -->
-<h4 class="mt-3">🛒 Ventas fiadas</h4>
-<table class="table table-bordered table-sm">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (ventasFiadas != null && ventasFiadas.Any())
-        {
-            foreach (var v in ventasFiadas)
-            {
-                <tr>
-                    <td>@v.Id</td>
-                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>$@v.Total.ToString("0.##")</td>
-                </tr>
-            }
-        }
-        else
-        {
-            <tr><td colspan="3">Sin ventas fiadas.</td></tr>
-        }
-    </tbody>
-</table>
-
-<!-- Pagos realizados -->
-<h4 class="mt-3">📙 Pagos realizados</h4>
-<table class="table table-bordered table-sm">
-    <thead class="table-dark">
-        <tr>
-            <th>Fecha</th>
-            <th>Monto</th>
-            <th>Observación</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (pagos != null && pagos.Any())
-        {
-            foreach (var p in pagos)
-            {
-                <tr>
-                    <td>@p.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>$@p.Monto.ToString("0.##")</td>
-                    <td>@(p.Observacion ?? "-")</td>
-                </tr>
-            }
-        }
-        else
-        {
-            <tr><td colspan="3">Sin pagos registrados.</td></tr>
-        }
-    </tbody>
-</table>

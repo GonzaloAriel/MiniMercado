@@ -1,111 +1,305 @@
 @model IEnumerable<MiniMercado.Models.Venta>
 
 @{
-    ViewData["Title"] = "Historial de Ventas";
+    ViewData["Title"] = "Administración de Ventas";
 }
 
-<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-    <h2>📜 Administrar Ventas</h2>
-    <a href="/Venta/Create" class="btn btn-success shadow-sm">
-        <i class="bi bi-cart-plus"></i> Nueva Venta
-    </a>
-</div>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-<div id="ajaxAlert" class="alert d-none alert-dismissible fade show">
-    <span id="ajaxAlertMessage"></span>
-    <button type="button" class="btn-close" onclick="this.parentElement.classList.add('d-none')"></button>
-</div>
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
 
-<div class="card p-3 mb-4 shadow-sm">
-    <form method="get" class="row g-3">
-        <div class="col-md-3">
-            <label class="form-label">Desde</label>
-            <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Hasta</label>
-            <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Estado</label>
-            <select name="estado" class="form-select">
-                <option value="">Todas</option>
-                <option value="activa" selected="@(ViewBag.Estado == "activa" ? "selected" : null)">Activas (Válidas)</option>
-                <option value="anulada" selected="@(ViewBag.Estado == "anulada" ? "selected" : null)">Anuladas</option>
-            </select>
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
-            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Limpiar</a>
-        </div>
-    </form>
-</div>
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
 
-<div class="table-responsive shadow-sm rounded">
-    <table class="table table-hover align-middle mb-0">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Fecha</th>
-                <th>Vendedor</th>
-                <th class="text-end">Total</th>
-                <th class="text-center">Estado</th>
-                <th class="text-center">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr id="row-@item.Id" class="@(item.Activa ? "table-danger opacity-75" : "")">
-                    <td>#@item.Id</td>
-                    <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td><small>@item.Usuario</small></td>
-                    <td class="text-end fw-bold">$ @item.Total.ToString("N2")</td>
-                    <td class="text-center">
-                        <span id="badge-@item.Id" class="badge @(item.Activa ? "bg-danger" : "bg-success")">
-                            @(item.Activa ? "ANULADA" : "OK")
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <div class="btn-group">
-                            <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">
-                                <i class="bi bi-eye"></i> Detalles
-                            </a>
-                            @if (!item.Activa)
-                            {
-                                <button type="button" 
-                                        onclick="prepararAnulacion(@item.Id)" 
-                                        class="btn btn-outline-danger btn-sm ms-1" 
-                                        title="Anular">
-                                    <i class="bi bi-x-circle"></i> Anular
-                                </button>
-                            }
-                        </div>
-                    </td>
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-modern.success { background: var(--green); color: #fff; border: none; }
+    .btn-modern.primary { background: var(--blue); color: #fff; border: none; }
+    .btn-modern.outline { background: var(--bg-surface); color: var(--text-secondary); }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .filters-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-label-modern {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control-modern {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        width: 100%;
+    }
+
+    .form-control-modern:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--blue-bg);
+    }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .db-table tr.anulada td { opacity: 0.5; }
+
+    .badge-modern {
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+
+    .badge-modern.success { background: var(--green-bg); color: var(--green-text); }
+    .badge-modern.danger { background: var(--red-bg); color: var(--red-text); }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+        transform: translateY(-1px);
+    }
+
+    .btn-action.danger:hover { border-color: var(--red); color: var(--red-text); }
+
+    .id-text { font-family: 'DM Mono', monospace; color: var(--blue-text); font-weight: 700; }
+    .price-text { font-family: 'DM Mono', monospace; font-weight: 700; color: var(--text-primary); font-size: 15px; }
+
+    .alert-modern {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .alert-modern.success { border-left: 4px solid var(--green); color: var(--green-text); }
+
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        color: var(--text-primary);
+    }
+
+    .modal-header { border-bottom: 1px solid var(--border); padding: 24px; }
+    .modal-footer { border-top: 1px solid var(--border); padding: 20px; }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Administrar Ventas</h1>
+            <p>Control avanzado y anulación de comprobantes</p>
+        </div>
+        <div class="header-actions">
+            <a href="/Venta/Create" class="btn-modern success">
+                <i class="bi bi-cart-plus"></i> Nueva Venta
+            </a>
+        </div>
+    </div>
+
+    <div id="ajaxAlert" class="alert-modern d-none">
+        <span id="ajaxAlertMessage"></span>
+        <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.classList.add('d-none')"></button>
+    </div>
+
+    <div class="filters-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label-modern">Fecha Desde</label>
+                <input type="date" name="desde" value="@ViewBag.Desde" class="form-control-modern" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-modern">Fecha Hasta</label>
+                <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control-modern" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-modern">Filtrar Estado</label>
+                <select name="estado" class="form-control-modern">
+                    <option value="">Todas las ventas</option>
+                    <option value="activa" selected="@(ViewBag.Estado == "activa" ? "selected" : null)">Activas (Válidas)</option>
+                    <option value="anulada" selected="@(ViewBag.Estado == "anulada" ? "selected" : null)">Anuladas</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn-modern primary flex-grow-1">Filtrar</button>
+                <a asp-action="Index" class="btn-modern outline">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha y Hora</th>
+                    <th>Usuario / Vendedor</th>
+                    <th class="text-end">Monto Total</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Acciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr id="row-@item.Id" class="@(item.Activa ? "anulada" : "")">
+                        <td><span class="id-text">#@item.Id</span></td>
+                        <td><span class="text-muted small">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
+                        <td><span class="small">@item.Usuario</span></td>
+                        <td class="text-end fw-bold"><span class="price-text">$ @item.Total.ToString("N2")</span></td>
+                        <td class="text-center">
+                            <span id="badge-@item.Id" class="badge-modern @(item.Activa ? "danger" : "success")">
+                                @(item.Activa ? "ANULADA" : "ACTIVA")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Detalle" asp-route-id="@item.Id" class="btn-action" title="Ver Detalles">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                @if (!item.Activa)
+                                {
+                                    <button type="button" 
+                                            onclick="prepararAnulacion(@item.Id)" 
+                                            class="btn-action danger" 
+                                            title="Anular Venta">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Modal de Anulación -->
-<div class="modal fade text-black" id="modalAnular" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="modalAnular" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">⚠ Anular Venta #<span id="modalVentaId"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">⚠️ Anular Venta #<span id="modalVentaId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>¿Está seguro de que desea anular esta venta? El stock de los productos será restaurado.</p>
+            <div class="modal-body p-4">
+                <p class="text-secondary small mb-4">Esta acción revertirá el stock de todos los productos incluidos en esta venta y marcará el comprobante como inválido de forma permanente.</p>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Motivo de Anulación (opcional)</label>
-                    <textarea id="motivoAnulacion" class="form-control" rows="2" placeholder="Ej: Error de carga, Devolución..."></textarea>
+                    <label class="form-label-modern">Motivo de la Anulación</label>
+                    <textarea id="motivoAnulacion" class="form-control-modern" rows="3" placeholder="Ej: Error de carga, Devolución del cliente..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="ejecutarAnulacion()">
+            <div class="modal-footer border-0">
+                <button type="button" class="btn-modern outline" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-modern" onclick="ejecutarAnulacion()">
                     Confirmar Anulación
                 </button>
             </div>
@@ -144,15 +338,15 @@
                         const row = document.getElementById(`row-${id}`);
                         const badge = document.getElementById(`badge-${id}`);
                         
-                        row.classList.add("table-danger", "opacity-75");
-                        badge.className = "badge bg-danger";
+                        row.classList.add("anulada");
+                        badge.className = "badge-modern danger";
                         badge.textContent = "ANULADA";
                         
                         // Ocultar botón de anular
-                        $(row).find('button').fadeOut();
+                        $(row).find('.btn-action.danger').fadeOut();
                         
                         bootstrap.Modal.getInstance(document.getElementById("modalAnular")).hide();
-                        mostrarAlerta(`✅ Venta #${id} anulada correctamente.`, "alert-success");
+                        mostrarAlerta(`✅ Venta #${id} anulada correctamente.`, "success");
                     } else {
                         alert("Error: " + response.error);
                     }
@@ -163,10 +357,10 @@
             });
         }
 
-        function mostrarAlerta(mensaje, clase) {
+        function mostrarAlerta(mensaje, tipo) {
             const alertDiv = document.getElementById("ajaxAlert");
             const alertMsg = document.getElementById("ajaxAlertMessage");
-            alertDiv.className = `alert ${clase} alert-dismissible fade show`;
+            alertDiv.className = `alert-modern ${tipo}`;
             alertMsg.textContent = mensaje;
             alertDiv.classList.remove("d-none");
             setTimeout(() => { $(alertDiv).fadeOut(); }, 4000);

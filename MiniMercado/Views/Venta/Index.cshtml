@@ -1,94 +1,240 @@
-﻿@model List<Venta>
+@model List<Venta>
 
-<h2 class="mt-4" >Historial de Ventas</h2>
+@{
+    ViewData["Title"] = "Historial de Ventas";
+}
 
-<hr />
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-<form method="get" class="row g-2 mb-3">
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
 
-    <div class="col-md-2">
-        <label class="form-label">N° venta</label>
-        <input type="number"
-               name="ventaId"
-               class="form-control"
-               placeholder="N°" />
+    .db-header {
+        margin-bottom: 32px;
+    }
+
+    .db-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .filters-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-label-modern {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control-modern {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        width: 100%;
+    }
+
+    .form-control-modern:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--blue-bg);
+    }
+
+    .btn-filter {
+        background: var(--blue);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        font-weight: 700;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 43px;
+        margin-top: 26px;
+    }
+
+    .btn-filter:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .id-badge {
+        font-family: 'DM Mono', monospace;
+        font-weight: 700;
+        color: var(--blue-text);
+        background: var(--blue-bg);
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .date-text { font-family: 'DM Mono', monospace; font-size: 14px; }
+    .total-text { font-family: 'DM Mono', monospace; font-weight: 700; color: var(--green-text); font-size: 16px; }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+    }
+
+    .btn-action:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+        text-decoration: none;
+    }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <h1>Historial de Ventas</h1>
+        <p>Registro completo de transacciones realizadas</p>
     </div>
 
-    <div class="col-md-3">
-        <label class="form-label">Nombre</label>
-        <input type="text"
-               name="nombreVenta"
-               class="form-control"
-               placeholder="Cliente / Nota" />
+    <!-- FILTROS -->
+    <div class="filters-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label-modern">N° Venta</label>
+                <input type="number" name="ventaId" class="form-control-modern" placeholder="Ej: 123" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-modern">Cliente / Nota</label>
+                <input type="text" name="nombreVenta" class="form-control-modern" placeholder="Buscar..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-modern">Desde</label>
+                <input type="date" name="desde" class="form-control-modern" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-modern">Hasta</label>
+                <input type="date" name="hasta" class="form-control-modern" />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn-filter">
+                    <i class="bi bi-search me-2"></i> Filtrar Resultados
+                </button>
+            </div>
+        </form>
     </div>
 
-    <div class="col-md-2">
-        <label class="form-label">Desde</label>
-        <input type="date"
-               name="desde"
-               class="form-control" />
+    <!-- TABLA -->
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha y Hora</th>
+                    <th>Cliente / Referencia</th>
+                    <th>Monto Total</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var v in Model)
+                    {
+                        <tr>
+                            <td><span class="id-badge">#@v.Id</span></td>
+                            <td><span class="date-text text-muted">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
+                            <td class="fw-bold">
+                                @(string.IsNullOrWhiteSpace(v.NombreVenta) ? "-" : v.NombreVenta)
+                            </td>
+                            <td><span class="total-text">$@v.Total.ToString("N0")</span></td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-action="Detalle" asp-route-id="@v.Id" class="btn-action">
+                                        <i class="bi bi-eye"></i> Detalle
+                                    </a>
+                                    <a asp-action="Ticket" asp-route-id="@v.Id" target="_blank" class="btn-action">
+                                        <i class="bi bi-receipt"></i> Ticket
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            No se encontraron ventas con los filtros aplicados.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
-
-    <div class="col-md-2">
-        <label class="form-label">Hasta</label>
-        <input type="date"
-               name="hasta"
-               class="form-control" />
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label">Filtrar</label>
-        <button class="btn btn-primary w-100">
-            🔍 Filtrar
-        </button>
-    </div>
-
-</form>
-
-
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Nombre</th>
-            <th>Total</th>
-            <th style="width:200px;">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var v in Model)
-        {
-            <tr>
-                <td>@v.Id</td>
-
-                <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-
-                <td>
-                    @(string.IsNullOrWhiteSpace(v.NombreVenta)
-                                    ? "-"
-                                    : v.NombreVenta)
-                </td>
-
-                <td>$@v.Total</td>
-
-                <td>
-
-                    <a asp-action="Detalle"
-                       asp-route-id="@v.Id"
-                       class="btn btn-sm btn-info">
-                        👁 Detalle
-                    </a>
-
-                    <a asp-action="Ticket"
-                       asp-route-id="@v.Id"
-                       target="_blank"
-                       class="btn btn-sm btn-secondary">
-                        🧾 Ticket
-                    </a>
-
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+</div>

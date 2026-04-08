@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,51 +8,174 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MiniMercado.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            /* Modo Día (Default) */
+            --bg-primary: #f3f4f6;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f9fafb;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --bg-surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --border: #e5e7eb;
+            --border-light: #f3f4f6;
+            --blue: #3b82f6;
+            --blue-bg: rgba(59, 130, 246, 0.1);
+            --blue-text: #2563eb;
+            --green: #10b981;
+            --green-bg: rgba(16, 185, 129, 0.1);
+            --green-text: #059669;
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.1);
+            --red-text: #dc2626;
+            --amber: #f59e0b;
+            --amber-bg: rgba(245, 158, 11, 0.1);
+            --amber-text: #d97706;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+        }
+
+        body.dark-mode {
+            /* Modo Noche (Sistema de Diseño solicitado) */
+            --bg-primary: #0a0c10;
+            --bg-secondary: #111418;
+            --bg-tertiary: #1a1e24;
+            --bg-card: #1a1e24;
+            --bg-card-hover: #22272f;
+            --bg-surface: #1e242c;
+            --text-primary: #f1f3f5;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #2a2f36;
+            --border-light: #252a30;
+            --blue: #3b82f6;
+            --blue-bg: rgba(59, 130, 246, 0.12);
+            --blue-text: #60a5fa;
+            --green: #10b981;
+            --green-bg: rgba(16, 185, 129, 0.12);
+            --green-text: #34d399;
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.12);
+            --red-text: #f87171;
+            --amber: #f59e0b;
+            --amber-bg: rgba(245, 158, 11, 0.12);
+            --amber-text: #fbbf24;
+        }
+
+        body {
+            background-color: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
+            font-family: 'DM Sans', system-ui, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .navbar-custom {
+            background: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link {
+            font-weight: 600 !important;
+            color: var(--text-secondary) !important;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary) !important;
+            background: var(--bg-tertiary);
+        }
+
+        .nav-link i { color: var(--blue); }
+
+        .dropdown-menu-custom {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        }
+        body.dark-mode .dropdown-menu-custom { box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important; }
+
+        .dropdown-item {
+            color: var(--text-secondary) !important;
+            font-weight: 500 !important;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-card-hover) !important;
+            color: var(--text-primary) !important;
+        }
+
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border) !important;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        #toggleDark {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        #toggleDark:hover { transform: rotate(15deg) scale(1.1); }
+    </style>
+    <script>
+        // Aplicar modo antes de renderizar para evitar flash
+        if (localStorage.getItem("darkMode") === "true") {
+            document.documentElement.classList.add("dark-mode");
+            document.addEventListener("DOMContentLoaded", () => document.body.classList.add("dark-mode"));
+        }
+    </script>
 </head>
 
 
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4 sticky-top">
             <div class="container-fluid">
 
                 <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/Bird_Lime_Nav_2.png" height="40" class="me-2" alt="Logo" />
+                    <img src="~/images/Bird_Lime_Nav_2.png" height="35" class="me-2" alt="Logo" />
                 </a>
 
 
-                <button class="navbar-toggler border-0" type="button"
+                <button class="navbar-toggler border-0 shadow-none text-secondary" type="button"
                         data-bs-toggle="collapse"
                         data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
+                    <i class="bi bi-list fs-2"></i>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
 
                     <ul class="navbar-nav me-auto">
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
+                        @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link"
-                                   asp-controller="Venta"
-                                   asp-action="Create">
-                                    <i class="bi bi-cart-plus me-1"></i> Nueva Venta
+                                <a class="nav-link" asp-controller="Venta" asp-action="Create">
+                                    <i class="bi bi-cart-plus me-1"></i> Vender
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link"
-                                   asp-controller="Venta"
-                                   asp-action="Index">
+                                <a class="nav-link" asp-controller="Venta" asp-action="Index">
                                     <i class="bi bi-receipt me-1"></i> Ventas
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link"
-                                   asp-controller="Venta"
-                                   asp-action="Caja">
+                                <a class="nav-link" asp-controller="Venta" asp-action="Caja">
                                     <i class="bi bi-cash-stack me-1"></i> Caja
                                 </a>
                             </li>
@@ -60,18 +183,8 @@
                             @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link"
-                                       asp-controller="Productos"
-                                       asp-action="Index">
+                                    <a class="nav-link" asp-controller="Productos" asp-action="Index">
                                         <i class="bi bi-box-seam me-1"></i> Productos
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link"
-                                       asp-controller="MovimientoStock"
-                                       asp-action="Ingreso">
-                                        <i class="bi bi-arrow-down-up me-1"></i> Stock
                                     </a>
                                 </li>
                             }
@@ -85,36 +198,35 @@
                         <!-- 🔔 Notificaciones -->
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <div class="dropdown me-2">
-                                <button class="btn btn-link text-white-50 p-2 shadow-none border-0 position-relative"
+                            <div class="dropdown me-3">
+                                <button class="btn btn-link text-secondary p-2 shadow-none border-0 position-relative"
                                         type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-bell-fill fs-5"></i>
-                                    <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                    <i class="bi bi-bell fs-5"></i>
+                                    <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.6rem;">
                                         0
                                     </span>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom animated fadeIn p-0 text-info" 
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom animated fadeIn p-0" 
                                     aria-labelledby="notifDropdown" style="width: 320px; max-height: 450px; overflow-y: auto;">
                                     <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0 fw-bold">Notificaciones</h6>
                                         <span class="badge bg-primary rounded-pill" id="notifCountBadge">0</span>
                                     </li>
                                     <div id="notifList">
-                                        <!-- Se carga via AJAX -->
                                         <li class="p-4 text-center text-muted">
                                             <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
-                                            <p class="mb-0 small text-light">Cargando...</p>
+                                            <p class="mb-0 small">Cargando...</p>
                                         </li>
                                     </div>
                                     <li class="text-center p-2 border-top">
-                                        <small class="text-muted text-info">Mostrando últimas no leídas</small>
+                                        <small class="text-muted">Mostrando últimas no leídas</small>
                                     </li>
                                 </ul>
                             </div>
                         }
 
                         <button id="toggleDark"
-                                class="btn btn-link text-white-50 p-2 me-3 shadow-none border-0"
+                                class="btn btn-link text-secondary p-2 me-3 shadow-none border-0"
                                 title="Cambiar modo">
                             <i class="bi bi-moon-stars-fill fs-5"></i>
                         </button>
@@ -128,57 +240,64 @@
         </nav>
 
     </header>
-    <div class="container">
-        <main role="main" class="pb-3 ">
+    <div class="container-fluid px-lg-5">
+        <main role="main" class="pb-5">
             @RenderBody()
         </main>
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["Error"]
-            </div>
-        }
+        
+        <div class="container">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+                    <i class="bi bi-exclamation-octagon me-2"></i> @TempData["Error"]
+                </div>
+            }
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["Success"]
-            </div>
-        }
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">
+                    <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+                </div>
+            }
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - MiniMercado - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="footer text-muted">
+        <div class="container text-center">
+            <small>&copy; 2026 - MiniMercado · Sistema de Gestión Inteligente</small>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
-
     <script>
         const toggleBtn = document.getElementById("toggleDark");
         const icon = toggleBtn.querySelector("i");
 
-        // Cargar preferencia guardada
-        if (localStorage.getItem("darkMode") === "true") {
-            document.body.classList.add("dark-mode");
-            icon.classList.replace("bi-moon-stars-fill", "bi-sun-fill");
-        }
-
-        toggleBtn.addEventListener("click", function () {
-            document.body.classList.toggle("dark-mode");
-
-            const isDark = document.body.classList.contains("dark-mode");
-            localStorage.setItem("darkMode", isDark);
-
+        // Función para actualizar el icono
+        function updateIcon(isDark) {
             if (isDark) {
                 icon.classList.replace("bi-moon-stars-fill", "bi-sun-fill");
             } else {
                 icon.classList.replace("bi-sun-fill", "bi-moon-stars-fill");
             }
+        }
+
+        // Cargar preferencia guardada
+        const isDarkStored = localStorage.getItem("darkMode") === "true";
+        if (isDarkStored) {
+            document.body.classList.add("dark-mode");
+            updateIcon(true);
+        }
+
+        toggleBtn.addEventListener("click", function () {
+            document.body.classList.toggle("dark-mode");
+            const isDark = document.body.classList.contains("dark-mode");
+            localStorage.setItem("darkMode", isDark);
+            updateIcon(isDark);
         });
     </script>
 
@@ -198,25 +317,25 @@
                         badge.text(data.length);
 
                         data.forEach(n => {
-                            const fecha = new Date(n.fecha).toLocaleString();
-                            let icon = "bi-info-circle";
+                            const fecha = new Date(n.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            let iconNotif = "bi-info-circle";
                             let color = "text-primary";
 
-                            if (n.tipo === "Stock") { icon = "bi-exclamation-triangle"; color = "text-danger"; }
-                            if (n.tipo === "Pago") { icon = "bi-credit-card"; color = "text-warning"; }
+                            if (n.tipo === "Stock") { iconNotif = "bi-exclamation-triangle"; color = "text-danger"; }
+                            if (n.tipo === "Pago") { iconNotif = "bi-credit-card"; color = "text-warning"; }
 
                             const item = `
-                                <li class="notif-item p-3 border-bottom position-relative" onclick="marcarLeida(${n.id}, '${n.url}')">
+                                <li class="notif-item p-3 border-bottom position-relative" style="cursor:pointer" onclick="marcarLeida(${n.id}, '${n.url}')">
                                     <div class="d-flex align-items-start">
                                         <div class="${color} me-3 mt-1">
-                                            <i class="bi ${icon} fs-5"></i>
+                                            <i class="bi ${iconNotif} fs-5"></i>
                                         </div>
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fw-bold small">${n.titulo}</span>
-                                                <span class="text-muted" style="font-size: 0.7rem;">${fecha}</span>
+                                                <span class="fw-bold small">@* Titulo *@ ${n.titulo}</span>
+                                                <span class="text-muted" style="font-size: 0.65rem;">${fecha}</span>
                                             </div>
-                                            <p class="mb-0 text-muted small text-light">${n.mensaje}</p>
+                                            <p class="mb-0 text-muted small" style="line-height:1.2">${n.mensaje}</p>
                                         </div>
                                     </div>
                                 </li>`;
@@ -225,7 +344,7 @@
                     } else {
                         count.addClass("d-none");
                         badge.text("0");
-                                list.append('<li class="p-4 text-center text-muted small text-light">No hay notificaciones nuevas</li>');
+                        list.append('<li class="p-4 text-center text-muted small">No hay notificaciones nuevas</li>');
                     }
                 });
             }
@@ -240,11 +359,9 @@
                 });
             }
 
-            // Polling cada 10 seg
-            setInterval(cargarNotificaciones, 10000);
+            setInterval(cargarNotificaciones, 20000);
             $(document).ready(cargarNotificaciones);
         </script>
     }
-
 </body>
 </html>

@@ -1,136 +1,284 @@
 @model IEnumerable<MiniMercado.Models.ViewModels.TenantAdminViewModel>
 
 @{
-    ViewData["Title"] = "Gestión de Tenants - Administración Global";
+    ViewData["Title"] = "Gestión de Comercios Global";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Tenants (Comercios)</h2>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1300px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .filters-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-control-modern {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+        width: 100%;
+    }
+
+    .form-control-modern:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--blue-bg);
+    }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-modern.primary { background: var(--blue); color: #fff; }
+    .btn-modern.outline { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .badge-modern {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .badge-modern.success { background: var(--green-bg); color: var(--green-text); }
+    .badge-modern.danger { background: var(--red-bg); color: var(--red-text); }
+    .badge-modern.amber { background: var(--amber-bg); color: var(--amber-text); }
+    .badge-modern.secondary { background: var(--bg-surface); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+    }
+
+    .mono-text { font-family: 'DM Mono', monospace; font-weight: 600; }
+    .price-text { font-family: 'DM Mono', monospace; font-weight: 700; color: var(--text-primary); }
+
+    .alert-modern {
+        background: var(--green-bg);
+        border: 1px solid var(--green);
+        color: var(--green-text);
+        padding: 16px 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Gestión de Locales</h1>
+            <p>Administración de clientes SaaS y estados de suscripción</p>
+        </div>
+        <div class="header-actions">
+            <a asp-controller="AdminGlobal" asp-action="Dashboard" class="btn-modern outline">
+                <i class="bi bi-grid-1x2"></i> Panel Métricas
+            </a>
+        </div>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert-modern">
+            <span><i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <!-- Filtros de búsqueda -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <form asp-action="Tenants" method="get" class="row g-3 align-items-center">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                        <input type="text" name="search" value="@ViewBag.CurrentSearch" class="form-control" placeholder="Buscar por nombre de comercio..." />
-                    </div>
+    <div class="filters-card">
+        <form asp-action="Tenants" method="get" class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" name="search" value="@ViewBag.CurrentSearch" 
+                           class="form-control-modern ps-5" placeholder="Nombre del comercio o ID..." />
                 </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="ocultarDesactivados" id="ocultarDesactivados" value="true" @(ViewBag.OcultarDesactivados == true ? "checked" : "") onchange="this.form.submit()" />
-                        <label class="form-check-label" for="ocultarDesactivados">Ocultar desactivados</label>
-                    </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
+                    <input class="form-check-input ms-0 shadow-none" type="checkbox" name="ocultarDesactivados" id="ocultarDesactivados" value="true" @(ViewBag.OcultarDesactivados == true ? "checked" : "") onchange="this.form.submit()" />
+                    <label class="form-check-label text-secondary small fw-bold" for="ocultarDesactivados">Ocultar Inactivos</label>
                 </div>
-                <div class="col-md-3 text-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-filter"></i> Aplicar Filtros
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn-modern primary w-100">Aplicar Filtros</button>
+            </div>
+        </form>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nombre del Comercio</th>
-                            <th>Último Pago</th>
-                            <th>Total Pagado</th>
-                            <th>Vencimiento</th>
-                            <th>Estado</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tenant in Model)
-                        {
-                            <tr>
-                                <td class="fw-bold">@tenant.NombreComercio</td>
-                                <td>@(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "Sin pagos")</td>
-                                <td>@tenant.TotalPagado.ToString("C")</td>
-                                <td>@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "N/A")</td>
-                                <td>
-                                    @if (!tenant.Activo)
-                                    {
-                                        <span class="badge bg-secondary"><i class="bi bi-eye-slash-fill"></i> Oculto</span>
-                                    }
-                                    
-                                    @if (tenant.Bloqueado)
-                                    {
-                                        <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> Bloqueado</span>
-                                    }
-                                    else if (tenant.EstaVencido)
-                                    {
-                                        <span class="badge bg-danger"><i class="bi bi-exclamation-octagon-fill"></i> Vencido</span>
-                                    }
-                                    else if (tenant.PorVencer)
-                                    {
-                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-fill"></i> Por vencer</span>
-                                    }
-                                    else if (tenant.Activo)
-                                    {
-                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Activo</span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a asp-action="RegistrarPago" asp-route-id="@tenant.Id" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-cash-stack me-1"></i> Cobrar
-                                        </a>
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%">Comercio / Tenant</th>
+                    <th>Vencimiento</th>
+                    <th class="text-end">Total Pagado</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Acciones Administrativas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tenant in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-bold">@tenant.NombreComercio</div>
+                            <div class="text-muted small">Último Pago: @(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "—")</div>
+                        </td>
+                        <td><span class="mono-text">@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")</span></td>
+                        <td class="text-end"><span class="price-text">@tenant.TotalPagado.ToString("C0")</span></td>
+                        <td class="text-center">
+                            @if (!tenant.Activo)
+                            {
+                                <span class="badge-modern secondary"><i class="bi bi-eye-slash"></i> OCULTO</span>
+                            }
+                            
+                            @if (tenant.Bloqueado)
+                            {
+                                <span class="badge-modern danger"><i class="bi bi-lock-fill"></i> BLOQUEADO</span>
+                            }
+                            else if (tenant.EstaVencido)
+                            {
+                                <span class="badge-modern danger"><i class="bi bi-calendar-x"></i> VENCIDO</span>
+                            }
+                            else if (tenant.PorVencer)
+                            {
+                                <span class="badge-modern amber"><i class="bi bi-clock-history"></i> POR VENCER</span>
+                            }
+                            else if (tenant.Activo)
+                            {
+                                <span class="badge-modern success"><i class="bi bi-check-circle"></i> ACTIVO</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="RegistrarPago" asp-route-id="@tenant.Id" class="btn-modern primary btn-sm" title="Registrar Cobro">
+                                    <i class="bi bi-cash-stack"></i> Cobrar
+                                </a>
 
-                                        <form asp-action="ToggleBloqueo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
-                                            @Html.AntiForgeryToken()
-                                            @if (tenant.Bloqueado)
-                                            {
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="bi bi-unlock-fill me-1"></i> Desbloquear
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-lock-fill me-1"></i> Bloquear
-                                                </button>
-                                            }
-                                        </form>
+                                <form asp-action="ToggleBloqueo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-modern @(tenant.Bloqueado ? "outline" : "danger") btn-sm" title="@(tenant.Bloqueado ? "Desbloquear" : "Bloquear")">
+                                        <i class="bi @(tenant.Bloqueado ? "bi-unlock" : "bi-lock")"></i>
+                                    </button>
+                                </form>
 
-                                        <form asp-action="ToggleActivo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
-                                            @Html.AntiForgeryToken()
-                                            @if (tenant.Activo)
-                                            {
-                                                <button type="submit" class="btn btn-sm btn-warning text-dark">
-                                                    <i class="bi bi-eye-slash-fill me-1"></i> Ocultar
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-eye-fill me-1"></i> Activar
-                                                </button>
-                                            }
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                                <form asp-action="ToggleActivo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-modern outline btn-sm" title="@(tenant.Activo ? "Desactivar" : "Activar")">
+                                        <i class="bi @(tenant.Activo ? "bi-eye-slash" : "bi-eye")"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

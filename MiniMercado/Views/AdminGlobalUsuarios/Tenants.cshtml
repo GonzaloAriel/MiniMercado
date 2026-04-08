@@ -1,38 +1,146 @@
-﻿@model List<MiniMercado.Models.Tenant>
+@model List<MiniMercado.Models.Tenant>
 
-<h2>Tenants</h2>
+@{
+    ViewData["Title"] = "Usuarios por Local";
+}
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Activo</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var tenant in Model)
-        {
-            <tr>
-                <td>@tenant.NombreComercio</td>
-                <td>
-                    @if (tenant.Activo)
-                    {
-                        <span class="badge bg-success">Activo</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Suspendido</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="UsuariosPorTenant"
-                       asp-route-tenantId="@tenant.Id"
-                       class="btn btn-sm btn-primary">
-                        Ver Usuarios
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1000px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        margin-bottom: 32px;
+    }
+
+    .db-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .badge-modern {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+
+    .badge-modern.success { background: var(--green-bg); color: var(--green-text); }
+    .badge-modern.danger { background: var(--red-bg); color: var(--red-text); }
+
+    .btn-modern {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-modern:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+        text-decoration: none;
+    }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <h1>Gestión de Usuarios Global</h1>
+        <p>Seleccione un comercio para administrar sus cuentas de acceso</p>
+    </div>
+
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th style="width: 60%">Nombre del Comercio</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tenant in Model)
+                {
+                    <tr>
+                        <td><span class="fw-bold">@tenant.NombreComercio</span></td>
+                        <td class="text-center">
+                            @if (tenant.Activo)
+                            {
+                                <span class="badge-modern success">ACTIVO</span>
+                            }
+                            else
+                            {
+                                <span class="badge-modern danger">SUSPENDIDO</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="UsuariosPorTenant" asp-route-tenantId="@tenant.Id" class="btn-modern">
+                                <i class="bi bi-people"></i> Ver Usuarios
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

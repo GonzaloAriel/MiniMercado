@@ -4,146 +4,328 @@
     ViewData["Title"] = "Productos";
 }
 
-<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-    <h2>📦 Listado de Productos</h2>
-    <div>
-        <a asp-action="Inactivos" class="btn btn-outline-warning me-2">
-            ♻ Productos Inactivos
-        </a>
-        <a asp-action="Create" class="btn btn-success">
-            ➕ Nuevo Producto
-        </a>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-modern.primary { background: var(--blue); color: #fff; border: none; }
+    .btn-modern.success { background: var(--green); color: #fff; border: none; }
+    .btn-modern.outline { background: var(--bg-card); color: var(--text-secondary); }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .filters-card {
+        padding: 24px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        margin-bottom: 24px;
+    }
+
+    .form-control-modern {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .form-control-modern:focus {
+        background: var(--bg-surface);
+        border-color: var(--blue);
+        color: var(--text-primary);
+        box-shadow: 0 0 0 2px var(--blue-bg);
+        outline: none;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .price-text {
+        font-family: 'DM Mono', monospace;
+        font-weight: 700;
+        color: var(--green-text);
+        font-size: 16px;
+    }
+
+    .badge-modern {
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+
+    .badge-modern.blue { background: var(--blue-bg); color: var(--blue-text); }
+    .badge-modern.red { background: var(--red-bg); color: var(--red-text); }
+    .badge-modern.amber { background: var(--amber-bg); color: var(--amber-text); }
+    .badge-modern.green { background: var(--green-bg); color: var(--green-text); }
+    .badge-modern.outline { border: 1px solid var(--border); color: var(--text-secondary); }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+        transform: translateY(-1px);
+    }
+
+    .btn-action.danger:hover {
+        border-color: var(--red);
+        color: var(--red-text);
+    }
+
+    .btn-action.success:hover {
+        border-color: var(--green);
+        color: var(--green-text);
+    }
+
+    .alert-modern {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .alert-modern.success { border-left: 4px solid var(--green); color: var(--green-text); }
+    .alert-modern.danger { border-left: 4px solid var(--red); color: var(--red-text); }
+
+</style>
+
+<div class="db-wrap">
+
+    <!-- HEADER -->
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Gestión de Productos</h1>
+            <p>@Model.Productos?.Count() artículos en catálogo</p>
+        </div>
+        <div class="header-actions">
+            <a asp-action="Inactivos" class="btn-modern outline">
+                <i class="bi bi-arrow-counterclockwise"></i> Inactivos
+            </a>
+            <a asp-action="Create" class="btn-modern success">
+                <i class="bi bi-plus-lg"></i> Nuevo Producto
+            </a>
+        </div>
     </div>
-</div>
 
-@if (TempData["Mensaje"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show">
-        @TempData["Mensaje"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- ALERTAS -->
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert-modern success">
+            <span><i class="bi bi-check-circle-fill me-2"></i> @TempData["Mensaje"]</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div id="ajaxAlert" class="alert-modern d-none">
+        <span id="ajaxAlertMessage"></span>
+        <button type="button" class="btn-close" onclick="this.parentElement.classList.add('d-none')"></button>
     </div>
-}
 
-<div id="ajaxAlert" class="alert d-none alert-dismissible fade show">
-    <span id="ajaxAlertMessage"></span>
-    <button type="button" class="btn-close" onclick="this.parentElement.classList.add('d-none')"></button>
-</div>
-
-<!-- Filtros -->
-<div class="card p-3 mb-4 shadow-sm">
-    <form method="get" class="row g-2">
-        <div class="col-md-5">
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input type="text"
-                       name="filtro"
-                       value="@Context.Request.Query["filtro"]"
-                       class="form-control"
-                       placeholder="Buscar por nombre o código de barra..." />
+    <!-- FILTROS -->
+    <div class="filters-card">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="position-relative">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" name="filtro" value="@Context.Request.Query["filtro"]" 
+                           class="form-control-modern w-100 ps-5" placeholder="Buscar por nombre o código..." />
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <select name="rubroId" class="form-select">
-                <option value="">-- Todos los rubros --</option>
-                @foreach (var r in Model.Rubros)
-                {
-                    <option value="@r.Id" selected="@(Model.FiltroRubro == r.Id ? "selected" : null)">@r.Nombre</option>
-                }
-            </select>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary px-4" type="submit">🔍 Filtrar</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
-        </div>
-    </form>
-</div>
+            <div class="col-md-4">
+                <select name="rubroId" class="form-control-modern w-100">
+                    <option value="">Todos los rubros</option>
+                    @foreach (var r in Model.Rubros)
+                    {
+                        <option value="@r.Id" selected="@(Model.FiltroRubro == r.Id ? "selected" : null)">@r.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn-modern primary flex-grow-1" type="submit">Filtrar</button>
+                <a asp-action="Index" class="btn-modern outline">Limpiar</a>
+            </div>
+        </form>
+    </div>
 
-<div class="table-responsive shadow-sm rounded">
-    <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-            <tr>
-                <th>Nombre</th>
-                <th>Código</th>
-                <th class="text-end">Precio</th>
-                <th class="text-center">Stock</th>
-                <th class="text-center">Vencimiento</th>
-                <th>Rubro</th>
-                <th class="text-center">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Productos != null && Model.Productos.Any())
-            {
-                foreach (var producto in Model.Productos)
+    <!-- TABLA -->
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Código</th>
+                    <th>Precio</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-center">Vencimiento</th>
+                    <th>Rubro</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Productos != null && Model.Productos.Any())
                 {
-                    <tr id="row-@producto.Id">
-                        <td class="fw-bold">@producto.NombreDisplay</td>
-                        <td><code class="text-muted">@producto.CodigoDisplay</code></td>
-                        <td class="text-end fw-bold text-success">$ @producto.Precio.ToString("N2")</td>
-                        <td class="text-center">
-                            <span class="badge @(producto.Stock <= 5 ? "bg-danger" : "bg-info")">
-                                @producto.Stock.ToString("0.##")
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            @if (producto.FechaProximoVencimiento.HasValue)
-                            {
-                                var dias = (producto.FechaProximoVencimiento.Value.Date - DateTime.Today).TotalDays;
-                                if (dias < 0)
+                    foreach (var producto in Model.Productos)
+                    {
+                        <tr id="row-@producto.Id">
+                            <td>
+                                <div class="fw-bold">@producto.NombreDisplay</div>
+                            </td>
+                            <td><code class="text-muted">@producto.CodigoDisplay</code></td>
+                            <td><span class="price-text">$@producto.Precio.ToString("N2")</span></td>
+                            <td class="text-center">
+                                <span class="badge-modern @(producto.Stock <= 5 ? "red" : "blue")">
+                                    @producto.Stock.ToString("0.##")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                @if (producto.FechaProximoVencimiento.HasValue)
                                 {
-                                    <span class="badge bg-danger" title="Vencido">🔴 @producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span>
+                                    var dias = (producto.FechaProximoVencimiento.Value.Date - DateTime.Today).TotalDays;
+                                    if (dias < 0) { <span class="badge-modern red" title="Vencido">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
+                                    else if (dias <= 7) { <span class="badge-modern amber" title="Por vencer">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
+                                    else { <span class="badge-modern green" title="En fecha">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
                                 }
-                                else if (dias <= 3)
-                                {
-                                    <span class="badge bg-warning text-dark" title="Por vencer">🟡 @producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success" title="En fecha">🟢 @producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="text-muted small">-</span>
-                            }
-                        </td>
-                        <td>
-                            <span class="badge bg-light text-dark border">
-                                @(producto.Rubro != null ? producto.Rubro.Nombre : "-")
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn btn-outline-info btn-sm ms-1" title="Ingresar Stock">
-                                    <i class="bi bi-box-seam"></i> Stock
-                                </a>
-                                <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn btn-outline-success btn-sm ms-1" title="Ver Lotes">
-                                    <i class="bi bi-box-seam"></i> Lotes
-                                </a>
-                                <a asp-action="Edit" asp-route-id="@producto.Id" class="btn btn-outline-warning btn-sm ms-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" 
-                                        onclick="confirmarDesactivacion(@producto.Id, '@producto.Nombre')" 
-                                        class="btn btn-outline-danger btn-sm ms-1" 
-                                        title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                                else { <span class="text-muted small">-</span> }
+                            </td>
+                            <td>
+                                <span class="badge-modern outline">
+                                    @(producto.Rubro?.Nombre ?? "-")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn-action success" title="Ingresar Stock">
+                                        <i class="bi bi-plus-circle"></i>
+                                    </a>
+                                    <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn-action" title="Ver Lotes">
+                                        <i class="bi bi-box-seam"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@producto.Id" class="btn-action" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" onclick="confirmarDesactivacion(@producto.Id, '@producto.Nombre')" 
+                                            class="btn-action danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                            No se encontraron productos.
                         </td>
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
-                        No se encontraron productos que coincidan con la búsqueda.
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @Html.AntiForgeryToken()
@@ -160,7 +342,6 @@
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             const row = document.getElementById(`row-${id}`);
             
-            // Efecto visual de carga
             row.style.opacity = "0.5";
             row.style.pointerEvents = "none";
 
@@ -175,38 +356,32 @@
                     if (response.ok) {
                         $(row).fadeOut(400, function() {
                             $(this).remove();
-                            mostrarAlerta("✅ Producto eliminado correctamente.", "alert-success");
-                            
-                            // Si no quedan filas, mostrar mensaje de vacío
-                            if ($('tbody tr').length === 0) {
-                                $('tbody').append('<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron productos.</td></tr>');
-                            }
+                            mostrarAlerta("✅ Producto eliminado correctamente.", "success");
                         });
                     } else {
                         row.style.opacity = "1";
                         row.style.pointerEvents = "auto";
-                        mostrarAlerta("❌ Error: " + response.error, "alert-danger");
+                        mostrarAlerta("❌ Error: " + response.error, "danger");
                     }
                 },
                 error: function() {
                     row.style.opacity = "1";
                     row.style.pointerEvents = "auto";
-                    mostrarAlerta("❌ Error al conectar con el servidor.", "alert-danger");
+                    mostrarAlerta("❌ Error al conectar con el servidor.", "danger");
                 }
             });
         }
 
-        function mostrarAlerta(mensaje, clase) {
+        function mostrarAlerta(mensaje, tipo) {
             const alertDiv = document.getElementById("ajaxAlert");
             const alertMsg = document.getElementById("ajaxAlertMessage");
             
-            alertDiv.className = `alert ${clase} alert-dismissible fade show`;
+            alertDiv.className = `alert-modern ${tipo}`;
             alertMsg.textContent = mensaje;
             alertDiv.classList.remove("d-none");
             
-            // Auto cerrar después de 3 segundos
             setTimeout(() => {
-                $(alertDiv).fadeOut();
+                $(alertDiv).fadeOut(400, function() { $(this).addClass("d-none").show(); });
             }, 3000);
         }
     </script>

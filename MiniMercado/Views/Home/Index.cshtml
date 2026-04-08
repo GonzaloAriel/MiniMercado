@@ -1,258 +1,424 @@
-﻿@{
-    ViewData["Title"] = "Dashboard";
+@{
+    ViewData["Title"] = "Panel de Control";
 }
 
 <style>
-    .dashboard-card {
-        border: none;
-        border-radius: 18px;
-        transition: 0.2s ease-in-out;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 32px 24px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
     }
 
-        .dashboard-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-        }
-
-    .action-btn {
-        border-radius: 16px;
-        padding: 28px;
-        font-size: 18px;
-        font-weight: 600;
-        transition: 0.2s;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    /* Header */
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
     }
 
-        .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-    .metric-card {
-        border-radius: 16px;
-        padding: 25px;
-        color: white;
-    }
-
-    .metric-value {
+    .db-header-left h1 {
         font-size: 28px;
-        font-weight: bold;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 4px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 15px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    /* Hero Section - Profesional y alegre */
+    .main-hero {
+        text-align: center;
+        padding: 40px 0 48px;
+    }
+
+    .main-hero img {
+        max-height: 100px;
+        width: auto;
+        margin-bottom: 20px;
+    }
+
+    .main-hero h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+
+    .main-hero p {
+        font-size: 16px;
+        color: var(--text-secondary);
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin: 32px 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    /* Action Grid */
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .action-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 24px;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-card:hover {
+        transform: translateY(-3px);
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+    }
+
+    .action-card .icon {
+        font-size: 24px;
+    }
+
+    .action-card .title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .action-card .desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    /* Colores por tipo */
+    .action-card.primary { border-left: 3px solid var(--blue); }
+    .action-card.success { border-left: 3px solid var(--green); }
+    .action-card.danger { border-left: 3px solid var(--red); }
+    .action-card.warning { border-left: 3px solid var(--amber); }
+
+    /* KPI Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    @@media (max-width: 768px) {
+        .kpi-grid { grid-template-columns: 1fr; }
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 24px;
+        transition: all 0.25s ease;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .kpi-value {
+        font-size: 32px;
+        font-weight: 700;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .kpi-value.green { color: var(--green-text); }
+    .kpi-value.amber { color: var(--amber-text); }
+    .kpi-value.blue { color: var(--blue-text); }
+
+    /* Data Card */
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-top: 24px;
+    }
+
+    .data-card-header {
+        padding: 14px 20px;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--amber-text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Tablas */
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 12px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .db-table td {
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    /* Badges */
+    .badge-stock {
+        font-family: 'DM Mono', monospace;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: var(--red-bg);
+        color: var(--red-text);
+        display: inline-block;
+        font-size: 12px;
+    }
+
+    /* Login Card */
+    .login-card {
+        max-width: 400px;
+        margin: 40px auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 40px;
+        text-align: center;
+    }
+
+    /* Botón de login */
+    .login-btn {
+        background: var(--blue);
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 14px 28px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        transition: all 0.25s ease;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .login-btn:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
     }
 </style>
 
-<!-- Logo -->
-<div class="text-center mt-3 mb-5">
-    <img src="~/images/Bird_Lime_Minimercado.png" class="rounded-pill " height="90" />
-    <p class="text-muted mt-4">Gestioná tu minimercado de forma inteligente!!</p>
-</div>
-
-<hr />
-
-<!-- Ingreso -->
-@if (!(User.IsInRole("Caja")) && !(User.IsInRole("Admin")) && !(User.IsInRole("AdminGlobal")))
-{
-    <div class="text-center mt-4 mb-5">
-        <a class="btn btn-success w-100 action-btn fs-4"
-               asp-area="Identity"
-               asp-page="/Account/Login">
-            🔐 Ingresar
-        </a>
+<div class="db-wrap">
+    
+    <div class="main-hero">
+        <img src="~/images/Bird_Lime_Minimercado.png" class="rounded-pill" alt="MiniMercado" />
+        <p>Gestión inteligente para tu negocio</p>
     </div>
-}
 
-<!-- 🚀 ACCIONES PRINCIPALES -->
-@if (User.IsInRole("Caja") || User.IsInRole("Admin"))
-{
-    <div class="col-md-12 mb-3">
-        <a asp-controller="Venta" asp-action="Create"
-               class="btn btn-primary w-100 action-btn fs-4">
-            🛍️ Nueva Venta!!
-        </a>
-    </div>
-}
-
-
-<div class="row g-4">
+    @if (!(User.IsInRole("Caja")) && !(User.IsInRole("Admin")) && !(User.IsInRole("AdminGlobal")))
+    {
+        <div class="login-card">
+            <div style="font-size: 48px; margin-bottom: 16px;">🏪</div>
+            <h3 class="fw-bold mb-3">Bienvenido</h3>
+            <p style="color: var(--text-secondary);">
+                Sistema de gestión integral para tu minimercado
+            </p>
+            <a class="login-btn" asp-area="Identity" asp-page="/Account/Login">
+                Ingresar al Sistema
+            </a>
+        </div>
+    }
 
     @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
     {
-        <hr />
-        <h4 class="mt-1">📒 Administracion</h4>
-
-        <div class="col-md-4">
-            <a asp-controller="Venta" asp-action="Index"
-                   class="btn btn-info w-100 action-btn">
-                📄 Historial de Ventas
+        <div class="col-md-12 mb-3">
+            <a asp-controller="Venta" asp-action="Create" class="btn btn-primary w-100 py-3 fw-bold fs-4" style="border-radius: 16px;">
+                🛍️ Nueva Venta
             </a>
         </div>
 
-        <div class="col-md-4">
-            <a asp-controller="Venta" asp-action="Caja"
-                   class="btn btn-info w-100 action-btn">
-                📊 Caja Diaria
+        <div class="section-title">Administración</div>
+        <div class="action-grid">
+            <a asp-controller="Venta" asp-action="Index" class="action-card">
+                <span class="icon">📄</span>
+                <span class="title">Historial</span>
+                <span class="desc">Ver todas las ventas realizadas</span>
             </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="VentaAdmin" asp-action="Index"
-                   class="btn btn-info w-100 action-btn">
-                ✏ Administracion de Venta
+            <a asp-controller="Venta" asp-action="Caja" class="action-card">
+                <span class="icon">📊</span>
+                <span class="title">Caja Diaria</span>
+                <span class="desc">Resumen de ingresos y egresos de hoy</span>
+            </a>
+            <a asp-controller="VentaAdmin" asp-action="Index" class="action-card">
+                <span class="icon">✏️</span>
+                <span class="title">Gestión Ventas</span>
+                <span class="desc">Administración avanzada de comprobantes</span>
             </a>
         </div>
     }
 
     @if (User.IsInRole("Admin"))
     {
-        <div class="col-md-4">
-            <a asp-controller="Productos" asp-action="Index"
-                   class="btn btn-info w-100 action-btn">
-                📦 Gestión de Productos
+        <div class="section-title">Inventario</div>
+        <div class="action-grid">
+            <a asp-controller="Productos" asp-action="Index" class="action-card">
+                <span class="icon">📦</span>
+                <span class="title">Productos</span>
+                <span class="desc">Administrar catálogo y precios</span>
+            </a>
+            <a asp-controller="MovimientoStock" asp-action="Ingreso" class="action-card">
+                <span class="icon">➕</span>
+                <span class="title">Ingreso Stock</span>
+                <span class="desc">Carga de mercadería y proveedores</span>
+            </a>
+            <a asp-controller="Rubro" asp-action="Index" class="action-card">
+                <span class="icon">🏷️</span>
+                <span class="title">Rubros</span>
+                <span class="desc">Categorización de productos</span>
             </a>
         </div>
 
-        <div class="col-md-4">
-            <a asp-controller="MovimientoStock" asp-action="Ingreso"
-                   class="btn btn-info w-100 action-btn">
-                ➕ Ingreso de Stock
+        <div class="section-title">Configuración y Reportes</div>
+        <div class="action-grid">
+            <a asp-controller="Usuarios" asp-action="Index" class="action-card">
+                <span class="icon">👤</span>
+                <span class="title">Usuarios</span>
+                <span class="desc">Gestión de personal y permisos</span>
+            </a>
+            <a asp-controller="AdminDashboard" asp-action="Index" class="action-card">
+                <span class="icon">📈</span>
+                <span class="title">Métricas</span>
+                <span class="desc">Estadísticas y reportes económicos</span>
+            </a>
+            <a asp-controller="Dashboard" asp-action="AuditoriaCajas" class="action-card">
+                <span class="icon">🔍</span>
+                <span class="title">Auditorías</span>
+                <span class="desc">Control de movimientos de caja</span>
+            </a>
+            <a asp-controller="Cliente" asp-action="Index" class="action-card">
+                <span class="icon">👥</span>
+                <span class="title">Clientes</span>
+                <span class="desc">Fiados y cuentas corrientes</span>
+            </a>
+            <a asp-controller="Caja" asp-action="Historial" class="action-card">
+                <span class="icon">🏦</span>
+                <span class="title">Estados Caja</span>
+                <span class="desc">Histórico de aperturas y cierres</span>
+            </a>
+            <a asp-controller="Configuracion" asp-action="Index" class="action-card">
+                <span class="icon">🛠️</span>
+                <span class="title">Negocio</span>
+                <span class="desc">Datos del local y comprobantes</span>
             </a>
         </div>
-
-        <div class="col-md-4 mb-1">
-            <a asp-controller="Rubro" asp-action="Index"
-                   class="btn btn-info w-100 action-btn">
-                🏷️ Gestión de Rubros
-            </a>
-        </div>
-
-
-        <hr />
-
-        <div class="row g-4 mt-1">
-            <h4 class="mt-1">⚙️ Configuraciones</h4>
-
-            <div class="col-md-4">
-                <a asp-controller="Usuarios" asp-action="Index"
-                       class="btn btn-primary w-100 action-btn">
-                    👤 Usuarios
-                </a>
-            </div>
-
-            <div class="col-md-4">
-                <a asp-controller="AdminDashboard" asp-action="Index"
-                       class="btn btn-primary w-100 action-btn">
-                    📈 Metricas y economia
-                </a>
-            </div>
-
-            <div class="col-md-4">
-                <a asp-controller="Dashboard" asp-action="AuditoriaCajas"
-                       class="btn btn-primary w-100 action-btn">
-                    📈 Auditorias
-                </a>
-            </div>
-
-            <div class="col-md-4">
-                <a asp-controller="Cliente" asp-action="Index"
-                       class="btn btn-primary w-100 action-btn">
-                    👥 Clientes y Fiados
-                </a>
-            </div>
-
-            <div class="col-md-4">
-                <a asp-controller="Caja" asp-action="Historial"
-                       class="btn btn-primary w-100 action-btn">
-                    📈 Estado de cajas
-                </a>
-            </div>
-
-            <div class="col-md-4">
-                <a asp-controller="Configuracion" asp-action="Index"
-                       class="btn btn-primary w-100 action-btn">
-                    🛠 Configuracion negocio
-                </a>
-            </div>
-        </div>
-        
-        <hr />
     }
-
 
     @if (User.IsInRole("AdminGlobal"))
     {
-        <div class="col-md-4">
-            <a asp-controller="AdminGlobal" asp-action="Dashboard"
-                   class="btn btn-primary w-100 action-btn">
-                📊 Dashboard Global de Ingresos
+        <div class="section-title">Administración Global</div>
+        <div class="action-grid">
+            <a asp-controller="AdminGlobal" asp-action="Dashboard" class="action-card info">
+                <span class="icon">📊</span>
+                <span class="title">Dashboard Global</span>
+                <span class="desc">Ingresos totales del sistema SaaS</span>
             </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="AdminGlobal" asp-action="Tenants"
-                   class="btn btn-danger w-100 action-btn">
-                🏢 Administrar Tenants y Cobros
+            <a asp-controller="AdminGlobal" asp-action="Tenants" class="action-card danger">
+                <span class="icon">🏢</span>
+                <span class="title">Tenants</span>
+                <span class="desc">Administrar locales y suscripciones</span>
             </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="Tenants" asp-action="Create"
-                   class="btn btn-success w-100 action-btn">
-                ➕ Crear Nuevo Tenant
+            <a asp-controller="Tenants" asp-action="Create" class="action-card success">
+                <span class="icon">➕</span>
+                <span class="title">Nuevo Local</span>
+                <span class="desc">Dar de alta un nuevo minimercado</span>
             </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="AdminGlobalUsuarios" asp-action="Tenants"
-                   class="btn btn-dark w-100 action-btn">
-                🔐 Gestión Global de Usuarios
+            <a asp-controller="AdminGlobalUsuarios" asp-action="Tenants" class="action-card">
+                <span class="icon">🔐</span>
+                <span class="title">Usuarios Global</span>
+                <span class="desc">Gestión multi-tenant de usuarios</span>
             </a>
         </div>
     }
 
-</div>
-
-
-@if (User.IsInRole("Caja") || User.IsInRole("Admin"))
-{
-    <!-- 🔔 RESUMEN DEL DÍA -->
-    <div class="row mb-4 pt-xxl-5">
-
-        <div class="col-md-4">
-            <div class="alert alert-success text-center">
-                💰 <strong>Ventas de hoy</strong><br />
-                $@ViewBag.TotalHoy.ToString("0.##")
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="alert alert-success text-center">
-                🧾 <strong>Cantidad de ventas</strong><br />
-                @ViewBag.CantidadVentasHoy
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="alert alert-success text-center">
-                ⚠️ <strong>Productos con stock bajo</strong><br />
-                @(ViewBag.StockBajo.Count)
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ⚠️ TABLA STOCK BAJO -->
-    @if (ViewBag.StockBajo.Count > 0)
+    @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
     {
-        <div class="card dashboard-card">
-            <div class="card-header bg-secondary fw-bold">
-                ⚠️ Productos con Stock Bajo
+        <div class="section-title">Resumen del día</div>
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <span class="kpi-label">Ventas de hoy</span>
+                <span class="kpi-value green">$@ViewBag.TotalHoy.ToString("N0")</span>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
+            <div class="kpi-card">
+                <span class="kpi-label">Cant. Ventas</span>
+                <span class="kpi-value blue">@ViewBag.CantidadVentasHoy</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Stock Bajo</span>
+                <span class="kpi-value amber">@(ViewBag.StockBajo.Count)</span>
+            </div>
+        </div>
+
+        @if (ViewBag.StockBajo.Count > 0)
+        {
+            <div class="data-card">
+                <div class="data-card-header">⚠️ Productos con Stock Bajo</div>
+                <table class="db-table">
+                    <thead>
                         <tr>
                             <th>Producto</th>
-                            <th>Stock</th>
+                            <th>Stock Actual</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -260,12 +426,12 @@
                         {
                             <tr>
                                 <td>@p.Nombre</td>
-                                <td class="text-danger fw-bold">@p.Stock</td>
+                                <td><span class="badge-stock">@p.Stock unidades</span></td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-        </div>
+        }
     }
-}
+</div>

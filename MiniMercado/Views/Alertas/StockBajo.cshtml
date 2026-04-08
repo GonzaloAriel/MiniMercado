@@ -4,26 +4,150 @@
     ViewData["Title"] = "Alertas de Stock Bajo";
 }
 
-<div class="mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>⚠️ Alertas de Stock Bajo</h2>
-        <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver a Productos
-        </a>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1000px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-modern.outline { background: var(--bg-surface); color: var(--text-secondary); }
+    .btn-modern.success { background: var(--green); color: #fff; border: none; }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .badge-modern {
+        font-family: 'DM Mono', monospace;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 30px;
+    }
+
+    .badge-modern.red { background: var(--red-bg); color: var(--red-text); }
+    .badge-modern.amber { background: var(--amber-bg); color: var(--amber-text); }
+
+    .status-text { font-weight: 700; font-size: 13px; }
+    .status-text.red { color: var(--red-text); }
+    .status-text.amber { color: var(--amber-text); }
+
+    .alert-card {
+        background: var(--blue-bg);
+        border: 1px solid var(--blue);
+        color: var(--blue-text);
+        padding: 16px 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Alertas de Stock Bajo</h1>
+            <p>Productos con existencia crítica (≤ 5 unidades)</p>
+        </div>
+        <div class="header-actions">
+            <a asp-controller="Productos" asp-action="Index" class="btn-modern outline">
+                <i class="bi bi-arrow-left"></i> Volver a Productos
+            </a>
+        </div>
     </div>
 
-    <div class="alert alert-info shadow-sm">
-        <i class="bi bi-info-circle-fill"></i> Se muestran los productos activos con stock igual o menor a <strong>5 unidades</strong>.
+    <div class="alert-card">
+        <i class="bi bi-info-circle-fill fs-5"></i>
+        <span>Se muestran productos activos cuya cantidad disponible requiere reposición inmediata.</span>
     </div>
 
-    <div class="table-responsive shadow-sm rounded">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
                 <tr>
-                    <th>Producto</th>
+                    <th style="width: 40%">Producto</th>
                     <th class="text-center">Stock Actual</th>
-                    <th class="text-center">Estado</th>
-                    <th class="text-center">Acciones</th>
+                    <th class="text-center">Estado Crítico</th>
+                    <th class="text-end">Acción Sugerida</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,25 +156,25 @@
                     foreach (var producto in Model)
                     {
                         <tr>
-                            <td class="fw-bold">@producto.Nombre</td>
+                            <td><span class="fw-bold">@producto.Nombre</span></td>
                             <td class="text-center">
-                                <span class="badge @(producto.Stock <= 0 ? "bg-danger" : "bg-warning text-dark")">
+                                <span class="badge-modern @(producto.Stock <= 0 ? "red" : "amber")">
                                     @producto.Stock.ToString("0.##")
                                 </span>
                             </td>
                             <td class="text-center">
                                 @if (producto.Stock <= 0)
                                 {
-                                    <span class="text-danger fw-bold">SIN STOCK</span>
+                                    <span class="status-text red"><i class="bi bi-x-circle-fill me-1"></i> AGOTADO</span>
                                 }
                                 else
                                 {
-                                    <span class="text-warning fw-bold">STOCK CRÍTICO</span>
+                                    <span class="status-text amber"><i class="bi bi-exclamation-triangle-fill me-1"></i> BAJO STOCK</span>
                                 }
                             </td>
-                            <td class="text-center">
-                                <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn btn-sm btn-success">
-                                    <i class="bi bi-plus-circle"></i> Reponer Stock
+                            <td class="text-end">
+                                <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn-modern success btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Reponer
                                 </a>
                             </td>
                         </tr>
@@ -59,8 +183,9 @@
                 else
                 {
                     <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">
-                            No hay productos con stock bajo. ¡Buen trabajo!
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+                            No hay productos con stock bajo en este momento.
                         </td>
                     </tr>
                 }

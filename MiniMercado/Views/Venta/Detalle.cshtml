@@ -1,36 +1,214 @@
-﻿@model Venta
+@model Venta
 
-<h2 class="mt-4" >Detalle de Venta #@Model.Id</h2>
+@{
+    ViewData["Title"] = "Detalle de Venta";
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Producto</th>
-            <th>Cant.</th>
-            <th>Precio</th>
-            <th>Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var d in Model.Detalles)
-        {
-            <tr>
-                <td>@d.Producto.Nombre</td>
-                <td>@d.Cantidad.ToString("0.##")</td>
-                <td>@d.PrecioUnitario.ToString("0.##")</td>
-                <td>
-                    @((d.Cantidad * d.PrecioUnitario).ToString("0.##"))
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-<h4>Total: @Model.Total.ToString("0.##")</h4>
+    :root {
+        --bg-primary: #0a0c10;
+        --bg-secondary: #111418;
+        --bg-tertiary: #1a1e24;
+        --bg-card: #1a1e24;
+        --bg-card-hover: #22272f;
+        --bg-surface: #1e242c;
+        --text-primary: #f1f3f5;
+        --text-secondary: #9ca3af;
+        --text-muted: #6b7280;
+        --border: #2a2f36;
+        --border-light: #252a30;
+        --green: #10b981;
+        --green-bg: rgba(16, 185, 129, 0.12);
+        --green-text: #34d399;
+        --blue: #3b82f6;
+        --blue-bg: rgba(59, 130, 246, 0.12);
+        --blue-text: #60a5fa;
+        --radius-lg: 20px;
+        --radius-xl: 24px;
+    }
 
-<a asp-action="Ticket"
-   asp-route-id="@Model.Id"
-   target="_blank"
-   class="btn btn-secondary">
-    🧾 Imprimir Ticket
-</a>
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 900px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        margin-bottom: 32px;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .summary-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .total-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .1em;
+    }
+
+    .total-value {
+        font-family: 'DM Mono', monospace;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--green-text);
+    }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .btn-modern.outline { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); }
+    .btn-modern.secondary { background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .id-badge {
+        font-family: 'DM Mono', monospace;
+        font-weight: 700;
+        color: var(--blue-text);
+        background: var(--blue-bg);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .qty-text { font-family: 'DM Mono', monospace; font-weight: 600; }
+    .price-text { font-family: 'DM Mono', monospace; color: var(--text-muted); }
+    .subtotal-text { font-family: 'DM Mono', monospace; font-weight: 700; color: #fff; }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Detalle de Comprobante</h1>
+            <p>Registro de artículos y montos de la operación <span class="id-badge">#@Model.Id</span></p>
+        </div>
+        <div class="header-actions">
+            <a asp-action="Index" class="btn-modern outline">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th style="width: 45%">Producto</th>
+                    <th class="text-center">Cant / Kg</th>
+                    <th class="text-end">Precio Unit.</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.Detalles)
+                {
+                    <tr>
+                        <td><span class="fw-bold text-white">@d.Producto.Nombre</span></td>
+                        <td class="text-center"><span class="qty-text">@d.Cantidad.ToString("0.##")</span></td>
+                        <td class="text-end"><span class="price-text">$@d.PrecioUnitario.ToString("N2")</span></td>
+                        <td class="text-end"><span class="subtotal-text">$@((d.Cantidad * d.PrecioUnitario).ToString("N2"))</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-card mb-4">
+        <div>
+            <span class="total-label">Monto Total de la Venta</span>
+            <div class="total-value">$ @Model.Total.ToString("N2")</div>
+        </div>
+        <a asp-action="Ticket" asp-route-id="@Model.Id" target="_blank" class="btn-modern secondary">
+            <i class="bi bi-receipt"></i> Imprimir Ticket
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.NombreVenta))
+    {
+        <div class="alert-modern" style="background: var(--bg-tertiary); border: 1px solid var(--border); padding: 20px; border-radius: 16px; color: var(--text-secondary); font-size: 14px;">
+            <i class="bi bi-info-circle me-2"></i> <strong>Nota / Cliente:</strong> @Model.NombreVenta
+        </div>
+    }
+</div>

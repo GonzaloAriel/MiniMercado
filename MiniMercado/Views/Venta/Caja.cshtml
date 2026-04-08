@@ -1,70 +1,224 @@
-﻿@model List<MiniMercado.Models.Venta>
+@model List<MiniMercado.Models.Venta>
 
-<h2 class="mt-4" >📊 Caja diaria</h2>
+@{
+    ViewData["Title"] = "Caja Diaria";
+}
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-md-3">
-        <label class="form-label">Fecha</label>
-        <input type="date"
-               name="fecha"
-               value="@ViewBag.Fecha.ToString("yyyy-MM-dd")"
-               class="form-control" />
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .form-control-modern {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-family: 'DM Mono', monospace;
+        font-size: 14px;
+    }
+
+    .form-control-modern:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--blue-bg);
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    @@media (max-width: 768px) {
+        .kpi-grid { grid-template-columns: 1fr; }
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .kpi-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .1em;
+    }
+
+    .kpi-value {
+        font-family: 'DM Mono', monospace;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .kpi-value.blue { color: var(--blue-text); }
+    .kpi-value.green { color: var(--green-text); }
+    .kpi-value.amber { color: var(--amber-text); }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+    }
+
+    .btn-action:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+        text-decoration: none;
+    }
+
+    .id-text { font-family: 'DM Mono', monospace; color: var(--text-muted); }
+    .time-text { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--text-primary); }
+    .price-text { font-family: 'DM Mono', monospace; font-weight: 700; color: var(--green-text); }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Caja Diaria</h1>
+            <p>Resumen de operaciones por fecha</p>
+        </div>
+        <form method="get" id="dateForm">
+            <input type="date" name="fecha" value="@ViewBag.Fecha.ToString("yyyy-MM-dd")" 
+                   class="form-control-modern" onchange="this.form.submit()" />
+        </form>
     </div>
-</form>
 
-<hr />
-
-<div class="row mb-3">
-    <div class="col-md-4">
-        <div class="alert alert-info">
-            📅 Fecha: <strong>@ViewBag.Fecha.ToString("dd/MM/yyyy")</strong>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Fecha Seleccionada</span>
+            <span class="kpi-value blue">@ViewBag.Fecha.ToString("dd/MM/yyyy")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Total Ventas</span>
+            <span class="kpi-value green">$@ViewBag.Total.ToString("N0")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Operaciones</span>
+            <span class="kpi-value amber">@ViewBag.CantidadVentas.ToString("0")</span>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="alert alert-success">
-            💰 Total vendido: <strong>$@ViewBag.Total.ToString("0.##")l</strong>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="alert alert-secondary">
-            🧾 Ventas realizadas: <strong>@ViewBag.CantidadVentas.ToString("0.##")</strong>
-        </div>
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>Operación</th>
+                    <th>Hora</th>
+                    <th>Monto</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var v in Model)
+                    {
+                        <tr>
+                            <td><span class="id-text">#@v.Id</span></td>
+                            <td><span class="time-text">@v.Fecha.ToString("HH:mm") hs</span></td>
+                            <td><span class="price-text">$@v.Total.ToString("N0")</span></td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-action="Detalle" asp-route-id="@v.Id" class="btn-action">
+                                        <i class="bi bi-eye"></i> Detalle
+                                    </a>
+                                    <a asp-action="Ticket" asp-route-id="@v.Id" target="_blank" class="btn-action">
+                                        <i class="bi bi-receipt"></i> Ticket
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                            No se registraron ventas en esta fecha.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
-
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Hora</th>
-            <th>Total</th>
-            <th style="width:200px;">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var v in Model)
-        {
-            <tr>
-                <td>@v.Id</td>
-                <td>@v.Fecha.ToString("HH:mm")</td>
-                <td>$@v.Total.ToString("0.##")</td>
-                <td>
-                    <a asp-action="Detalle"
-                       asp-route-id="@v.Id"
-                       class="btn btn-sm btn-info">
-                        👁 Detalle
-                    </a>
-
-                    <a asp-action="Ticket"
-                       asp-route-id="@v.Id"
-                       target="_blank"
-                       class="btn btn-sm btn-secondary">
-                        🧾 Ticket
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>

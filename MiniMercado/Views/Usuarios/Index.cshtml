@@ -1,45 +1,198 @@
-﻿@model List<MiniMercado.Models.ViewModels.UsuarioListadoVM>
+@model List<MiniMercado.Models.ViewModels.UsuarioListadoVM>
 
-<h2>Usuarios</h2>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+}
 
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-<a asp-action="Create" class="btn btn-primary mb-3">
-    Nuevo Usuario
-</a>
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 1000px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Rol</th>
-            <th style="width:250px;">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            <tr>
-                <td>@user.Email</td>
-                <td>@user.Rol</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">
-                        Editar
-                    </a>
+    .db-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
 
-                    <a asp-action="CambiarPassword" asp-route-id="@user.Id" class="btn btn-sm btn-info">
-                        Password
-                    </a>
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
 
-                    @if (user.Rol != "Admin")
-                    {
-                        <a asp-action="Delete" asp-route-id="@user.Id"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('¿Eliminar usuario?');">
-                            Eliminar
-                        </a>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .btn-modern {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-modern.primary { background: var(--blue); color: #fff; border: none; }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 16px 24px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .db-table td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .db-table tr:hover td { background: var(--bg-card-hover); }
+
+    .role-badge {
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 30px;
+        text-transform: uppercase;
+    }
+
+    .role-badge.admin { background: var(--amber-bg); color: var(--amber-text); }
+    .role-badge.user { background: var(--blue-bg); color: var(--blue-text); }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+    }
+
+    .btn-action:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--blue);
+        color: var(--blue-text);
+        text-decoration: none;
+    }
+
+    .btn-action.danger:hover {
+        border-color: var(--red);
+        color: var(--red-text);
+    }
+
+    .user-email { font-weight: 600; color: var(--text-primary); }
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Gestión de Usuarios</h1>
+            <p>Control de acceso y permisos del personal</p>
+        </div>
+        <div class="header-actions">
+            <a asp-action="Create" class="btn-modern primary">
+                <i class="bi bi-person-plus"></i> Nuevo Usuario
+            </a>
+        </div>
+    </div>
+
+    <div class="data-card">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>Email de Usuario</th>
+                    <th>Rol de Acceso</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-circle fs-5 me-3 text-muted"></i>
+                                <span class="user-email">@user.Email</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge @(user.Rol == "Admin" ? "admin" : "user")">
+                                @user.Rol
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Edit" asp-route-id="@user.Id" class="btn-action" title="Editar perfil">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="CambiarPassword" asp-route-id="@user.Id" class="btn-action" title="Cambiar contraseña">
+                                    <i class="bi bi-key"></i>
+                                </a>
+                                @if (user.Rol != "Admin")
+                                {
+                                    <a asp-action="Delete" asp-route-id="@user.Id"
+                                       class="btn-action danger"
+                                       title="Eliminar usuario"
+                                       onclick="return confirm('¿Está seguro de que desea eliminar a este usuario?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

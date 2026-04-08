@@ -1,61 +1,13 @@
 @{
     ViewData["Title"] = "Dashboard Anual";
-    
-    // Variables del dashboard
     var ventasPorMes = ViewBag.VentasPorMes;
     var productosTop = ViewBag.ProductosTop;
     var anioActual = ViewBag.Anio ?? DateTime.Today.Year;
 }
 
 <style>
-    /* ──────────────────────────────────────────────────────────────
-    *  IMPORTS & VARIABLES - DARK MODERN THEME
-    *  ──────────────────────────────────────────────────────────── */
     @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-    :root {
-        /* Dark Modern Palette */
-        --bg-primary: #0a0c10;
-        --bg-secondary: #111418;
-        --bg-tertiary: #1a1e24;
-        --bg-card: #1a1e24;
-        --bg-card-hover: #22272f;
-        --bg-surface: #1e242c;
-        
-        /* Text colors */
-        --text-primary: #f1f3f5;
-        --text-secondary: #9ca3af;
-        --text-muted: #6b7280;
-        
-        /* Border */
-        --border: #2a2f36;
-        --border-light: #252a30;
-        
-        /* Status colors */
-        --green: #10b981;
-        --green-bg: rgba(16, 185, 129, 0.12);
-        --green-text: #34d399;
-        --red: #ef4444;
-        --red-bg: rgba(239, 68, 68, 0.12);
-        --red-text: #f87171;
-        --amber: #f59e0b;
-        --amber-bg: rgba(245, 158, 11, 0.12);
-        --amber-text: #fbbf24;
-        --blue: #3b82f6;
-        --blue-bg: rgba(59, 130, 246, 0.12);
-        --blue-text: #60a5fa;
-        --purple: #8b5cf6;
-        --purple-bg: rgba(139, 92, 246, 0.12);
-        
-        /* Spacing & Radius */
-        --radius: 12px;
-        --radius-lg: 20px;
-        --radius-xl: 24px;
-    }
-
-    /* ──────────────────────────────────────────────────────────────
-    *  BASE & LAYOUT - TYPOGRAPHY SCALED UP (2 levels)
-    *  ──────────────────────────────────────────────────────────── */
     .db-wrap {
         font-family: 'DM Sans', system-ui, sans-serif;
         color: var(--text-primary);
@@ -66,21 +18,17 @@
         min-height: 100vh;
     }
 
-    /* Typography scale +2 levels */
     .db-header-left h1 {
-        font-size: 36px;      /* +2 levels (was 24) */
+        font-size: 36px;
         font-weight: 700;
         letter-spacing: -0.03em;
         margin: 0 0 6px;
         line-height: 1.2;
-        background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-primary);
     }
 
     .db-header-left p {
-        font-size: 17px;      /* +2 levels (was 13) */
+        font-size: 17px;
         color: var(--text-secondary);
         margin: 0;
         font-family: 'DM Mono', monospace;
@@ -89,51 +37,29 @@
     .db-year-badge {
         background: var(--bg-tertiary);
         color: var(--text-primary);
-        font-size: 17px;      /* +2 levels (was 13) */
+        font-size: 17px;
         font-weight: 600;
         padding: 8px 20px;
         border-radius: 30px;
         font-family: 'DM Mono', monospace;
         letter-spacing: .04em;
         border: 1px solid var(--border);
-        backdrop-filter: blur(10px);
     }
 
-    /* Section Titles */
     .section-title {
-        font-size: 16px;      /* +2 levels (was 12) */
+        font-size: 16px;
         font-weight: 700;
         color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: .1em;
-        margin: 0 0 20px;
+        margin: 32px 0 20px;
     }
 
-    /* ──────────────────────────────────────────────────────────────
-    *  ANIMATIONS
-    *  ──────────────────────────────────────────────────────────── */
-    @@keyframes fadeUp {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @@keyframes glowPulse {
-        0%, 100% { border-color: var(--border); }
-        50% { border-color: var(--blue); }
-    }
-
-    /* ──────────────────────────────────────────────────────────────
-    *  KPI CARDS - GLASS MORPHISM
-    *  ──────────────────────────────────────────────────────────── */
     .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 16px;
         margin-bottom: 24px;
-    }
-
-    @@media (max-width: 768px) {
-        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     .kpi-card {
@@ -144,25 +70,17 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        animation: fadeUp .4s ease both;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
     }
 
     .kpi-card:hover {
         transform: translateY(-4px);
         border-color: var(--blue);
         background: var(--bg-card-hover);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
 
-    .kpi-card:nth-child(1) { animation-delay: .05s; }
-    .kpi-card:nth-child(2) { animation-delay: .10s; }
-    .kpi-card:nth-child(3) { animation-delay: .15s; }
-    .kpi-card:nth-child(4) { animation-delay: .20s; }
-
     .kpi-label {
-        font-size: 14px;      /* +2 levels (was 11) */
+        font-size: 14px;
         font-weight: 600;
         color: var(--text-secondary);
         text-transform: uppercase;
@@ -170,154 +88,50 @@
     }
 
     .kpi-value {
-        font-size: 38px;      /* +2 levels (was 26) */
+        font-size: 38px;
         font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1;
         font-family: 'DM Mono', monospace;
     }
 
-    .kpi-value.green { color: var(--green); }
-    .kpi-value.red { color: var(--red); }
-    .kpi-value.blue { color: var(--blue); }
-    .kpi-value.amber { color: var(--amber); }
+    .kpi-value.green { color: var(--green-text); }
+    .kpi-value.red { color: var(--red-text); }
+    .kpi-value.blue { color: var(--blue-text); }
+    .kpi-value.amber { color: var(--amber-text); }
 
-    .kpi-link {
-        font-size: 14px;      /* +2 levels (was 11) */
-        color: var(--text-muted);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 4px;
-        transition: all .2s;
-        font-weight: 500;
-    }
-
-    .kpi-link:hover { color: var(--blue); text-decoration: none; gap: 8px; }
-
-    /* ──────────────────────────────────────────────────────────────
-    *  ALERT CARDS
-    *  ──────────────────────────────────────────────────────────── */
-    .alert-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 40px;
-    }
-
-    @@media (max-width: 600px) { .alert-grid { grid-template-columns: 1fr; } }
-
-    .alert-card {
-        border-radius: var(--radius-xl);
-        padding: 24px 28px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        border: 1px solid transparent;
-        animation: fadeUp .4s ease both;
-        transition: all 0.3s ease;
-    }
-
-    .alert-card:hover {
-        transform: translateY(-2px);
-    }
-
-    .alert-card:nth-child(1) { animation-delay: .25s; }
-    .alert-card:nth-child(2) { animation-delay: .30s; }
-
-    .alert-card.blue { 
-        background: var(--blue-bg); 
-        border-color: rgba(59, 130, 246, 0.3);
-    }
-    .alert-card.red { 
-        background: var(--red-bg); 
-        border-color: rgba(239, 68, 68, 0.3);
-    }
-
-    .alert-card-left p {
-        font-size: 15px;      /* +2 levels (was 12) */
-        color: var(--text-secondary);
-        margin: 0 0 6px;
-        font-weight: 600;
-    }
-
-    .alert-card-left .alert-num {
-        font-size: 44px;      /* +2 levels (was 32) */
-        font-weight: 700;
-        letter-spacing: -0.04em;
-        font-family: 'DM Mono', monospace;
-        line-height: 1;
-    }
-
-    .alert-num.blue { color: var(--blue-text); }
-    .alert-num.red { color: var(--red-text); }
-
-    .alert-btn {
-        font-size: 15px;      /* +2 levels (was 12) */
-        font-weight: 600;
-        padding: 10px 20px;
-        border-radius: 12px;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: all 0.2s;
-        border: none;
-    }
-
-    .alert-btn:hover { opacity: .85; transform: scale(1.02); text-decoration: none; }
-    .alert-btn.blue { background: var(--blue); color: #fff; }
-    .alert-btn.red { background: var(--red); color: #fff; }
-
-    /* ──────────────────────────────────────────────────────────────
-    *  CHARTS
-    *  ──────────────────────────────────────────────────────────── */
     .charts-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
         gap: 20px;
         margin-bottom: 40px;
     }
-
-    @@media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } }
 
     .chart-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: var(--radius-xl);
         padding: 28px 24px;
-        animation: fadeUp .4s ease .35s both;
-        transition: all 0.3s ease;
-    }
-
-    .chart-card:hover {
-        border-color: var(--purple);
-        background: var(--bg-card-hover);
     }
 
     .chart-card h5 {
-        font-size: 18px;      /* +2 levels (was 13) */
+        font-size: 18px;
         font-weight: 700;
         color: var(--text-primary);
-        margin: 0 0 24px;
-        letter-spacing: -.01em;
+        margin-bottom: 24px;
     }
 
-    /* ──────────────────────────────────────────────────────────────
-    *  DATA TABLES - DARK THEME
-    *  ──────────────────────────────────────────────────────────── */
+    /* Fixed container height for charts to prevent "infinite growth" */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+
     .data-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: var(--radius-xl);
         overflow: hidden;
         margin-bottom: 24px;
-        animation: fadeUp .4s ease .4s both;
-        transition: all 0.3s ease;
-    }
-
-    .data-card:hover {
-        border-color: var(--border-light);
     }
 
     .data-card-header {
@@ -327,330 +141,161 @@
         padding: 20px 24px;
         border-bottom: 1px solid var(--border);
         background: var(--bg-tertiary);
-        gap: 16px;
-    }
-
-    .data-card-header h5 {
-        font-size: 17px;      /* +2 levels (was 13) */
-        font-weight: 700;
-        margin: 0;
-        color: var(--text-primary);
     }
 
     .db-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 16px;      /* +2 levels (was 13) */
     }
 
     .db-table th {
         padding: 14px 24px;
         text-align: left;
-        font-size: 14px;      /* +2 levels (was 11) */
+        font-size: 13px;
         font-weight: 700;
         color: var(--text-secondary);
         text-transform: uppercase;
-        letter-spacing: .08em;
         background: var(--bg-tertiary);
         border-bottom: 1px solid var(--border);
     }
 
-    .db-table th.center { text-align: center; }
-    .db-table th.right { text-align: right; }
-
     .db-table td {
         padding: 14px 24px;
         border-bottom: 1px solid var(--border-light);
-        vertical-align: middle;
         color: var(--text-primary);
     }
 
-    .db-table td.center { text-align: center; }
-    .db-table td.right { text-align: right; }
-
-    .db-table tbody tr:last-child td { border-bottom: none; }
-    .db-table tbody tr:hover td { background: var(--bg-card-hover); }
-
-    .db-table td.product-name { 
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    /* Badges */
-    .badge-stock {
-        display: inline-block;
-        font-size: 15px;      /* +2 levels (was 12) */
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 30px;
-        font-family: 'DM Mono', monospace;
-    }
-
-    .badge-stock.amber { background: var(--amber-bg); color: var(--amber-text); }
-    .badge-stock.gray { background: var(--bg-tertiary); color: var(--text-muted); }
-    .badge-stock.red { background: var(--red-bg); color: var(--red-text); }
-
-    /* Buttons */
-    .btn-outline-sm {
-        font-size: 14px;      /* +2 levels (was 11) */
-        font-weight: 600;
-        padding: 7px 16px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: var(--bg-surface);
-        color: var(--text-secondary);
-        text-decoration: none;
-        transition: all 0.2s;
-        white-space: nowrap;
-    }
-
-    .btn-outline-sm:hover {
-        background: var(--blue);
-        border-color: var(--blue);
-        text-decoration: none;
-        color: #fff;
-        transform: translateY(-1px);
-    }
+    .db-table tr:hover td { background: var(--bg-card-hover); }
 
     .btn-table {
-        font-size: 14px;      /* +2 levels (was 11) */
+        font-size: 13px;
         font-weight: 600;
-        padding: 7px 14px;
-        border-radius: 10px;
+        padding: 6px 12px;
+        border-radius: 8px;
         border: 1px solid var(--border);
         background: var(--bg-surface);
         color: var(--text-secondary);
         text-decoration: none;
-        transition: all 0.2s;
-        white-space: nowrap;
-        display: inline-block;
     }
 
     .btn-table:hover {
-        background: var(--green-bg);
-        border-color: var(--green);
-        color: var(--green-text);
-        text-decoration: none;
-        transform: translateY(-1px);
-    }
-
-    .btn-table.danger:hover {
-        background: var(--red-bg);
-        border-color: var(--red);
-        color: var(--red-text);
-    }
-
-    .btn-table.neutral:hover {
-        background: var(--bg-tertiary);
+        background: var(--blue);
+        color: #fff;
         border-color: var(--blue);
-        color: var(--blue-text);
     }
 
-    /* Empty State */
-    .empty-state {
-        padding: 48px 24px;
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 16px;      /* +2 levels (was 13) */
-        background: var(--bg-card);
-    }
-
-    /* ──────────────────────────────────────────────────────────────
-    *  STOCK CARDS (Vencidos / Por vencer)
-    *  ──────────────────────────────────────────────────────────── */
     .stock-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 20px;
         margin-bottom: 40px;
     }
-
-    @@media (max-width: 700px) { .stock-grid { grid-template-columns: 1fr; } }
 
     .stock-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: var(--radius-xl);
         overflow: hidden;
-        animation: fadeUp .4s ease .45s both;
-        transition: all 0.3s ease;
-    }
-
-    .stock-card:hover {
-        transform: translateY(-2px);
-        border-color: var(--border-light);
     }
 
     .stock-card-header {
         padding: 16px 24px;
-        font-size: 16px;      /* +2 levels (was 12) */
+        font-size: 16px;
         font-weight: 700;
-        letter-spacing: .02em;
         display: flex;
         align-items: center;
         gap: 10px;
     }
 
-    .stock-card-header .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-
-    .stock-card-header.red-header {
-        background: var(--red-bg);
-        color: var(--red-text);
-        border-bottom: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .stock-card-header.amber-header {
-        background: var(--amber-bg);
-        color: var(--amber-text);
-        border-bottom: 1px solid rgba(245, 158, 11, 0.2);
-    }
-
-    .dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
-    .dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    .stock-card-header.red { background: var(--red-bg); color: var(--red-text); }
+    .stock-card-header.amber { background: var(--amber-bg); color: var(--amber-text); }
 
     .stock-item {
         display: flex;
-        align-items: center;
         justify-content: space-between;
         padding: 16px 24px;
         border-bottom: 1px solid var(--border-light);
-        gap: 16px;
-        transition: background 0.2s;
-    }
-
-    .stock-item:hover {
-        background: var(--bg-card-hover);
     }
 
     .stock-item:last-child { border-bottom: none; }
 
-    .stock-item-left .name {
-        font-size: 16px;      /* +2 levels (was 13) */
-        font-weight: 600;
-        margin-bottom: 4px;
-        color: var(--text-primary);
-    }
+    .stock-name { font-weight: 600; color: var(--text-primary); }
+    .stock-date { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
 
-    .stock-item-left .date {
-        font-size: 14px;      /* +2 levels (was 11) */
-        color: var(--text-muted);
-        font-family: 'DM Mono', monospace;
-    }
-
-    .date.red-text { color: var(--red-text); }
-    .date.amber-text { color: var(--amber-text); }
-
-    .stock-item-right {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 8px;
-    }
-
-    .stock-card-footer {
-        padding: 14px 24px;
-        border-top: 1px solid var(--border);
-        background: var(--bg-tertiary);
-        text-align: center;
+    @@media (max-width: 768px) {
+        .charts-grid { grid-template-columns: 1fr; }
+        .db-wrap { padding: 20px 16px; }
     }
 </style>
 
-<!-- MAIN DASHBOARD CONTENT -->
 <div class="db-wrap">
-
-    <!-- HEADER -->
-    <div class="db-header">
+    <div class="db-header d-flex justify-content-between align-items-center mb-4">
         <div class="db-header-left">
-            <h1>Dashboard anual</h1>
-            <p>Resumen de actividad comercial</p>
+            <h1>Dashboard Anual</h1>
+            <p>Resumen de actividad comercial del minimercado</p>
         </div>
         <span class="db-year-badge">@anioActual</span>
     </div>
 
-    <!-- KPI CARDS -->
     <div class="kpi-grid">
         <div class="kpi-card">
-            <span class="kpi-label">Total facturado</span>
-            <span class="kpi-value green">$&nbsp;@ViewBag.TotalAnual.ToString("N0")</span>
+            <span class="kpi-label">Ventas Totales</span>
+            <span class="kpi-value green">$@ViewBag.TotalAnual.ToString("N0")</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-label">Ventas anuladas</span>
+            <span class="kpi-label">Ventas Anuladas</span>
             <span class="kpi-value red">@ViewBag.Anuladas</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-label">Ticket promedio</span>
-            <span class="kpi-value blue">$&nbsp;@ViewBag.TicketPromedio.ToString("N0")</span>
+            <span class="kpi-label">Ticket Promedio</span>
+            <span class="kpi-value blue">$@ViewBag.TicketPromedio.ToString("N0")</span>
         </div>
         <div class="kpi-card">
-            <span class="kpi-label">Bajo stock</span>
+            <span class="kpi-label">Bajo Stock</span>
             <span class="kpi-value amber">@ViewBag.StockBajoCount</span>
-            <a href="/Alertas/StockBajo" class="kpi-link">Ver productos →</a>
         </div>
     </div>
 
-    <!-- ALERTAS CRÍTICAS -->
-    <div class="alert-grid">
-        <div class="alert-card blue">
-            <div class="alert-card-left">
-                <p>Lotes por vencer en 7 días</p>
-                <span class="alert-num blue">@ViewBag.VencimientosCount</span>
-            </div>
-            <a href="/Alertas/Vencimientos" class="alert-btn blue">Gestionar</a>
-        </div>
-        <div class="alert-card red">
-            <div class="alert-card-left">
-                <p>Productos con stock negativo</p>
-                <span class="alert-num red">@ViewBag.NegativosCount</span>
-            </div>
-            <a href="/Alertas/StockNegativo" class="alert-btn red">Regularizar</a>
-        </div>
-    </div>
-
-    <!-- GRÁFICOS -->
-    <p class="section-title">Análisis de ventas</p>
+    <p class="section-title">Gráficos de Rendimiento</p>
     <div class="charts-grid">
         <div class="chart-card">
-            <h5>Ventas por mes</h5>
-            <canvas id="ventasChart"></canvas>
+            <h5>Ventas por Mes</h5>
+            <div class="chart-container">
+                <canvas id="ventasChart"></canvas>
+            </div>
         </div>
         <div class="chart-card">
-            <h5>Productos más vendidos</h5>
-            <canvas id="productosChart"></canvas>
+            <h5>Top 5 Productos Vendidos</h5>
+            <div class="chart-container">
+                <canvas id="productosChart"></canvas>
+            </div>
         </div>
     </div>
 
-    <!-- TABLA: BAJO STOCK -->
-    <p class="section-title">Inventario</p>
+    <p class="section-title">Inventario y Stock</p>
     <div class="data-card">
         <div class="data-card-header">
-            <h5>Productos con bajo stock</h5>
-            <a href="/Alertas/StockBajo" class="btn-outline-sm">Ver todos</a>
+            <h5 class="mb-0">Productos con Stock Crítico</h5>
+            <a href="/Alertas/StockBajo" class="btn-table">Ver todos</a>
         </div>
         <table class="db-table">
             <thead>
                 <tr>
                     <th>Producto</th>
-                    <th class="center">Stock</th>
-                    <th class="right">Acción</th>
+                    <th style="text-align:center">Stock</th>
+                    <th style="text-align:right">Acción</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var producto in ViewBag.BajoStock)
+                @foreach (var p in ViewBag.BajoStock)
                 {
                     <tr>
-                        <td class="product-name">@producto.Nombre</td>
-                        <td class="center">
-                            <span class="badge-stock amber">@producto.Stock</span>
+                        <td class="fw-bold">@p.Nombre</td>
+                        <td style="text-align:center">
+                            <span class="badge rounded-pill @(p.Stock <= 0 ? "bg-danger" : "bg-warning text-dark")">@p.Stock</span>
                         </td>
-                        <td class="right">
-                            <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn-table">
-                                Reponer stock
-                            </a>
+                        <td style="text-align:right">
+                            <a href="/MovimientoStock/Ingreso?productoId=@p.Id" class="btn-table">Cargar Stock</a>
                         </td>
                     </tr>
                 }
@@ -658,243 +303,120 @@
         </table>
     </div>
 
-    <!-- TABLA: STOCK MUERTO (SIN ROTACIÓN) -->
-    <div class="data-card">
-        <div class="data-card-header">
-            <h5>Productos sin rotación</h5>
-        </div>
-        @if (ViewBag.ProductosSinVenta == null || ViewBag.ProductosSinVenta.Count == 0)
-        {
-            <div class="empty-state">No hay productos sin rotación</div>
-        }
-        else
-        {
-            <table class="db-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th class="center">Stock</th>
-                        <th class="right">Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var producto in ViewBag.ProductosSinVenta)
-                    {
-                        <tr>
-                            <td class="product-name">@producto.Nombre</td>
-                            <td class="center">
-                                <span class="badge-stock gray">@producto.Stock</span>
-                            </td>
-                            <td class="right">
-                                <a href="/Productos/Detalle/@producto.Id" class="btn-table neutral">
-                                    Ver detalle
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-
-    <!-- CONTROL DE VENCIMIENTOS -->
-    <p class="section-title">Control de vencimientos</p>
+    <p class="section-title">Control de Vencimientos</p>
     <div class="stock-grid">
-
-        <!-- VENCIDOS -->
         <div class="stock-card">
-            <div class="stock-card-header red-header">
-                <span class="dot red"></span>
-                Productos vencidos
-            </div>
-            @if (ViewBag.ProductosVencidos.Count == 0)
+            <div class="stock-card-header red">Productos Vencidos</div>
+            @foreach (var p in ViewBag.ProductosVencidos)
             {
-                <div class="empty-state">Sin productos vencidos</div>
-            }
-            else
-            {
-                <div class="stock-list">
-                    @foreach (var producto in ViewBag.ProductosVencidos)
-                    {
-                        <div class="stock-item">
-                            <div class="stock-item-left">
-                                <div class="name">@producto.Nombre</div>
-                                <div class="date red-text">Venció @producto.Fecha.ToString("dd/MM/yyyy")</div>
-                            </div>
-                            <div class="stock-item-right">
-                                <span class="badge-stock red">@producto.Cantidad</span>
-                                <a href="/Productos/Detalle/@producto.ProductoId" class="btn-table danger">Lotes</a>
-                            </div>
-                        </div>
-                    }
+                <div class="stock-item">
+                    <div>
+                        <div class="stock-name">@p.Nombre</div>
+                        <div class="stock-date">Venció: @p.Fecha.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-danger">@p.Cantidad uds</div>
+                        <a href="/Productos/Detalle/@p.ProductoId" class="small text-muted">Ver lotes</a>
+                    </div>
                 </div>
             }
-            <div class="stock-card-footer">
-                <a href="/Alertas/Vencimientos" class="btn-outline-sm">Ver todos</a>
-            </div>
         </div>
 
-        <!-- PRÓXIMOS A VENCER -->
         <div class="stock-card">
-            <div class="stock-card-header amber-header">
-                <span class="dot amber"></span>
-                Próximos a vencer
-            </div>
-            @if (ViewBag.ProductosPorVencer.Count == 0)
+            <div class="stock-card-header amber">Próximos a Vencer (7 días)</div>
+            @foreach (var p in ViewBag.ProductosPorVencer)
             {
-                <div class="empty-state">Sin productos próximos a vencer</div>
-            }
-            else
-            {
-                <div class="stock-list">
-                    @foreach (var producto in ViewBag.ProductosPorVencer)
-                    {
-                        <div class="stock-item">
-                            <div class="stock-item-left">
-                                <div class="name">@producto.Nombre</div>
-                                <div class="date amber-text">Vence @producto.Fecha.ToString("dd/MM/yyyy")</div>
-                            </div>
-                            <div class="stock-item-right">
-                                <span class="badge-stock amber">@producto.Cantidad</span>
-                                <a href="/Productos/Detalle/@producto.ProductoId" class="btn-table">Lotes</a>
-                            </div>
-                        </div>
-                    }
+                <div class="stock-item">
+                    <div>
+                        <div class="stock-name">@p.Nombre</div>
+                        <div class="stock-date">Vence: @p.Fecha.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-warning">@p.Cantidad uds</div>
+                        <a href="/Productos/Detalle/@p.ProductoId" class="small text-muted">Ver lotes</a>
+                    </div>
                 </div>
             }
-            <div class="stock-card-footer">
-                <a href="/Alertas/Vencimientos" class="btn-outline-sm">Ver todos</a>
-            </div>
         </div>
-
     </div>
 </div>
 
-<!-- CHARTS SCRIPT (lógica intacta) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
-    Chart.defaults.font.size = 14;
-    Chart.defaults.color = '#9ca3af';
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctxVentas = document.getElementById('ventasChart');
+        const ctxProds = document.getElementById('productosChart');
 
-    const gridColor = 'rgba(255,255,255,0.05)';
-    const tickColor = '#6b7280';
+        const getThemeColors = () => {
+            const isDark = document.body.classList.contains('dark-mode');
+            return {
+                text: isDark ? '#9ca3af' : '#4b5563',
+                grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+            };
+        };
 
-    // Ventas por mes (Line Chart)
-    const ventasData = {
-        labels: [
-            @foreach (var mes in ventasPorMes)
-            {
-                @: "@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(mes.Mes)",
-            }
-        ],
-        datasets: [{
-            label: 'Total Facturado',
-            data: [
-                @foreach (var mes in ventasPorMes)
-                {
-                    @: @mes.Total,
-                }
-            ],
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.08)',
-            borderWidth: 3,
-            pointRadius: 5,
-            pointBackgroundColor: '#10b981',
-            pointBorderColor: '#0a0c10',
-            pointBorderWidth: 2,
-            tension: 0.4,
-            fill: true
-        }]
-    };
+        let colors = getThemeColors();
 
-    new Chart(document.getElementById('ventasChart'), {
-        type: 'line',
-        data: ventasData,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a1e24',
-                    titleColor: '#f1f3f5',
-                    bodyColor: '#9ca3af',
-                    padding: 12,
-                    cornerRadius: 12,
-                    callbacks: {
-                        label: (ctx) => ' $' + ctx.parsed.y.toLocaleString('es-AR')
-                    }
-                }
+        const vChart = new Chart(ctxVentas, {
+            type: 'line',
+            data: {
+                labels: [@Html.Raw(string.Join(",", ((IEnumerable<dynamic>)ventasPorMes).Select(m => $"\"{System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m.Mes)}\"")))],
+                datasets: [{
+                    label: 'Ventas $',
+                    data: [@string.Join(",", ((IEnumerable<dynamic>)ventasPorMes).Select(m => m.Total.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)))],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 13 } } },
-                y: {
-                    grid: { color: gridColor },
-                    ticks: {
-                        color: tickColor,
-                        callback: (v) => '$' + (v / 1000).toFixed(0) + 'k',
-                        font: { size: 13 }
-                    }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: colors.grid }, ticks: { color: colors.text } },
+                    x: { grid: { color: colors.grid }, ticks: { color: colors.text } }
                 }
             }
-        }
-    });
+        });
 
-    // Productos más vendidos (Bar Chart Horizontal)
-    const productosData = {
-        labels: [
-            @foreach (var producto in productosTop)
-            {
-                @: "@producto.Producto",
-            }
-        ],
-        datasets: [{
-            label: 'Cantidad Vendida',
-            data: [
-                @foreach (var producto in productosTop)
-                {
-                    @: @producto.CantidadVendida,
-                }
-            ],
-            backgroundColor: [
-                'rgba(59,130,246,0.85)',
-                'rgba(59,130,246,0.70)',
-                'rgba(59,130,246,0.55)',
-                'rgba(59,130,246,0.40)',
-                'rgba(59,130,246,0.28)'
-            ],
-            borderColor: 'transparent',
-            borderRadius: 8,
-            borderWidth: 0
-        }]
-    };
-
-    new Chart(document.getElementById('productosChart'), {
-        type: 'bar',
-        data: productosData,
-        options: {
-            responsive: true,
-            indexAxis: 'y',
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a1e24',
-                    titleColor: '#f1f3f5',
-                    bodyColor: '#9ca3af',
-                    padding: 12,
-                    cornerRadius: 12
-                }
+        const pChart = new Chart(ctxProds, {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(string.Join(",", ((IEnumerable<dynamic>)productosTop).Select(p => $"\"{p.Producto}\"")))],
+                datasets: [{
+                    label: 'Cant. Vendida',
+                    data: [@string.Join(",", ((IEnumerable<dynamic>)productosTop).Select(p => p.CantidadVendida))],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                }]
             },
-            scales: {
-                x: { 
-                    grid: { color: gridColor }, 
-                    ticks: { color: tickColor, font: { size: 13 } } 
-                },
-                y: {
-                    grid: { display: false },
-                    ticks: { color: tickColor, font: { size: 13, weight: '500' } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    y: { grid: { display: false }, ticks: { color: colors.text } },
+                    x: { grid: { color: colors.grid }, ticks: { color: colors.text } }
                 }
             }
-        }
-    });
-</script>
+        });
+
+        // Observer optimizado: Solo actualizar si hay un cambio real de clase
+        let lastClass = document.body.className;
+        const observer = new MutationObserver(() => {
+            if (document.body.className !== lastClass) {
+                lastClass = document.body.className;
+                const newColors = getThemeColors();
+                [vChart, pChart].forEach(c => {
+                    c.options.scales.y.grid.color = newColors.grid;
+                    c.options.scales.y.ticks.color = newColors.text;
+                    if(c.options.scales.x.grid) c.options.scales.x.grid.color = newColors.grid;
+                    c.options.scales.x.ticks.color = newColors.text;
+                    c.update('none'); // Update without animations to be faster and safer
+                });
+            }
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    </script>
+}

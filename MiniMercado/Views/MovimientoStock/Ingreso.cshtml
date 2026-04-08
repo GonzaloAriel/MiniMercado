@@ -1,111 +1,218 @@
 @model MiniMercado.Models.MovimientoStock
 
 @{
+    ViewData["Title"] = "Ingreso de Stock";
     bool isPreselected = ViewBag.ProductoId != null;
 }
 
-<h2>Ingreso de Stock</h2>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-@if (ViewBag.ProductoId != null)
-{
-    <div class="alert alert-info">
-        Stock actual: <strong>@ViewBag.StockActual</strong>
-    </div>
-
-    @if (ViewBag.StockActual < 0)
-    {
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            Este producto tiene stock negativo. Ingresá mercadería para regularizar.
-        </div>
-    }
-}
-
-<form asp-action="Ingreso" method="post">
-
-    @Html.AntiForgeryToken()
-
-    @if (isPreselected)
-    {
-        <input type="hidden" name="ProductoId" value="@ViewBag.ProductoId" />
-
-        <div class="form-group mb-3">
-            <label class="fw-bold">Producto</label>
-            <div class="input-group">
-                <input type="text" class="form-control bg-light" value="@ViewBag.ProductoNombre" readonly />
-                <a asp-action="Ingreso" class="btn btn-outline-secondary" title="Cambiar producto">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </div>
-        </div>
-    }
-    else
-    {
-        ViewBag.Label = "Producto";
-        ViewBag.InputId = "ProductoId";
-        ViewBag.InputName = "ProductoId";
-        ViewBag.SearchId = "buscadorStock";
-        ViewBag.ResultId = "resultadosStock";
-        ViewBag.Placeholder = "🔎 Escriba nombre o escanee código...";
-
-        <div class="form-group mb-3 position-relative">
-            <label class="fw-bold">@ViewBag.Label</label>
-            <input type="hidden" id="@ViewBag.InputId" name="@ViewBag.InputName" value="" />
-            
-            <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text"
-                       id="@ViewBag.SearchId"
-                       class="form-control form-control-lg"
-                       placeholder="@(ViewBag.Placeholder ?? "🔎 Buscar producto...")"
-                       autocomplete="off" />
-            </div>
-
-            <div class="input-group">
-                <span class="input-group-text bg-light">Seleccionado:</span>
-                <input type="text" id="ProductoNombreDisplay" readonly class="form-control bg-light" 
-                       value=""
-                       placeholder="Ningún producto seleccionado" />
-            </div>
-
-            <span asp-validation-for="ProductoId" class="text-danger small"></span>
-
-            <div id="@ViewBag.ResultId" class="list-group shadow position-absolute w-100 d-none" style="z-index: 1050; top: 100%;"></div>
-        </div>
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 24px 64px;
+        max-width: 800px;
+        margin: 0 auto;
+        min-height: 100vh;
     }
 
-    <div class="form-group mb-3">
-        <label>Cantidad</label>
-        <input asp-for="Cantidad" class="form-control" step="0.01" />
-        <span asp-validation-for="Cantidad" class="text-danger"></span>
+    .db-header {
+        margin-bottom: 32px;
+        text-align: center;
+    }
+
+    .db-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 8px;
+        color: var(--text-primary);
+    }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 32px;
+        margin-bottom: 24px;
+    }
+
+    .form-label-modern {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control-modern {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 15px;
+        width: 100%;
+        transition: all 0.2s;
+    }
+
+    .form-control-modern:focus {
+        border-color: var(--blue);
+        outline: none;
+        box-shadow: 0 0 0 3px var(--blue-bg);
+    }
+
+    .form-control-modern[readonly] {
+        background: var(--bg-tertiary);
+        color: var(--text-muted);
+        cursor: not-allowed;
+    }
+
+    .btn-modern {
+        font-size: 15px;
+        font-weight: 700;
+        padding: 14px 24px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .btn-modern.success { background: var(--green); color: #fff; width: 100%; }
+    .btn-modern.outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 12px; }
+    .btn-modern:hover { transform: translateY(-2px); opacity: 0.9; color: #fff; text-decoration: none; }
+
+    .stock-badge {
+        background: var(--blue-bg);
+        border: 1px solid var(--blue);
+        color: var(--blue-text);
+        padding: 12px 20px;
+        border-radius: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        font-weight: 600;
+    }
+
+    .stock-badge.negative {
+        background: var(--red-bg);
+        border-color: var(--red);
+        color: var(--red-text);
+    }
+
+    .id-display {
+        font-family: 'DM Mono', monospace;
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+</style>
+
+<div class="db-wrap">
+    
+    <div class="db-header">
+        <h1>Ingreso de Mercadería</h1>
+        <p class="text-muted">Carga de stock y control de lotes</p>
     </div>
 
-    <div class="form-group mb-3">
-        <label>Fecha de Vencimiento (Opcional)</label>
-        <input type="date" name="FechaVencimiento" class="form-control" />
+    @if (ViewBag.ProductoId != null)
+    {
+        <div class="stock-badge @(ViewBag.StockActual < 0 ? "negative" : "")">
+            <span><i class="bi bi-box-seam me-2"></i> Stock Actual</span>
+            <span class="id-display">@ViewBag.StockActual</span>
+        </div>
+
+        @if (ViewBag.StockActual < 0)
+        {
+            <div class="alert alert-danger border-0 rounded-4 mb-4 small">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Stock negativo detectado. Regularice ingresando mercadería.
+            </div>
+        }
+    }
+
+    <div class="data-card">
+        <form asp-action="Ingreso" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (isPreselected)
+            {
+                <input type="hidden" name="ProductoId" value="@ViewBag.ProductoId" />
+                <div class="mb-4">
+                    <label class="form-label-modern">Producto Seleccionado</label>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control-modern" value="@ViewBag.ProductoNombre" readonly />
+                        <a asp-action="Ingreso" class="btn btn-action" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border); color: var(--text-muted);" title="Cambiar producto">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="mb-4 position-relative">
+                    <label class="form-label-modern">Buscar Producto</label>
+                    <input type="hidden" id="ProductoId" name="ProductoId" />
+                    
+                    <div class="position-relative mb-2">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" id="buscadorStock" class="form-control-modern ps-5" 
+                               placeholder="Nombre o código de barras..." autocomplete="off" />
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 small text-muted px-2">
+                        <span class="fw-bold">Seleccionado:</span>
+                        <input type="text" id="ProductoNombreDisplay" readonly class="border-0 bg-transparent text-primary fw-bold w-100" 
+                               style="outline: none;" value="Ninguno" />
+                    </div>
+
+                    <span asp-validation-for="ProductoId" class="text-danger small"></span>
+                    <div id="resultadosStock" class="list-group shadow position-absolute w-100 d-none" style="z-index: 1050; top: 80px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"></div>
+                </div>
+            }
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label-modern">Cantidad a Ingresar</label>
+                    <input asp-for="Cantidad" class="form-control-modern" step="0.01" placeholder="0.00" />
+                    <span asp-validation-for="Cantidad" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-modern">Vencimiento (Opcional)</label>
+                    <input type="date" name="FechaVencimiento" class="form-control-modern" />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label-modern">Observación / Nota</label>
+                <textarea asp-for="Observacion" class="form-control-modern" rows="2" placeholder="Ej: Proveedor X - Factura Y"></textarea>
+            </div>
+
+            <input type="hidden" asp-for="Tipo" value="INGRESO" />
+
+            <button type="submit" class="btn-modern success">
+                <i class="bi bi-check-lg"></i> Confirmar Ingreso de Stock
+            </button>
+
+            <a asp-controller="Productos" asp-action="Index" class="btn-modern outline">
+                Cancelar y Volver
+            </a>
+        </form>
     </div>
-
-    <input type="hidden" asp-for="Tipo" value="INGRESO" />
-
-    <div class="form-group mb-3">
-        <label>Observación</label>
-        <textarea asp-for="Observacion" class="form-control"></textarea>
-    </div>
-
-    <button type="submit" class="btn btn-success mt-3">
-        Guardar Ingreso
-    </button>
-
-    <a asp-controller="Productos" asp-action="Index" class="btn btn-secondary mt-3">
-        Cancelar
-    </a>
-</form>
-
+</div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 
     @if (!isPreselected)
     {
