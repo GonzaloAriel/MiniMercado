@@ -1,0 +1,167 @@
+@{
+    ViewData["Title"] = "Inicio";
+
+    var total = ViewBag.TotalHoy ?? 0;
+    var ventas = ViewBag.CantidadVentas ?? 0;
+    var ticket = ViewBag.TicketPromedio ?? 0;
+    var progreso = ViewBag.Progreso ?? 35; // %
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+    body {
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+        background: linear-gradient(180deg, #4f46e5 0%, #6366f1 40%, #e0e7ff 100%);
+    }
+
+    .home-wrap {
+        padding: 24px;
+        color: #fff;
+        max-width: 900px;
+        margin: auto;
+    }
+
+    /* Header */
+    .home-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+
+    .home-header h2 {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    /* Progress card */
+    .progress-card {
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 30px;
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .progress-bar span {
+        display: block;
+        height: 100%;
+        background: #34d399;
+    }
+
+    /* Quick actions */
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+
+    .action {
+        text-align: center;
+        flex: 1;
+    }
+
+    .action div {
+        width: 60px;
+        height: 60px;
+        margin: auto;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+    /* Cards */
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+        gap: 16px;
+    }
+
+    .card {
+        background: #fff;
+        color: #111;
+        border-radius: 20px;
+        padding: 16px;
+    }
+
+    .card h4 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .card strong {
+        font-size: 20px;
+    }
+</style>
+
+<div class="home-wrap">
+
+    <!-- HEADER -->
+    <div class="home-header">
+        <h2>Hola, @User.Identity.Name</h2>
+    </div>
+
+    <!-- PROGRESO -->
+    <div class="progress-card">
+        <div><strong>@progreso%</strong> de tu objetivo mensual</div>
+        <div class="progress-bar">
+            <span style="width:@progreso%"></span>
+        </div>
+        <small>Seguí vendiendo para alcanzar tu meta 🚀</small>
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="actions">
+        <div class="action">
+            <div>+</div>
+            <small>Venta</small>
+        </div>
+        <div class="action">
+            <div>→</div>
+            <small>Mov.</small>
+        </div>
+        <div class="action">
+            <div>$</div>
+            <small>Caja</small>
+        </div>
+        <div class="action">
+            <div>📦</div>
+            <small>Stock</small>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="cards">
+        <div class="card">
+            <h4>Total hoy</h4>
+            <strong>$ @total.ToString("N0")</strong>
+        </div>
+        <div class="card">
+            <h4>Ventas</h4>
+            <strong>@ventas</strong>
+        </div>
+        <div class="card">
+            <h4>Ticket promedio</h4>
+            <strong>$ @ticket.ToString("N0")</strong>
+        </div>
+        <div class="card">
+            <h4>Estado</h4>
+            <strong>Activo</strong>
+        </div>
+    </div>
+
+</div>

@@ -6,13 +6,9 @@
     @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
     .db-wrap {
-        font-family: 'DM Sans', system-ui, sans-serif;
-        color: var(--text-primary);
-        background: var(--bg-primary);
         padding: 32px 24px 64px;
         max-width: 1200px;
         margin: 0 auto;
-        min-height: 100vh;
     }
 
     /* Header */
@@ -28,24 +24,20 @@
         font-weight: 700;
         letter-spacing: -0.02em;
         margin: 0 0 4px;
-        color: var(--text-primary);
     }
 
     .db-header-left p {
         font-size: 15px;
-        color: var(--text-secondary);
         margin: 0;
     }
 
-    /* Hero Section - Profesional y alegre */
+    /* Hero Section */
     .main-hero {
         text-align: center;
         padding: 40px 0 48px;
     }
 
     .main-hero img {
-        max-height: 100px;
-        width: auto;
         margin-bottom: 20px;
     }
 
@@ -53,32 +45,18 @@
         font-size: 28px;
         font-weight: 700;
         margin-bottom: 8px;
-        color: var(--text-primary);
-    }
-
-    .main-hero p {
-        font-size: 16px;
-        color: var(--text-secondary);
     }
 
     /* Section Title */
     .section-title {
         font-size: 13px;
         font-weight: 700;
-        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: .08em;
         margin: 32px 0 16px;
         display: flex;
         align-items: center;
         gap: 10px;
-    }
-
-    .section-title::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: var(--border);
     }
 
     /* Action Grid */
@@ -90,21 +68,11 @@
     }
 
     .action-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
         padding: 20px 24px;
         text-decoration: none;
-        transition: all 0.25s ease;
         display: flex;
         flex-direction: column;
         gap: 8px;
-    }
-
-    .action-card:hover {
-        transform: translateY(-3px);
-        background: var(--bg-card-hover);
-        border-color: var(--blue);
     }
 
     .action-card .icon {
@@ -114,20 +82,18 @@
     .action-card .title {
         font-size: 16px;
         font-weight: 600;
-        color: var(--text-primary);
     }
 
     .action-card .desc {
         font-size: 13px;
-        color: var(--text-muted);
         line-height: 1.4;
     }
 
     /* Colores por tipo */
-    .action-card.primary { border-left: 3px solid var(--blue); }
-    .action-card.success { border-left: 3px solid var(--green); }
-    .action-card.danger { border-left: 3px solid var(--red); }
-    .action-card.warning { border-left: 3px solid var(--amber); }
+    .action-card.primary { border-left: 4px solid var(--blue) !important; }
+    .action-card.success { border-left: 4px solid var(--green) !important; }
+    .action-card.danger { border-left: 4px solid var(--red) !important; }
+    .action-card.warning { border-left: 4px solid var(--amber) !important; }
 
     /* KPI Grid */
     .kpi-grid {
@@ -142,17 +108,12 @@
     }
 
     .kpi-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
         padding: 20px 24px;
-        transition: all 0.25s ease;
     }
 
     .kpi-label {
         font-size: 12px;
         font-weight: 600;
-        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: .08em;
         margin-bottom: 8px;
@@ -165,22 +126,10 @@
         font-family: 'DM Mono', monospace;
     }
 
-    .kpi-value.green { color: var(--green-text); }
-    .kpi-value.amber { color: var(--amber-text); }
-    .kpi-value.blue { color: var(--blue-text); }
-
     /* Data Card */
-    .data-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        margin-top: 24px;
-    }
-
     .data-card-header {
         padding: 14px 20px;
-        background: var(--bg-tertiary);
+        background: var(--bg-card-hover);
         border-bottom: 1px solid var(--border);
         font-weight: 600;
         font-size: 14px;
@@ -190,73 +139,12 @@
         gap: 8px;
     }
 
-    /* Tablas */
-    .db-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .db-table th {
-        padding: 12px 20px;
-        text-align: left;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        background: var(--bg-tertiary);
-        border-bottom: 1px solid var(--border);
-    }
-
-    .db-table td {
-        padding: 12px 20px;
-        border-bottom: 1px solid var(--border-light);
-        color: var(--text-primary);
-        font-size: 14px;
-    }
-
-    .db-table tr:hover td { background: var(--bg-card-hover); }
-
-    /* Badges */
-    .badge-stock {
-        font-family: 'DM Mono', monospace;
-        font-weight: 600;
-        padding: 4px 12px;
-        border-radius: 20px;
-        background: var(--red-bg);
-        color: var(--red-text);
-        display: inline-block;
-        font-size: 12px;
-    }
-
     /* Login Card */
     .login-card {
         max-width: 400px;
         margin: 40px auto;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
         padding: 40px;
         text-align: center;
-    }
-
-    /* Botón de login */
-    .login-btn {
-        background: var(--blue);
-        border: none;
-        border-radius: var(--radius-lg);
-        padding: 14px 28px;
-        text-decoration: none;
-        display: inline-block;
-        margin-top: 20px;
-        transition: all 0.25s ease;
-        color: #fff;
-        font-weight: 600;
-    }
-
-    .login-btn:hover {
-        transform: translateY(-2px);
-        opacity: 0.9;
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
     }
 </style>
 
