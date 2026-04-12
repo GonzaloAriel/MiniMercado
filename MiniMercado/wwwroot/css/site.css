@@ -155,6 +155,7 @@ body.dark-mode .dropdown-item:hover {
 .notif-item {
     cursor: pointer;
     transition: background 0.2s;
+    color: #A9A9A9; /* DarkGrey */
 }
 
 .notif-item:hover {

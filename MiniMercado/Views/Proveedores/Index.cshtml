@@ -5,6 +5,21 @@
 }
 
 <style>
+    .db-header-left h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin: 0 0 6px;
+        color: var(--text-primary);
+    }
+
+    .db-header-left p {
+        font-size: 16px;
+        color: var(--text-primary);
+        margin: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
     .card-custom {
         background: white;
         border-radius: 12px;
@@ -43,10 +58,10 @@
         transition: background-color 0.2s;
     }
 
-    .btn-primary-custom:hover {
-        background-color: #15803d;
-        color: white;
-    }
+        .btn-primary-custom:hover {
+            background-color: #15803d;
+            color: white;
+        }
 
     .alert-soft {
         background-color: #eff6ff;
@@ -65,18 +80,18 @@
         border-collapse: collapse;
     }
 
-    .table-custom th {
-        text-align: left;
-        padding: 12px;
-        border-bottom: 2px solid #f4f4f5;
-        color: #71717a;
-        font-weight: 600;
-    }
+        .table-custom th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #f4f4f5;
+            color: #71717a;
+            font-weight: 600;
+        }
 
-    .table-custom td {
-        padding: 16px 12px;
-        border-bottom: 1px solid #f4f4f5;
-    }
+        .table-custom td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #f4f4f5;
+        }
 
     .form-control-custom {
         padding: 8px 12px;
@@ -86,10 +101,10 @@
         transition: border-color 0.2s;
     }
 
-    .form-control-custom:focus {
-        outline: none;
-        border-color: #16a34a;
-    }
+        .form-control-custom:focus {
+            outline: none;
+            border-color: #16a34a;
+        }
 
     .status-badge {
         padding: 4px 12px;
@@ -119,9 +134,9 @@
         transition: color 0.2s;
     }
 
-    .action-link:hover {
-        color: #18181b;
-    }
+        .action-link:hover {
+            color: #18181b;
+        }
 
     .btn-toggle {
         background: none;
@@ -131,18 +146,25 @@
         color: #71717a;
     }
 
-    .btn-toggle.deactivate:hover {
-        color: #dc2626;
-    }
+        .btn-toggle.deactivate:hover {
+            color: #dc2626;
+        }
 
-    .btn-toggle.activate:hover {
-        color: #16a34a;
-    }
+        .btn-toggle.activate:hover {
+            color: #16a34a;
+        }
 </style>
 
+<div class="db-wrap">
+    <div class="db-header">
+        <div class="db-header-left">
+            <h1>Gestión de Proveedores</h1>
+            <p>Catálogo de Poveedores</p>
+        </div>
+    </div>
+</div>
+
 <div class="header-section">
-    <h1 style="font-size: 1.875rem; font-weight: 700; color: #18181b; margin: 0;">Proveedores</h1>
-    
     <div class="search-box">
         <form asp-action="Index" method="get" style="display:contents">
             <input type="text" name="q" value="@ViewBag.CurrentFilter" class="form-control-custom" placeholder="Buscar por nombre o CUIT..." />
