@@ -282,6 +282,7 @@
             <thead>
                 <tr>
                     <th>Producto</th>
+                    <th>Proveedor</th>
                     <th style="text-align:center">Stock</th>
                     <th style="text-align:right">Acción</th>
                 </tr>
@@ -291,6 +292,7 @@
                 {
                     <tr>
                         <td class="fw-bold">@p.Nombre</td>
+                        <td>@(p.Proveedor?.Nombre ?? "Sin proveedor")</td>
                         <td style="text-align:center">
                             <span class="badge rounded-pill @(p.Stock <= 0 ? "bg-danger" : "bg-warning text-dark")">@p.Stock</span>
                         </td>

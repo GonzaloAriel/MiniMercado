@@ -36,6 +36,7 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<ProductoService>();
+builder.Services.AddScoped<ProveedorService>();
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
 builder.Services.AddScoped<AlertasService>();
 builder.Services.AddHttpContextAccessor();

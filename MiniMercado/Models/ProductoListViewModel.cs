@@ -7,5 +7,10 @@ namespace MiniMercado.Models
         public List<Producto> Productos { get; set; }
         public List<Rubro> Rubros { get; set; }
         public int? FiltroRubro { get; set; }
+
+        // Paginación
+        public int PaginaActual { get; set; }
+        public int TotalPaginas { get; set; }
+        public string? FiltroNombre { get; set; }
     }
 }       

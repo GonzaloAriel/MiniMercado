@@ -49,6 +49,16 @@ namespace MiniMercado.Models
         [ValidateNever]
         public Tenant Tenant { get; set; }
 
+        // Relación con Proveedor (principal)
+        [Display(Name = "Proveedor Principal")]
+        public int? ProveedorId { get; set; }
+
+        [ValidateNever]
+        public Proveedor? Proveedor { get; set; }
+
+        [ValidateNever]
+        public List<ProductoProveedor> Proveedores { get; set; } = new List<ProductoProveedor>();
+
         // Relación con Rubro (categoria)
         [Required(ErrorMessage = "Debe seleccionar un rubro o crear uno nuevo")]
         public int? RubroId { get; set; }

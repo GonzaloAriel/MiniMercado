@@ -72,6 +72,16 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <label asp-for="ProveedorId" class="form-label fw-bold">Proveedor Principal (Opcional)</label>
+            <select asp-for="ProveedorId" class="form-select" asp-items="@(new SelectList(ViewBag.Proveedores, "Id", "Nombre"))">
+                <option value="">-- Sin proveedor --</option>
+            </select>
+            <span asp-validation-for="ProveedorId" class="text-danger"></span>
+        </div>
+    </div>
+
     <div class="row mt-3">
         <div class="col-md-4">
             <div class="form-check form-switch mb-2">

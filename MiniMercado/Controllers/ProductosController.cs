@@ -118,9 +118,10 @@ namespace MiniMercado.Controllers
 
         // LISTAR
         [Authorize(Roles = "AdminGlobal, Admin")]
-        public IActionResult Index(int? rubroId, string? filtro)
+        public IActionResult Index(int? rubroId, string? filtro, int page = 1)
         {
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 15;
 
             var productosQuery = _context.Productos
                 .Where(p => p.Activo && p.TenantId == tenantId)
@@ -139,11 +140,20 @@ namespace MiniMercado.Controllers
                     p.CodigoBarra.Contains(filtro));
             }
 
+            // Conteo total para paginación
+            var totalRegistros = productosQuery.Count();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            // Aplicar Skip y Take
+            var productos = productosQuery
+                .OrderBy(p => p.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
             var rubros = _context.Rubros
                 .Where(r => r.TenantId == tenantId)
                 .ToList();
-
-            var productos = productosQuery.ToList();
 
             // 🎯 Calcular vencimiento más próximo para cada producto basado en Lotes con stock
             foreach (var p in productos)
@@ -157,7 +167,10 @@ namespace MiniMercado.Controllers
             {
                 Productos = productos,
                 Rubros = rubros,
-                FiltroRubro = rubroId
+                FiltroRubro = rubroId,
+                PaginaActual = page,
+                TotalPaginas = totalPaginas,
+                FiltroNombre = filtro
             };
 
             return View(model);
@@ -173,6 +186,10 @@ namespace MiniMercado.Controllers
                 .Where(r => r.TenantId == tenantId)
                 .ToList();
 
+            ViewBag.Proveedores = _context.Proveedores
+                .Where(p => p.TenantId == tenantId && p.Activo)
+                .ToList();
+
             return View();
         }
 
@@ -185,11 +202,15 @@ namespace MiniMercado.Controllers
             producto.TenantId = tenantId;
 
             ModelState.Remove(nameof(producto.TenantId));
+            ModelState.Remove(nameof(producto.Rubro));
 
             if (!ModelState.IsValid)
             {
                 ViewBag.Rubros = _context.Rubros
                     .Where(r => r.TenantId == tenantId)
+                    .ToList();
+                ViewBag.Proveedores = _context.Proveedores
+                    .Where(p => p.TenantId == tenantId && p.Activo)
                     .ToList();
                 return View(producto);
             }
@@ -203,6 +224,9 @@ namespace MiniMercado.Controllers
                 ModelState.AddModelError("CodigoBarra", "Ya existe un producto con ese código de barras.");
                 ViewBag.Rubros = _context.Rubros
                     .Where(r => r.TenantId == tenantId)
+                    .ToList();
+                ViewBag.Proveedores = _context.Proveedores
+                    .Where(p => p.TenantId == tenantId && p.Activo)
                     .ToList();
                 return View(producto);
             }
@@ -221,6 +245,7 @@ namespace MiniMercado.Controllers
             {
                 ModelState.AddModelError("CodigoBarra", "Error: Ya existe un producto con ese código de barras.");
                 ViewBag.Rubros = _context.Rubros.Where(r => r.TenantId == tenantId).ToList();
+                ViewBag.Proveedores = _context.Proveedores.Where(p => p.TenantId == tenantId && p.Activo).ToList();
                 return View(producto);
             }
         }
@@ -241,6 +266,10 @@ namespace MiniMercado.Controllers
                 .Where(r => r.TenantId == tenantId)
                 .ToList();
 
+            ViewBag.Proveedores = _context.Proveedores
+                .Where(p => p.TenantId == tenantId && p.Activo)
+                .ToList();
+
             return View(producto);
         }
 
@@ -259,6 +288,9 @@ namespace MiniMercado.Controllers
                 ViewBag.Rubros = _context.Rubros
                     .Where(r => r.TenantId == tenantId)
                     .ToList();
+                ViewBag.Proveedores = _context.Proveedores
+                    .Where(p => p.TenantId == tenantId && p.Activo)
+                    .ToList();
                 return View(producto);
             }
 
@@ -276,6 +308,7 @@ namespace MiniMercado.Controllers
             productoDb.PrecioEditable = producto.PrecioEditable;
             productoDb.EsPorPeso = producto.EsPorPeso;
             productoDb.RubroId = producto.RubroId;
+            productoDb.ProveedorId = producto.ProveedorId;
 
             // Recalcular stock desde lotes antes de guardar
             _productoService.SincronizarStock(productoDb);

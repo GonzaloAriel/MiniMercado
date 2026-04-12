@@ -259,6 +259,16 @@
         border-radius: 12px;
         color: var(--text-primary);
     }
+
+    .suggested-price {
+        display: block;
+        font-size: 10px;
+        color: #d97706;
+        margin-top: 2px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-align: right;
+    }
 </style>
 
 <div class="db-wrap">
@@ -312,7 +322,11 @@
                                             <input type="number" name="detalles[@i].Cantidad" class="qty-input cantidad" value="@Model[i].Cantidad" step="0.01" min="0.01" />
                                         </td>
                                         <td class="text-end">
-                                            <input type="text" name="detalles[@i].PrecioUnitario" class="price-input precio" value="@Model[i].PrecioUnitario" @(Model[i].Producto?.PrecioEditable == true ? "" : "readonly") />
+                                            <input type="text" name="detalles[@i].PrecioUnitario" class="price-input precio" value="@Model[i].PrecioUnitario" />
+                                            @if (Model[i].Producto?.ProductoBaseId != null)
+                                            {
+                                                <span class="suggested-price">Precio sugerido, puedes modificarlo</span>
+                                            }
                                         </td>
                                         <td class="text-end">
                                             <span class="subtotal-text subtotal">$@(Model[i].Cantidad * Model[i].PrecioUnitario)</span>
@@ -434,7 +448,8 @@
             precio: prod.precio,
             stock: prod.stock,
             esPorPeso: prod.esPorPeso,
-            codigoBarra: prod.codigo || prod.codigoBarra
+            codigoBarra: prod.codigo || prod.codigoBarra,
+            esBase: prod.esBase === true
         };
 
         const filas = document.querySelectorAll("#tablaVenta tbody tr");
@@ -465,7 +480,8 @@
                 </td>
                 <td class="text-end">
                     <input type="text" name="detalles[${index}].PrecioUnitario" class="price-input precio" 
-                               value="${p.precio}" readonly />
+                               value="${p.precio}" />
+                    ${p.esBase ? '<span class="suggested-price">Precio sugerido, puedes modificarlo</span>' : ''}
                 </td>
                 <td class="text-end">
                     <span class="subtotal-text subtotal">$${p.precio}</span>

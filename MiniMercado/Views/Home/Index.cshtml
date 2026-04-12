@@ -11,6 +11,15 @@
         margin: 0 auto;
     }
 
+    .logo-home{
+         max-height: 75px;
+    padding: 3px;
+    border: 1.5px solid #a78bfa; /* Lila suave */
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     /* Header */
     .db-header {
         display: flex;
@@ -151,19 +160,13 @@
 <div class="db-wrap">
     
     <div class="main-hero">
-        <img src="~/images/Bird_Lime_Minimercado.png" class="rounded-pill" alt="MiniMercado" />
-        <p>Gestión inteligente para tu negocio</p>
+        <img src="~/images/Minimercado.png" class="logo-home" alt="MiniMercado" />
     </div>
 
     @if (!(User.IsInRole("Caja")) && !(User.IsInRole("Admin")) && !(User.IsInRole("AdminGlobal")))
     {
-        <div class="login-card">
-            <div style="font-size: 48px; margin-bottom: 16px;">🏪</div>
-            <h3 class="fw-bold mb-3">Bienvenido</h3>
-            <p style="color: var(--text-secondary);">
-                Sistema de gestión integral para tu minimercado
-            </p>
-            <a class="login-btn" asp-area="Identity" asp-page="/Account/Login">
+        <div class="col-md-12 mt-1">
+             <a class="btn btn-primary w-100 py-3 fw-bold fs-4 rounded-pill" asp-area="Identity" asp-page="/Account/Login">
                 Ingresar al Sistema
             </a>
         </div>
@@ -172,8 +175,9 @@
     @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
     {
         <div class="col-md-12 mb-3">
-            <a asp-controller="Venta" asp-action="Create" class="btn btn-primary w-100 py-3 fw-bold fs-4" style="border-radius: 16px;">
-                🛍️ Nueva Venta
+             <a asp-controller="Venta" asp-action="Create" class="action-card" style="display: block; text-align: center;">
+                <span class="icon fs-2">🛍️</span>
+                <span class="title fs-2">Nueva Venta!!</span>
             </a>
         </div>
 
@@ -215,6 +219,11 @@
                 <span class="icon">🏷️</span>
                 <span class="title">Rubros</span>
                 <span class="desc">Categorización de productos</span>
+            </a>
+            <a asp-controller="Proveedores" asp-action="Index" class="action-card">
+                <span class="icon">🚚</span>
+                <span class="title">Proveedores</span>
+                <span class="desc">Gestión de proveedores y contactos</span>
             </a>
         </div>
 

@@ -42,6 +42,21 @@ body {
     transition: transform 0.3s ease;
 }
 
+.navbar-logo-modern {
+    max-height: 30px;
+    padding: 3px;
+    border: 1.5px solid #a78bfa; /* Lila suave */
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-logo-modern:hover {
+    border-color: #c084fc;
+    background: rgba(167, 139, 250, 0.15);
+    transform: scale(1.1) rotate(-2deg);
+}
+
 .navbar-brand:hover img {
     transform: scale(1.05);
 }

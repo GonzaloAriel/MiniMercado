@@ -94,6 +94,7 @@ namespace MiniMercado.Services
         public List<Producto> GetStockBajo(int tenantId)
         {
             return _context.Productos
+                .Include(p => p.Proveedor)
                 .Where(p => p.TenantId == tenantId && p.Activo && p.Stock > 0 && p.Stock <= 5)
                 .OrderBy(p => p.Stock)
                 .ToList();

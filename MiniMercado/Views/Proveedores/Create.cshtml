@@ -1,0 +1,140 @@
+@model MiniMercado.Models.ViewModels.ProveedorViewModel
+@{
+    ViewData["Title"] = "Nuevo Proveedor";
+}
+
+<style>
+    .card-custom {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 32px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    }
+
+    .text-danger {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .btn-save {
+        background-color: #16a34a;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-cancel {
+        background-color: #f4f4f5;
+        color: #71717a;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+</style>
+
+<div style="margin-bottom: 24px;">
+    <h1 style="font-size: 1.875rem; font-weight: 700; color: #18181b; text-align: center;">Nuevo Proveedor</h1>
+</div>
+
+<div class="card-custom">
+    <form asp-action="Create">
+        <div class="form-group">
+            <label asp-for="Nombre" class="form-label">Nombre del Comercio / Empresa</label>
+            <input asp-for="Nombre" class="form-control-custom" placeholder="Ej: Distribuidora Central" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label asp-for="Contacto" class="form-label">Persona de Contacto</label>
+                <input asp-for="Contacto" class="form-control-custom" placeholder="Ej: Juan Pérez" />
+                <span asp-validation-for="Contacto" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Telefono" class="form-label">Teléfono</label>
+                <input asp-for="Telefono" class="form-control-custom" placeholder="Ej: 11 1234 5678" />
+                <span asp-validation-for="Telefono" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control-custom" placeholder="correo@ejemplo.com" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CUIT" class="form-label">CUIT</label>
+                <input asp-for="CUIT" class="form-control-custom" placeholder="00-00000000-0" />
+                <span asp-validation-for="CUIT" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Direccion" class="form-label">Dirección</label>
+            <input asp-for="Direccion" class="form-control-custom" placeholder="Calle, Número, Ciudad" />
+            <span asp-validation-for="Direccion" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Notas" class="form-label">Notas / Observaciones</label>
+            <textarea asp-for="Notas" class="form-control-custom" rows="3" placeholder="Información adicional..."></textarea>
+            <span asp-validation-for="Notas" class="text-danger"></span>
+        </div>
+
+        <div class="btn-container">
+            <a asp-action="Index" class="btn-cancel">Cancelar</a>
+            <button type="submit" class="btn-save">Guardar Proveedor</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

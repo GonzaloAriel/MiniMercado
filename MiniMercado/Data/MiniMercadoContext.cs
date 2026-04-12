@@ -34,6 +34,8 @@ namespace MiniMercado.Data
         public DbSet<LoteProducto> LotesProducto { get; set; }
         public DbSet<Caja> Cajas { get; set; }
         public DbSet<Configuracion> Configuraciones { get; set; }
+        public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<ProductoProveedor> ProductoProveedores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,8 +57,34 @@ namespace MiniMercado.Data
             modelBuilder.Entity<LoteProducto>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Caja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Configuracion>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Proveedor>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
 
             // CONFIGURACIONES FLUENT API EXISTENTES
+
+            modelBuilder.Entity<ProductoProveedor>()
+                .HasKey(pp => new { pp.ProductoId, pp.ProveedorId });
+
+            modelBuilder.Entity<ProductoProveedor>()
+                .HasOne(pp => pp.Producto)
+                .WithMany(p => p.Proveedores)
+                .HasForeignKey(pp => pp.ProductoId);
+
+            modelBuilder.Entity<ProductoProveedor>()
+                .HasOne(pp => pp.Proveedor)
+                .WithMany()
+                .HasForeignKey(pp => pp.ProveedorId);
+
+            modelBuilder.Entity<Producto>()
+                .HasOne(p => p.Proveedor)
+                .WithMany(pr => pr.Productos)
+                .HasForeignKey(p => p.ProveedorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Proveedor>()
+                .HasOne(p => p.Tenant)
+                .WithMany()
+                .HasForeignKey(p => p.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Caja>()
                 .HasOne(c => c.Tenant)

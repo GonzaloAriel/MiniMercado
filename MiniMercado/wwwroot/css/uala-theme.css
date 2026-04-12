@@ -88,7 +88,17 @@ body {
     filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.1));
 }
 
+.main-hero img {
+    max-height: 75px !important;
+    width: auto !important;
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.1));
+}
+
 body.dark-mode .navbar-brand img {
+    filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+}
+
+body.dark-mode .main-hero img {
     filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
 }
 

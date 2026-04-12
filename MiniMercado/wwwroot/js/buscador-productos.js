@@ -142,6 +142,7 @@ function initBuscador(config) {
                 return res.json();
             })
             .then(nuevoProducto => {
+                nuevoProducto.esBase = true;
                 finalizar(nuevoProducto);
             })
             .catch(err => {

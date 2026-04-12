@@ -175,19 +175,47 @@
         color: var(--green-text);
     }
 
-    .alert-modern {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 16px 24px;
-        margin-bottom: 24px;
+    /* Paginación */
+    .pagination-container {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        justify-content: center;
+        margin-top: 32px;
+        gap: 8px;
+        padding-bottom: 24px;
     }
 
-    .alert-modern.success { border-left: 4px solid var(--green); color: var(--green-text); }
-    .alert-modern.danger { border-left: 4px solid var(--red); color: var(--red-text); }
+    .page-link-modern {
+        min-width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .page-link-modern:hover:not(.disabled) {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+    }
+
+    .page-link-modern.active {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+    }
+
+    .page-link-modern.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        color: var(--text-secondary);
+    }
 
 </style>
 
@@ -197,7 +225,7 @@
     <div class="db-header">
         <div class="db-header-left">
             <h1>Gestión de Productos</h1>
-            <p>@Model.Productos?.Count() artículos en catálogo</p>
+            <p>Catálogo de mercadería</p>
         </div>
         <div class="header-actions">
             <a asp-action="Inactivos" class="btn-modern outline">
@@ -229,7 +257,7 @@
             <div class="col-md-5">
                 <div class="position-relative">
                     <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                    <input type="text" name="filtro" value="@Context.Request.Query["filtro"]" 
+                    <input type="text" name="filtro" value="@Model.FiltroNombre" 
                            class="form-control-modern w-100 ps-5" placeholder="Buscar por nombre o código..." />
                 </div>
             </div>
@@ -299,6 +327,9 @@
                                     <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn-action success" title="Ingresar Stock">
                                         <i class="bi bi-plus-circle"></i>
                                     </a>
+                                     <a href="/Proveedores/Index?productoId=@producto.Id&proveedorId=@producto.ProveedorId" class="btn-action secondary" title="Proveedor">
+                                        <i class="bi bi-bus-front-fill"></i>
+                                    </a>
                                     <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn-action" title="Ver Lotes">
                                         <i class="bi bi-box-seam"></i>
                                     </a>
@@ -326,6 +357,58 @@
             </tbody>
         </table>
     </div>
+
+    <!-- PAGINACIÓN -->
+    @if (Model.TotalPaginas > 1)
+    {
+        <div class="pagination-container">
+            @if (Model.PaginaActual > 1)
+            {
+                <a asp-action="Index" 
+                   asp-route-page="@(Model.PaginaActual - 1)" 
+                   asp-route-filtro="@Model.FiltroNombre"
+                   asp-route-rubroId="@Model.FiltroRubro"
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
+            }
+
+            @for (int i = 1; i <= Model.TotalPaginas; i++)
+            {
+                if (i == Model.PaginaActual)
+                {
+                    <span class="page-link-modern active">@i</span>
+                }
+                else
+                {
+                    <a asp-action="Index" 
+                       asp-route-page="@i" 
+                       asp-route-filtro="@Model.FiltroNombre"
+                       asp-route-rubroId="@Model.FiltroRubro"
+                       class="page-link-modern">@i</a>
+                }
+            }
+
+            @if (Model.PaginaActual < Model.TotalPaginas)
+            {
+                <a asp-action="Index" 
+                   asp-route-page="@(Model.PaginaActual + 1)" 
+                   asp-route-filtro="@Model.FiltroNombre"
+                   asp-route-rubroId="@Model.FiltroRubro"
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+            }
+        </div>
+    }
 </div>
 
 @Html.AntiForgeryToken()
