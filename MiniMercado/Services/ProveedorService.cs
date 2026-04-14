@@ -17,7 +17,7 @@ namespace MiniMercado.Services
 
         private int GetTenantId() => _tenantService.GetTenantId() ?? throw new Exception("Tenant no identificado");
 
-        public async Task<List<dynamic>> ObtenerFiltradosAsync(int tenantId, int? proveedorId, string? q)
+        public async Task<(List<dynamic> Lista, int Total)> ObtenerFiltradosAsync(int tenantId, int? proveedorId, string? q, int page, int pageSize)
         {
             var query = _context.Proveedores
                 .Where(p => p.TenantId == tenantId)
@@ -34,7 +34,12 @@ namespace MiniMercado.Services
                 query = query.Where(p => p.Nombre.ToLower().Contains(q) || (p.CUIT != null && p.CUIT.Contains(q)));
             }
 
-            return await query
+            var total = await query.CountAsync();
+
+            var lista = await query
+                .OrderBy(p => p.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(p => new
                 {
                     p.Id,
@@ -47,6 +52,8 @@ namespace MiniMercado.Services
                 })
                 .Cast<dynamic>()
                 .ToListAsync();
+
+            return (lista, total);
         }
 
         public async Task<List<Proveedor>> GetAllAsync()

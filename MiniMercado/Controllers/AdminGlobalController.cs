@@ -50,8 +50,11 @@ namespace MiniMercado.Controllers
         }
 
         // Listado de todos los tenants para el administrador global
-        public async Task<IActionResult> Tenants(string search, bool ocultarDesactivados)
+        public async Task<IActionResult> Tenants(string search, bool ocultarDesactivados, int page = 1)
         {
+            if (page < 1) page = 1;
+            int pageSize = 10;
+
             ViewBag.CurrentSearch = search;
             ViewBag.OcultarDesactivados = ocultarDesactivados;
 
@@ -69,7 +72,13 @@ namespace MiniMercado.Controllers
                 query = query.Where(t => !t.Bloqueado);
             }
 
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
             var tenants = await query
+                .OrderBy(t => t.NombreComercio)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(t => new TenantAdminViewModel
                 {
                     Id = t.Id,
@@ -81,6 +90,9 @@ namespace MiniMercado.Controllers
                     TotalPagado = t.Cobros.Sum(c => c.Monto)
                 })
                 .ToListAsync();
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(tenants);
         }

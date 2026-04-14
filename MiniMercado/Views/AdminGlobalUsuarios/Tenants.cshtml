@@ -110,37 +110,84 @@
     </div>
 
     <div class="data-card">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th style="width: 60%">Nombre del Comercio</th>
-                    <th class="text-center">Estado</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var tenant in Model)
-                {
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
                     <tr>
-                        <td><span class="fw-bold">@tenant.NombreComercio</span></td>
-                        <td class="text-center">
-                            @if (tenant.Activo)
-                            {
-                                <span class="badge-modern success">ACTIVO</span>
-                            }
-                            else
-                            {
-                                <span class="badge-modern danger">SUSPENDIDO</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <a asp-action="UsuariosPorTenant" asp-route-tenantId="@tenant.Id" class="btn-modern">
-                                <i class="bi bi-people"></i> Ver Usuarios
-                            </a>
-                        </td>
+                        <th style="width: 60%">Nombre del Comercio</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var tenant in Model)
+                    {
+                        <tr>
+                            <td><span class="fw-bold">@tenant.NombreComercio</span></td>
+                            <td class="text-center">
+                                @if (tenant.Activo)
+                                {
+                                    <span class="badge-modern success">ACTIVO</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-modern danger">SUSPENDIDO</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="UsuariosPorTenant" asp-route-tenantId="@tenant.Id" class="btn-modern">
+                                    <i class="bi bi-people"></i> Ver Usuarios
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    @if (ViewBag.TotalPaginas > 1)
+    {
+        <div class="pagination-container">
+            @if (ViewBag.PaginaActual > 1)
+            {
+                <a asp-action="Tenants" 
+                   asp-route-page="@(ViewBag.PaginaActual - 1)" 
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
+            }
+
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                if (i == ViewBag.PaginaActual)
+                {
+                    <span class="page-link-modern active">@i</span>
+                }
+                else
+                {
+                    <a asp-action="Tenants" 
+                       asp-route-page="@i" 
+                       class="page-link-modern">@i</a>
+                }
+            }
+
+            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+            {
+                <a asp-action="Tenants" 
+                   asp-route-page="@(ViewBag.PaginaActual + 1)" 
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+            }
+        </div>
+    }
 </div>

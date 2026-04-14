@@ -18,25 +18,46 @@ namespace MiniMercado.Controllers
             _alertasService = alertasService;
         }
 
-        public IActionResult Vencimientos()
+        public async Task<IActionResult> Vencimientos(int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
-            var vencimientos = _alertasService.GetVencimientos(tenantId);
-            return View(vencimientos);
+            int pageSize = 10;
+
+            var result = await _alertasService.GetVencimientosPaginated(tenantId, page, pageSize);
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(result.Total / (double)pageSize);
+
+            return View(result.Lista);
         }
 
-        public IActionResult StockBajo()
+        public async Task<IActionResult> StockBajo(int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
-            var stockBajo = _alertasService.GetStockBajo(tenantId);
-            return View(stockBajo);
+            int pageSize = 10;
+
+            var result = await _alertasService.GetStockBajoPaginated(tenantId, page, pageSize);
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(result.Total / (double)pageSize);
+
+            return View(result.Lista);
         }
 
-        public IActionResult StockNegativo()
+        public async Task<IActionResult> StockNegativo(int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
-            var stockNegativo = _alertasService.GetStockNegativo(tenantId);
-            return View(stockNegativo);
+            int pageSize = 10;
+
+            var result = await _alertasService.GetStockNegativoPaginated(tenantId, page, pageSize);
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(result.Total / (double)pageSize);
+
+            return View(result.Lista);
         }
     }
 }

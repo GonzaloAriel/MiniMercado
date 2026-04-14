@@ -44,6 +44,12 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MiniMercadoContext>();
+    db.Database.Migrate();
+}
+
 // 🔹 Seed automático (Roles + Tenant Demo + AdminGlobal)
 using (var scope = app.Services.CreateScope())
 {

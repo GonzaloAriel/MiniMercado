@@ -22,23 +22,32 @@ namespace MiniMercado.Controllers
         }
 
         // INDEX
-        public IActionResult Index(string? filtro)
+        public async Task<IActionResult> Index(string? filtro, int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
-            var clientes = _context.Clientes
+            var query = _context.Clientes
                 .Where(c => c.Activo && c.TenantId == tenantId)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(filtro))
             {
                 filtro = filtro.ToLower();
-                clientes = clientes.Where(c =>
+                query = query.Where(c =>
                     c.Nombre.ToLower().Contains(filtro) ||
                     (c.Telefono != null && c.Telefono.Contains(filtro)));
             }
 
-            var lista = clientes.ToList();
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var lista = await query
+                .OrderBy(c => c.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             var ventasFiadas = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -60,6 +69,9 @@ namespace MiniMercado.Controllers
 
             ViewBag.Deudas = ventasFiadas;
             ViewBag.Pagos = pagos;
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.Filtro = filtro;
 
             return View(lista);
         }

@@ -139,70 +139,117 @@
     </div>
 
     <div class="data-card">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th style="width: 35%">Producto</th>
-                    <th class="text-center">Stock en Lote</th>
-                    <th class="text-center">Fecha de Vencimiento</th>
-                    <th class="text-center">Estado Crítico</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Any())
-                {
-                    foreach (var lote in Model)
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Producto</th>
+                        <th class="text-center">Stock en Lote</th>
+                        <th class="text-center">Fecha de Vencimiento</th>
+                        <th class="text-center">Estado Crítico</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
                     {
-                        var dias = (lote.FechaVencimiento.Value.Date - DateTime.Today).TotalDays;
+                        foreach (var lote in Model)
+                        {
+                            var dias = (lote.FechaVencimiento.Value.Date - DateTime.Today).TotalDays;
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@(lote.Producto?.Nombre ?? "Producto Desconocido")</div>
+                                    <div class="id-text small">Lote ID: @lote.Id</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge-modern blue">@lote.Cantidad.ToString("0.##")</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold">@lote.FechaVencimiento.Value.ToString("dd/MM/yyyy")</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (dias < 0)
+                                    {
+                                        <span class="badge-modern red"><i class="bi bi-x-circle-fill me-1"></i> VENCIDO</span>
+                                    }
+                                    else if (dias == 0)
+                                    {
+                                        <span class="badge-modern red"><i class="bi bi-clock-fill me-1"></i> VENCE HOY</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-modern amber"><i class="bi bi-hourglass-split me-1"></i> @dias DÍAS</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="/MovimientoStock/Ingreso?productoId=@lote.ProductoId" class="btn-modern outline btn-sm" title="Reponer">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </a>
+                                        <a href="/Productos/Detalle/@lote.ProductoId" class="btn-modern outline btn-sm" title="Gestionar Lotes">
+                                            <i class="bi bi-box-seam"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
                         <tr>
-                            <td>
-                                <div class="fw-bold">@(lote.Producto?.Nombre ?? "Producto Desconocido")</div>
-                                <div class="id-text small">Lote ID: @lote.Id</div>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge-modern blue">@lote.Cantidad.ToString("0.##")</span>
-                            </td>
-                            <td class="text-center">
-                                <span class="fw-bold">@lote.FechaVencimiento.Value.ToString("dd/MM/yyyy")</span>
-                            </td>
-                            <td class="text-center">
-                                @if (dias < 0)
-                                {
-                                    <span class="badge-modern red"><i class="bi bi-x-circle-fill me-1"></i> VENCIDO</span>
-                                }
-                                else if (dias == 0)
-                                {
-                                    <span class="badge-modern red"><i class="bi bi-clock-fill me-1"></i> VENCE HOY</span>
-                                }
-                                else
-                                {
-                                    <span class="badge-modern amber"><i class="bi bi-hourglass-split me-1"></i> @dias DÍAS</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <a href="/MovimientoStock/Ingreso?productoId=@lote.ProductoId" class="btn-modern outline btn-sm" title="Reponer">
-                                        <i class="bi bi-plus-lg"></i>
-                                    </a>
-                                    <a href="/Productos/Detalle/@lote.ProductoId" class="btn-modern outline btn-sm" title="Gestionar Lotes">
-                                        <i class="bi bi-box-seam"></i>
-                                    </a>
-                                </div>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-check fs-2 d-block mb-2 text-success"></i>
+                                No hay lotes próximos a vencer. Todo bajo control.
                             </td>
                         </tr>
                     }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (ViewBag.TotalPaginas > 1)
+    {
+        <div class="pagination-container">
+            @if (ViewBag.PaginaActual > 1)
+            {
+                <a asp-action="Vencimientos" 
+                   asp-route-page="@(ViewBag.PaginaActual - 1)" 
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
+            }
+
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                if (i == ViewBag.PaginaActual)
+                {
+                    <span class="page-link-modern active">@i</span>
                 }
                 else
                 {
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            <i class="bi bi-calendar-check fs-2 d-block mb-2 text-success"></i>
-                            No hay lotes próximos a vencer. Todo bajo control.
-                        </td>
-                    </tr>
+                    <a asp-action="Vencimientos" 
+                       asp-route-page="@i" 
+                       class="page-link-modern">@i</a>
                 }
-            </tbody>
-        </table>
-    </div>
+            }
+
+            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+            {
+                <a asp-action="Vencimientos" 
+                   asp-route-page="@(ViewBag.PaginaActual + 1)" 
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+            }
+        </div>
+    }
 </div>

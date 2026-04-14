@@ -146,43 +146,45 @@
 </h2>
 
 <div class="card-custom" style="padding: 0;">
-    <table class="table-custom">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Stock actual</th>
-                <th>Precio Costo</th>
-                <th>Principal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Productos != null && Model.Productos.Any())
-            {
-                foreach (var producto in Model.Productos)
+    <div class="table-responsive">
+        <table class="table-custom table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Stock actual</th>
+                    <th>Precio Costo</th>
+                    <th>Principal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Productos != null && Model.Productos.Any())
+                {
+                    foreach (var producto in Model.Productos)
+                    {
+                        <tr>
+                            <td style="font-weight: 500;">@producto.NombreDisplay</td>
+                            <td>@producto.Stock</td>
+                            <td>-</td> @* Precio costo logic pending if intermediate table is used here *@
+                            <td>
+                                @if (producto.ProveedorId == Model.Id)
+                                {
+                                    <span style="color: #16a34a; font-weight: 600;">Sí</span>
+                                }
+                                else
+                                {
+                                    <span>No</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td style="font-weight: 500;">@producto.NombreDisplay</td>
-                        <td>@producto.Stock</td>
-                        <td>-</td> @* Precio costo logic pending if intermediate table is used here *@
-                        <td>
-                            @if (producto.ProveedorId == Model.Id)
-                            {
-                                <span style="color: #16a34a; font-weight: 600;">Sí</span>
-                            }
-                            else
-                            {
-                                <span>No</span>
-                            }
-                        </td>
+                        <td colspan="4" style="text-align: center; color: #71717a; padding: 32px;">No hay productos asociados a este proveedor.</td>
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="4" style="text-align: center; color: #71717a; padding: 32px;">No hay productos asociados a este proveedor.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -1,4 +1,4 @@
-﻿@model MiniMercado.Models.Venta
+@model MiniMercado.Models.Venta
 
 @{
     ViewData["Title"] = "Venta Confirmada";
@@ -11,33 +11,35 @@
 
 <!-- Detalle de la venta -->
 <div class="mt-5">
-    <table class="table mt-3">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cant.</th>
-                <th>Precio</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var d in Model.Detalles)
-            {
+    <div class="table-responsive">
+        <table class="table mt-3">
+            <thead>
                 <tr>
-                    <td>@d.Producto.Nombre</td>
-                    <td>@d.Cantidad.ToString("0.##")</td>
-                    <td>@d.PrecioUnitario.ToString("0.##")</td>
-                    <td>@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
                 </tr>
-            }
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3" class="text-end fw-bold">TOTAL:</td>
-                <td class="fw-bold">@Model.Total.ToString("0.##")</td>
-            </tr>
-        </tfoot>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.Detalles)
+                {
+                    <tr>
+                        <td>@d.Producto.Nombre</td>
+                        <td>@d.Cantidad.ToString("0.##")</td>
+                        <td>@d.PrecioUnitario.ToString("0.##")</td>
+                        <td>@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                    <td class="fw-bold">@Model.Total.ToString("0.##")</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 
 <div class="mt-5">

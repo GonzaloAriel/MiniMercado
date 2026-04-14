@@ -882,23 +882,25 @@
                 </div>
             </div>
             <div class="stock-table-wrap">
-                <table class="stock-table">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var p in ViewBag.StockBajo)
-                        {
+                <div class="table-responsive">
+                    <table class="stock-table table">
+                        <thead>
                             <tr>
-                                <td>@p.Nombre</td>
-                                <td><span class="badge-stock">@p.Stock unidades</span></td>
+                                <th>Producto</th>
+                                <th>Stock</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in ViewBag.StockBajo)
+                            {
+                                <tr>
+                                    <td>@p.Nombre</td>
+                                    <td><span class="badge-stock">@p.Stock unidades</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     }

@@ -52,7 +52,6 @@
         font-size: 32px;
         font-weight: 700;
         letter-spacing: -0.03em;
-        margin: 0 0 6px;
         background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -172,27 +171,29 @@
     </div>
 
     <div class="data-card">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th style="width: 45%">Producto</th>
-                    <th class="text-center">Cant / Kg</th>
-                    <th class="text-end">Precio Unit.</th>
-                    <th class="text-end">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var d in Model.Detalles)
-                {
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
                     <tr>
-                        <td><span class="fw-bold text-white">@d.Producto.Nombre</span></td>
-                        <td class="text-center"><span class="qty-text">@d.Cantidad.ToString("0.##")</span></td>
-                        <td class="text-end"><span class="price-text">$@d.PrecioUnitario.ToString("N2")</span></td>
-                        <td class="text-end"><span class="subtotal-text">$@((d.Cantidad * d.PrecioUnitario).ToString("N2"))</span></td>
+                        <th style="width: 45%">Producto</th>
+                        <th class="text-center">Cant / Kg</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.Detalles)
+                    {
+                        <tr>
+                            <td><span class="fw-bold text-white">@d.Producto.Nombre</span></td>
+                            <td class="text-center"><span class="qty-text">@d.Cantidad.ToString("0.##")</span></td>
+                            <td class="text-end"><span class="price-text">$@d.PrecioUnitario.ToString("N2")</span></td>
+                            <td class="text-end"><span class="subtotal-text">$@((d.Cantidad * d.PrecioUnitario).ToString("N2"))</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="summary-card mb-4">

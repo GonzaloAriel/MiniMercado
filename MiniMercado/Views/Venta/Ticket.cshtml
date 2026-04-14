@@ -1,4 +1,4 @@
-﻿@model MiniMercado.Models.Venta
+@model MiniMercado.Models.Venta
 @using MiniMercado.Models
 
 @{
@@ -13,6 +13,7 @@
         h3 { text-align: center; }
         p.centro { text-align: center; }
         table { width: 100%; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body onload="window.print()">
@@ -38,16 +39,18 @@
 
     <hr />
 
-    <table>
-        @foreach (var d in Model.Detalles)
-        {
-            <tr>
-                <td>@d.Producto.Nombre</td>
-                <td>x @d.Cantidad.ToString("0.##")</td>
-                <td>$@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
-            </tr>
-        }
-    </table>
+    <div class="table-responsive">
+        <table class="table">
+            @foreach (var d in Model.Detalles)
+            {
+                <tr>
+                    <td>@d.Producto.Nombre</td>
+                    <td>x @d.Cantidad.ToString("0.##")</td>
+                    <td>$@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
+                </tr>
+            }
+        </table>
+    </div>
 
     <hr />
     <p><strong>Total: $@Model.Total.ToString("0.##")</strong></p>

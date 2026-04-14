@@ -121,20 +121,32 @@ namespace MiniMercado.Controllers
             return View(caja);
         }
 
-        public IActionResult Historial(DateTime? desde, DateTime? hasta)
+        public async Task<IActionResult> Historial(DateTime? desde, DateTime? hasta, int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
             
             var fechaDesde = desde ?? DateTime.Today.AddDays(-7);
             var fechaHasta = hasta ?? DateTime.Today.AddDays(1);
 
-            var cajas = _context.Cajas
+            var query = _context.Cajas
                 .Where(c => c.TenantId == tenantId && c.FechaApertura >= fechaDesde && c.FechaApertura <= fechaHasta)
+                .AsQueryable();
+
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var cajas = await query
                 .OrderByDescending(c => c.FechaApertura)
-                .ToList();
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             ViewBag.Desde = fechaDesde;
             ViewBag.Hasta = fechaHasta;
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(cajas);
         }

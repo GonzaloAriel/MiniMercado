@@ -1,4 +1,4 @@
-﻿@model MiniMercado.Models.Venta
+@model MiniMercado.Models.Venta
 
 @{
     ViewData["Title"] = "Detalle de Venta";
@@ -25,29 +25,31 @@
     }
 </div>
 
-<table class="table table-bordered">
-    <thead class="table-light">
-        <tr>
-            <th>Producto</th>
-            <th class="text-end">Cantidad</th>
-            <th class="text-end">Precio</th>
-            <th class="text-end">Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var d in Model.Detalles)
-        {
+<div class="table-responsive">
+    <table class="table table-bordered table">
+        <thead class="table-light">
             <tr>
-                <td>@d.Producto.Nombre</td>
-                <td class="text-end">@d.Cantidad.ToString("0.###")</td>
-                <td class="text-end">$@d.PrecioUnitario.ToString("0")</td>
-                <td class="text-end">
-                    $@( (d.Cantidad * d.PrecioUnitario).ToString("0") )
-                </td>
+                <th>Producto</th>
+                <th class="text-end">Cantidad</th>
+                <th class="text-end">Precio</th>
+                <th class="text-end">Subtotal</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Detalles)
+            {
+                <tr>
+                    <td>@d.Producto.Nombre</td>
+                    <td class="text-end">@d.Cantidad.ToString("0.###")</td>
+                    <td class="text-end">$@d.PrecioUnitario.ToString("0")</td>
+                    <td class="text-end">
+                        $@( (d.Cantidad * d.PrecioUnitario).ToString("0") )
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 <h4 class="text-end">
     Total: $@Model.Total.ToString("0")

@@ -204,64 +204,68 @@
         <div class="col-lg-6">
             <p class="section-title">🛒 Historial de Compras</p>
             <div class="data-card">
-                <table class="db-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th class="text-end">Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (ventasFiadas != null && ventasFiadas.Any())
-                        {
-                            foreach (var v in ventasFiadas)
+                <div class="table-responsive">
+                    <table class="db-table table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ventasFiadas != null && ventasFiadas.Any())
                             {
-                                <tr>
-                                    <td><span class="text-muted small mono-text">#@v.Id</span></td>
-                                    <td><span class="small">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
-                                    <td class="text-end"><span class="mono-text">$@v.Total.ToString("N0")</span></td>
-                                </tr>
+                                foreach (var v in ventasFiadas)
+                                {
+                                    <tr>
+                                        <td><span class="text-muted small mono-text">#@v.Id</span></td>
+                                        <td><span class="small">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                        <td class="text-end"><span class="mono-text">$@v.Total.ToString("N0")</span></td>
+                                    </tr>
+                                }
                             }
-                        }
-                        else
-                        {
-                            <tr><td colspan="3" class="text-center py-4 text-muted small">Sin ventas fiadas registradas.</td></tr>
-                        }
-                    </tbody>
-                </table>
+                            else
+                            {
+                                <tr><td colspan="3" class="text-center py-4 text-muted small">Sin ventas fiadas registradas.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div class="col-lg-6">
             <p class="section-title">🏦 Entregas y Pagos</p>
             <div class="data-card">
-                <table class="db-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Monto</th>
-                            <th>Nota</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (pagos != null && pagos.Any())
-                        {
-                            foreach (var p in pagos)
+                <div class="table-responsive">
+                    <table class="db-table table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Monto</th>
+                                <th>Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (pagos != null && pagos.Any())
                             {
-                                <tr>
-                                    <td><span class="small">@p.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
-                                    <td><span class="mono-text text-success">$@p.Monto.ToString("N0")</span></td>
-                                    <td><span class="text-muted small">@(p.Observacion ?? "-")</span></td>
-                                </tr>
+                                foreach (var p in pagos)
+                                {
+                                    <tr>
+                                        <td><span class="small">@p.Fecha.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                        <td><span class="mono-text text-success">$@p.Monto.ToString("N0")</span></td>
+                                        <td><span class="text-muted small">@(p.Observacion ?? "-")</span></td>
+                                    </tr>
+                                }
                             }
-                        }
-                        else
-                        {
-                            <tr><td colspan="3" class="text-center py-4 text-muted small">No se registran pagos a cuenta.</td></tr>
-                        }
-                    </tbody>
-                </table>
+                            else
+                            {
+                                <tr><td colspan="3" class="text-center py-4 text-muted small">No se registran pagos a cuenta.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

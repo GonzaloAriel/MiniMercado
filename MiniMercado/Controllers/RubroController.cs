@@ -23,14 +23,28 @@ namespace MiniMercado.Controllers
 
         // INDEX
         [Authorize(Roles = "AdminGlobal, Admin")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
-            var rubros = _context.Rubros
+            var query = _context.Rubros
                 .Where(r => r.Activo && r.TenantId == tenantId)
                 .Include(r => r.Productos)
-                .ToList();
+                .AsQueryable();
+
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var rubros = await query
+                .OrderBy(r => r.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(rubros);
         }
@@ -169,21 +183,36 @@ namespace MiniMercado.Controllers
 
         // INACTIVOS
         [Authorize(Roles = "AdminGlobal, Admin")]
-        public IActionResult Inactivos(string filtro)
+        public async Task<IActionResult> Inactivos(string? filtro, int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
-            var rubros = _context.Rubros
+            var query = _context.Rubros
                 .Where(r => !r.Activo && r.TenantId == tenantId)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(filtro))
             {
                 filtro = filtro.ToLower();
-                rubros = rubros.Where(r => r.Nombre.ToLower().Contains(filtro));
+                query = query.Where(r => r.Nombre.ToLower().Contains(filtro));
             }
 
-            return View(rubros.ToList());
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var rubros = await query
+                .OrderBy(r => r.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.Filtro = filtro;
+
+            return View(rubros);
         }
 
         [HttpPost]

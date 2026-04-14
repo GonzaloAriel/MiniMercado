@@ -17,9 +17,14 @@ namespace MiniMercado.Controllers
             _tenantService = tenantService;
         }
 
-        public IActionResult AuditoriaCajas(DateTime? desde, DateTime? hasta)
+        public async Task<IActionResult> AuditoriaCajas(DateTime? desde, DateTime? hasta, int pageResumen = 1, int pageVentas = 1, int pageAuditoria = 1)
         {
+            if (pageResumen < 1) pageResumen = 1;
+            if (pageVentas < 1) pageVentas = 1;
+            if (pageAuditoria < 1) pageAuditoria = 1;
+
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
             var fechaDesde = desde ?? DateTime.Today;
             var fechaHasta = hasta ?? DateTime.Today.AddDays(1);
@@ -37,7 +42,7 @@ namespace MiniMercado.Controllers
                               FROM Ventas 
                               WHERE TenantId = {0}", tenantId);
 
-            model.ResumenCajas = ventasRaw
+            var queryResumen = ventasRaw
                 .Where(v => v.Fecha >= fechaDesde && v.Fecha <= fechaHasta) 
                 .GroupBy(v => new { v.Usuario, Fecha = v.Fecha.Date })
                 .Select(g => new ResumenCajaDia
@@ -47,11 +52,16 @@ namespace MiniMercado.Controllers
                     CantidadVentas = g.Count(x => !x.Activa), 
                     CantidadAnuladas = g.Count(x => x.Activa), 
                     TotalVendido = g.Where(x => !x.Activa).Sum(x => x.Total) 
-                })
-                .OrderByDescending(x => x.Fecha)
-                .ToList();
+                });
 
-            model.HistorialVentas = ventasRaw
+            var totalResumen = await queryResumen.CountAsync();
+            model.ResumenCajas = await queryResumen
+                .OrderByDescending(x => x.Fecha)
+                .Skip((pageResumen - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var queryVentas = ventasRaw
                 .Where(v => v.Fecha >= fechaDesde && v.Fecha <= fechaHasta) 
                 .OrderByDescending(v => v.Fecha)
                 .Select(v => new VentaHistorialItem
@@ -61,15 +71,32 @@ namespace MiniMercado.Controllers
                     Usuario = v.Usuario,
                     Total = v.Total,
                     Activa = v.Activa
-                })
-                .ToList();
+                });
 
-            
-            model.Auditorias = _context.Auditorias
-                .Where(a => a.Fecha >= fechaDesde && a.Fecha <= fechaHasta && a.TenantId == tenantId) 
+            var totalVentas = await queryVentas.CountAsync();
+            model.HistorialVentas = await queryVentas
+                .Skip((pageVentas - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var queryAuditoria = _context.Auditorias
+                .Where(a => a.Fecha >= fechaDesde && a.Fecha <= fechaHasta && a.TenantId == tenantId);
+
+            var totalAuditoria = await queryAuditoria.CountAsync();
+            model.Auditorias = await queryAuditoria
                 .OrderByDescending(a => a.Fecha)
-                .Take(100)
-                .ToList();
+                .Skip((pageAuditoria - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.PageResumen = pageResumen;
+            ViewBag.TotalResumen = (int)Math.Ceiling(totalResumen / (double)pageSize);
+            ViewBag.PageVentas = pageVentas;
+            ViewBag.TotalVentas = (int)Math.Ceiling(totalVentas / (double)pageSize);
+            ViewBag.PageAuditoria = pageAuditoria;
+            ViewBag.TotalAuditoria = (int)Math.Ceiling(totalAuditoria / (double)pageSize);
+            ViewBag.Desde = fechaDesde.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = fechaHasta.ToString("yyyy-MM-dd");
 
             return View(model);
         }

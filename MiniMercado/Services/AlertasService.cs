@@ -76,6 +76,59 @@ namespace MiniMercado.Services
 
         // --- MÉTODOS DE CONSULTA (Fuente de Verdad) ---
 
+        public async Task<(List<LoteProducto> Lista, int Total)> GetVencimientosPaginated(int tenantId, int page, int pageSize)
+        {
+            var hoy = DateTime.Today;
+            var limite = hoy.AddDays(7);
+
+            var query = _context.LotesProducto
+                .Include(l => l.Producto)
+                .Where(l => l.TenantId == tenantId &&
+                            l.Cantidad > 0 &&
+                            l.FechaVencimiento != null &&
+                            l.FechaVencimiento <= limite);
+
+            var total = await query.CountAsync();
+            var lista = await query
+                .OrderBy(l => l.FechaVencimiento)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (lista, total);
+        }
+
+        public async Task<(List<Producto> Lista, int Total)> GetStockBajoPaginated(int tenantId, int page, int pageSize)
+        {
+            var query = _context.Productos
+                .Include(p => p.Proveedor)
+                .Where(p => p.TenantId == tenantId && p.Activo && p.Stock > 0 && p.Stock <= 5);
+
+            var total = await query.CountAsync();
+            var lista = await query
+                .OrderBy(p => p.Stock)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (lista, total);
+        }
+
+        public async Task<(List<Producto> Lista, int Total)> GetStockNegativoPaginated(int tenantId, int page, int pageSize)
+        {
+            var query = _context.Productos
+                .Where(p => p.TenantId == tenantId && p.Activo && p.Stock < 0);
+
+            var total = await query.CountAsync();
+            var lista = await query
+                .OrderBy(p => p.Stock)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (lista, total);
+        }
+
         public List<LoteProducto> GetVencimientos(int tenantId)
         {
             var hoy = DateTime.Today;

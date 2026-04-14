@@ -279,83 +279,85 @@
 
     <!-- TABLA -->
     <div class="data-card">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Código</th>
-                    <th>Precio</th>
-                    <th class="text-center">Stock</th>
-                    <th class="text-center">Vencimiento</th>
-                    <th>Rubro</th>
-                    <th class="text-center">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Productos != null && Model.Productos.Any())
-                {
-                    foreach (var producto in Model.Productos)
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th>Precio</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Vencimiento</th>
+                        <th>Rubro</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Productos != null && Model.Productos.Any())
                     {
-                        <tr id="row-@producto.Id">
-                            <td>
-                                <div class="fw-bold">@producto.NombreDisplay</div>
-                            </td>
-                            <td><code class="text-muted">@producto.CodigoDisplay</code></td>
-                            <td><span class="price-text">$@producto.Precio.ToString("N2")</span></td>
-                            <td class="text-center">
-                                <span class="badge-modern @(producto.Stock <= 5 ? "red" : "blue")">
-                                    @producto.Stock.ToString("0.##")
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                @if (producto.FechaProximoVencimiento.HasValue)
-                                {
-                                    var dias = (producto.FechaProximoVencimiento.Value.Date - DateTime.Today).TotalDays;
-                                    if (dias < 0) { <span class="badge-modern red" title="Vencido">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
-                                    else if (dias <= 7) { <span class="badge-modern amber" title="Por vencer">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
-                                    else { <span class="badge-modern green" title="En fecha">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
-                                }
-                                else { <span class="text-muted small">-</span> }
-                            </td>
-                            <td>
-                                <span class="badge-modern outline">
-                                    @(producto.Rubro?.Nombre ?? "-")
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-1">
-                                    <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn-action success" title="Ingresar Stock">
-                                        <i class="bi bi-plus-circle"></i>
-                                    </a>
-                                     <a href="/Proveedores/Index?productoId=@producto.Id&proveedorId=@producto.ProveedorId" class="btn-action secondary" title="Proveedor">
-                                        <i class="bi bi-bus-front-fill"></i>
-                                    </a>
-                                    <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn-action" title="Ver Lotes">
-                                        <i class="bi bi-box-seam"></i>
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@producto.Id" class="btn-action" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" onclick="confirmarDesactivacion(@producto.Id, '@producto.Nombre')" 
-                                            class="btn-action danger" title="Eliminar">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                        foreach (var producto in Model.Productos)
+                        {
+                            <tr id="row-@producto.Id">
+                                <td>
+                                    <div class="fw-bold">@producto.NombreDisplay</div>
+                                </td>
+                                <td><code class="text-muted">@producto.CodigoDisplay</code></td>
+                                <td><span class="price-text">$@producto.Precio.ToString("N2")</span></td>
+                                <td class="text-center">
+                                    <span class="badge-modern @(producto.Stock <= 5 ? "red" : "blue")">
+                                        @producto.Stock.ToString("0.##")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @if (producto.FechaProximoVencimiento.HasValue)
+                                    {
+                                        var dias = (producto.FechaProximoVencimiento.Value.Date - DateTime.Today).TotalDays;
+                                        if (dias < 0) { <span class="badge-modern red" title="Vencido">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
+                                        else if (dias <= 7) { <span class="badge-modern amber" title="Por vencer">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
+                                        else { <span class="badge-modern green" title="En fecha">@producto.FechaProximoVencimiento.Value.ToString("dd/MM/yyyy")</span> }
+                                    }
+                                    else { <span class="text-muted small">-</span> }
+                                </td>
+                                <td>
+                                    <span class="badge-modern outline">
+                                        @(producto.Rubro?.Nombre ?? "-")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a href="/MovimientoStock/Ingreso?productoId=@producto.Id" class="btn-action success" title="Ingresar Stock">
+                                            <i class="bi bi-plus-circle"></i>
+                                        </a>
+                                         <a href="/Proveedores/Index?productoId=@producto.Id&proveedorId=@producto.ProveedorId" class="btn-action secondary" title="Proveedor">
+                                            <i class="bi bi-bus-front-fill"></i>
+                                        </a>
+                                        <a asp-action="Detalle" asp-route-id="@producto.Id" class="btn-action" title="Ver Lotes">
+                                            <i class="bi bi-box-seam"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@producto.Id" class="btn-action" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" onclick="confirmarDesactivacion(@producto.Id, '@producto.Nombre')" 
+                                                class="btn-action danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                                No se encontraron productos.
                             </td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
-                            No se encontraron productos.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- PAGINACIÓN -->

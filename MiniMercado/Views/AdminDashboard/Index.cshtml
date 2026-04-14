@@ -278,31 +278,33 @@
             <h5 class="mb-0">Productos con Stock Crítico</h5>
             <a href="/Alertas/StockBajo" class="btn-table">Ver todos</a>
         </div>
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Proveedor</th>
-                    <th style="text-align:center">Stock</th>
-                    <th style="text-align:right">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in ViewBag.BajoStock)
-                {
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
                     <tr>
-                        <td class="fw-bold">@p.Nombre</td>
-                        <td>@(p.Proveedor?.Nombre ?? "Sin proveedor")</td>
-                        <td style="text-align:center">
-                            <span class="badge rounded-pill @(p.Stock <= 0 ? "bg-danger" : "bg-warning text-dark")">@p.Stock</span>
-                        </td>
-                        <td style="text-align:right">
-                            <a href="/MovimientoStock/Ingreso?productoId=@p.Id" class="btn-table">Cargar Stock</a>
-                        </td>
+                        <th>Producto</th>
+                        <th>Proveedor</th>
+                        <th style="text-align:center">Stock</th>
+                        <th style="text-align:right">Acción</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var p in ViewBag.BajoStock)
+                    {
+                        <tr>
+                            <td class="fw-bold">@p.Nombre</td>
+                            <td>@(p.Proveedor?.Nombre ?? "Sin proveedor")</td>
+                            <td style="text-align:center">
+                                <span class="badge rounded-pill @(p.Stock <= 0 ? "bg-danger" : "bg-warning text-dark")">@p.Stock</span>
+                            </td>
+                            <td style="text-align:right">
+                                <a href="/MovimientoStock/Ingreso?productoId=@p.Id" class="btn-table">Cargar Stock</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <p class="section-title">Control de Vencimientos</p>

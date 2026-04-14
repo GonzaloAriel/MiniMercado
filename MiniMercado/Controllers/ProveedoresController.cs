@@ -29,19 +29,25 @@ namespace MiniMercado.Controllers
         }
 
         // GET: Proveedores
-        public async Task<IActionResult> Index(int? proveedorId, int? productoId, string? q)
+        public async Task<IActionResult> Index(int? proveedorId, int? productoId, string? q, int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
             if (productoId.HasValue && !proveedorId.HasValue)
             {
                 ViewBag.MensajeInfo = "Este producto no tiene proveedor asignado. Mostrando lista completa.";
             }
 
-            var proveedores = await _proveedorService.ObtenerFiltradosAsync(tenantId, proveedorId, q);
+            var result = await _proveedorService.ObtenerFiltradosAsync(tenantId, proveedorId, q, page, pageSize);
 
-            ViewBag.Proveedores = proveedores;
+            ViewBag.Proveedores = result.Lista;
             ViewBag.CurrentFilter = q;
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(result.Total / (double)pageSize);
+            ViewBag.ProductoId = productoId;
+            ViewBag.ProveedorId = proveedorId;
             
             return View();
         }

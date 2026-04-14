@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
 
@@ -20,9 +21,25 @@ namespace MiniMercado.Controllers
             _userManager = userManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
-            var tenants = _context.Tenants.ToList();
+            if (page < 1) page = 1;
+            int pageSize = 10;
+
+            var query = _context.Tenants.AsQueryable();
+
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var tenants = await query
+                .OrderBy(t => t.NombreComercio)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
+
             return View(tenants);
         }
 

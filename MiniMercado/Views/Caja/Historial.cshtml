@@ -193,46 +193,99 @@
     </div>
 
     <div class="data-card">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th>Apertura</th>
-                    <th>Cierre</th>
-                    <th>Responsable</th>
-                    <th class="text-end">Monto Inicial</th>
-                    <th class="text-end">Ventas</th>
-                    <th class="text-end">Diferencia</th>
-                    <th class="text-center">Estado</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var caja in Model)
-                {
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
                     <tr>
-                        <td><span class="small text-muted mono-text">@caja.FechaApertura.ToString("dd/MM/yy HH:mm")</span></td>
-                        <td><span class="small text-muted mono-text">@(caja.FechaCierre?.ToString("dd/MM/yy HH:mm") ?? "—")</span></td>
-                        <td><span class="small fw-bold">@caja.Usuario</span></td>
-                        <td class="text-end"><span class="mono-text small">$@caja.MontoInicial.ToString("N0")</span></td>
-                        <td class="text-end"><span class="mono-text fw-bold text-primary">$@caja.TotalVentas.ToString("N0")</span></td>
-                        <td class="text-end">
-                            <span class="mono-text fw-bold @(caja.Diferencia < 0 ? "text-danger" : (caja.Diferencia > 0 ? "text-warning" : "text-success"))">
-                                @(caja.Diferencia.HasValue ? $"$ {caja.Diferencia.Value:N0}" : "—")
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            @if (caja.Estado == "ABIERTA") { <span class="badge-status success">ABIERTA</span> }
-                            else if (caja.Estado == "AUTOMATICA") { <span class="badge-status info">AUTO</span> }
-                            else { <span class="badge-status secondary">CERRADA</span> }
-                        </td>
-                        <td class="text-end">
-                            <a asp-action="ResumenCierre" asp-route-id="@caja.Id" class="btn-modern outline btn-sm" title="Ver Resumen">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
+                        <th>Apertura</th>
+                        <th>Cierre</th>
+                        <th>Responsable</th>
+                        <th class="text-end">Monto Inicial</th>
+                        <th class="text-end">Ventas</th>
+                        <th class="text-end">Diferencia</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var caja in Model)
+                    {
+                        <tr>
+                            <td><span class="small text-muted mono-text">@caja.FechaApertura.ToString("dd/MM/yy HH:mm")</span></td>
+                            <td><span class="small text-muted mono-text">@(caja.FechaCierre?.ToString("dd/MM/yy HH:mm") ?? "—")</span></td>
+                            <td><span class="small fw-bold">@caja.Usuario</span></td>
+                            <td class="text-end"><span class="mono-text small">$@caja.MontoInicial.ToString("N0")</span></td>
+                            <td class="text-end"><span class="mono-text fw-bold text-primary">$@caja.TotalVentas.ToString("N0")</span></td>
+                            <td class="text-end">
+                                <span class="mono-text fw-bold @(caja.Diferencia < 0 ? "text-danger" : (caja.Diferencia > 0 ? "text-warning" : "text-success"))">
+                                    @(caja.Diferencia.HasValue ? $"$ {caja.Diferencia.Value:N0}" : "—")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                @if (caja.Estado == "ABIERTA") { <span class="badge-status success">ABIERTA</span> }
+                                else if (caja.Estado == "AUTOMATICA") { <span class="badge-status info">AUTO</span> }
+                                else { <span class="badge-status secondary">CERRADA</span> }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="ResumenCierre" asp-route-id="@caja.Id" class="btn-modern outline btn-sm" title="Ver Resumen">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    @if (ViewBag.TotalPaginas > 1)
+    {
+        <div class="pagination-container">
+            @if (ViewBag.PaginaActual > 1)
+            {
+                <a asp-action="Historial" 
+                   asp-route-page="@(ViewBag.PaginaActual - 1)" 
+                   asp-route-desde="@ViewBag.Desde.ToString("yyyy-MM-dd")"
+                   asp-route-hasta="@ViewBag.Hasta.ToString("yyyy-MM-dd")"
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
+            }
+
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                if (i == ViewBag.PaginaActual)
+                {
+                    <span class="page-link-modern active">@i</span>
+                }
+                else
+                {
+                    <a asp-action="Historial" 
+                       asp-route-page="@i" 
+                       asp-route-desde="@ViewBag.Desde.ToString("yyyy-MM-dd")"
+                       asp-route-hasta="@ViewBag.Hasta.ToString("yyyy-MM-dd")"
+                       class="page-link-modern">@i</a>
+                }
+            }
+
+            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+            {
+                <a asp-action="Historial" 
+                   asp-route-page="@(ViewBag.PaginaActual + 1)" 
+                   asp-route-desde="@ViewBag.Desde.ToString("yyyy-MM-dd")"
+                   asp-route-hasta="@ViewBag.Hasta.ToString("yyyy-MM-dd")"
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+            }
+        </div>
+    }
 </div>

@@ -1,4 +1,4 @@
-﻿@model MiniMercado.ViewModels.DashboardCajasViewModel
+@model MiniMercado.ViewModels.DashboardCajasViewModel
 
 <h2 class="mt-4">📋 Auditoría de Cajas</h2>
 
@@ -23,115 +23,292 @@
 
 <h4>💰 Ventas por Caja / Día</h4>
 
-<table class="table table-bordered table-hover">
-
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Usuario</th>
-            <th>Ventas</th>
-            <th>Anuladas</th>
-            <th>Total Vendido</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        @foreach (var item in Model.ResumenCajas)
-        {
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table">
+    
+        <thead>
             <tr>
-                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                <td>@item.Usuario</td>
-                <td>@item.CantidadVentas</td>
-                <td>@item.CantidadAnuladas</td>
-                <td>$@item.TotalVendido</td>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Ventas</th>
+                <th>Anuladas</th>
+                <th>Total Vendido</th>
             </tr>
+        </thead>
+    
+        <tbody>
+    
+            @foreach (var item in Model.ResumenCajas)
+            {
+                <tr>
+                    <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                    <td>@item.Usuario</td>
+                    <td>@item.CantidadVentas</td>
+                    <td>@item.CantidadAnuladas</td>
+                    <td>$@item.TotalVendido</td>
+                </tr>
+            }
+    
+        </tbody>
+    
+    </table>
+</div>
+
+@if (ViewBag.TotalResumen > 1)
+{
+    <div class="pagination-container">
+        @if (ViewBag.PageResumen > 1)
+        {
+            <a asp-action="AuditoriaCajas" 
+               asp-route-pageResumen="@(ViewBag.PageResumen - 1)" 
+               asp-route-pageVentas="@ViewBag.PageVentas"
+               asp-route-pageAuditoria="@ViewBag.PageAuditoria"
+               asp-route-desde="@ViewBag.Desde"
+               asp-route-hasta="@ViewBag.Hasta"
+               class="page-link-modern">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
         }
 
-    </tbody>
+        @for (int i = 1; i <= ViewBag.TotalResumen; i++)
+        {
+            if (i == ViewBag.PageResumen)
+            {
+                <span class="page-link-modern active">@i</span>
+            }
+            else
+            {
+                <a asp-action="AuditoriaCajas" 
+                   asp-route-pageResumen="@i" 
+                   asp-route-pageVentas="@ViewBag.PageVentas"
+                   asp-route-pageAuditoria="@ViewBag.PageAuditoria"
+                   asp-route-desde="@ViewBag.Desde"
+                   asp-route-hasta="@ViewBag.Hasta"
+                   class="page-link-modern">@i</a>
+            }
+        }
 
-</table>
+        @if (ViewBag.PageResumen < ViewBag.TotalResumen)
+        {
+            <a asp-action="AuditoriaCajas" 
+               asp-route-pageResumen="@(ViewBag.PageResumen + 1)" 
+               asp-route-pageVentas="@ViewBag.PageVentas"
+               asp-route-pageAuditoria="@ViewBag.PageAuditoria"
+               asp-route-desde="@ViewBag.Desde"
+               asp-route-hasta="@ViewBag.Hasta"
+               class="page-link-modern">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+        }
+    </div>
+}
 
 
 <h4 class="mt-5">🧾 Ventas por Usuario</h4>
 
-<table class="table table-bordered table-hover">
-
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Usuario</th>
-            <th>Total</th>
-            <th>Estado</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        @foreach (var venta in Model.HistorialVentas)
-        {
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table">
+    
+        <thead>
             <tr>
-
-                <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-
-                <td>@venta.Usuario</td>
-
-                <td>$@venta.Total</td>
-
-                <td>
-                    @if (!venta.Activa)
-                    {
-                        <span class="badge bg-success">Activa</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Anulada</span>
-                    }
-                </td>
-
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Total</th>
+                <th>Estado</th>
             </tr>
+        </thead>
+    
+        <tbody>
+    
+            @foreach (var venta in Model.HistorialVentas)
+            {
+                <tr>
+    
+                    <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+    
+                    <td>@venta.Usuario</td>
+    
+                    <td>$@venta.Total</td>
+    
+                    <td>
+                        @if (!venta.Activa)
+                        {
+                            <span class="badge bg-success">Activa</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Anulada</span>
+                        }
+                    </td>
+    
+                </tr>
+            }
+    
+        </tbody>
+    
+    </table>
+</div>
+
+@if (ViewBag.TotalVentas > 1)
+{
+    <div class="pagination-container">
+        @if (ViewBag.PageVentas > 1)
+        {
+            <a asp-action="AuditoriaCajas" 
+               asp-route-pageResumen="@ViewBag.PageResumen" 
+               asp-route-pageVentas="@(ViewBag.PageVentas - 1)"
+               asp-route-pageAuditoria="@ViewBag.PageAuditoria"
+               asp-route-desde="@ViewBag.Desde"
+               asp-route-hasta="@ViewBag.Hasta"
+               class="page-link-modern">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
         }
 
-    </tbody>
+        @for (int i = 1; i <= ViewBag.TotalVentas; i++)
+        {
+            if (i == ViewBag.PageVentas)
+            {
+                <span class="page-link-modern active">@i</span>
+            }
+            else
+            {
+                <a asp-action="AuditoriaCajas" 
+                   asp-route-pageResumen="@ViewBag.PageResumen" 
+                   asp-route-pageVentas="@i"
+                   asp-route-pageAuditoria="@ViewBag.PageAuditoria"
+                   asp-route-desde="@ViewBag.Desde"
+                   asp-route-hasta="@ViewBag.Hasta"
+                   class="page-link-modern">@i</a>
+            }
+        }
 
-</table>
+        @if (ViewBag.PageVentas < ViewBag.TotalVentas)
+        {
+            <a asp-action="AuditoriaCajas" 
+               asp-route-pageResumen="@ViewBag.PageResumen" 
+               asp-route-pageVentas="@(ViewBag.PageVentas + 1)"
+               asp-route-pageAuditoria="@ViewBag.PageAuditoria"
+               asp-route-desde="@ViewBag.Desde"
+               asp-route-hasta="@ViewBag.Hasta"
+               class="page-link-modern">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+        }
+    </div>
+}
 
 
 <h4 class="mt-5">🛡 Registro de Auditoría</h4>
 
-<table class="table table-bordered table-hover">
-
-    <thead>
-
-        <tr>
-            <th>Fecha</th>
-            <th>Usuario</th>
-            <th>Acción</th>
-            <th>Tabla</th>
-            <th>Descripción</th>
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-        @foreach (var a in Model.Auditorias)
-        {
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table">
+    
+        <thead>
+    
             <tr>
-
-                <td>@a.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-
-                <td>@a.UsuarioId</td>
-
-                <td>@a.Accion</td>
-
-                <td>@a.Tabla</td>
-
-                <td>@a.Descripcion</td>
-
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Tabla</th>
+                <th>Descripción</th>
             </tr>
+    
+        </thead>
+    
+        <tbody>
+    
+            @foreach (var a in Model.Auditorias)
+            {
+                <tr>
+    
+                    <td>@a.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+    
+                    <td>@a.UsuarioId</td>
+    
+                    <td>@a.Accion</td>
+    
+                    <td>@a.Tabla</td>
+    
+                    <td>@a.Descripcion</td>
+    
+                </tr>
+            }
+    
+        </tbody>
+    
+    </table>
+</div>
+
+@if (ViewBag.TotalAuditoria > 1)
+{
+    <div class="pagination-container">
+        @if (ViewBag.PageAuditoria > 1)
+        {
+            <a asp-action="AuditoriaCajas" 
+               asp-route-pageResumen="@ViewBag.PageResumen" 
+               asp-route-pageVentas="@ViewBag.PageVentas"
+               asp-route-pageAuditoria="@(ViewBag.PageAuditoria - 1)"
+               asp-route-desde="@ViewBag.Desde"
+               asp-route-hasta="@ViewBag.Hasta"
+               class="page-link-modern">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
         }
 
-    </tbody>
+        @for (int i = 1; i <= ViewBag.TotalAuditoria; i++)
+        {
+            if (i == ViewBag.PageAuditoria)
+            {
+                <span class="page-link-modern active">@i</span>
+            }
+            else
+            {
+                <a asp-action="AuditoriaCajas" 
+                   asp-route-pageResumen="@ViewBag.PageResumen" 
+                   asp-route-pageVentas="@ViewBag.PageVentas"
+                   asp-route-pageAuditoria="@i"
+                   asp-route-desde="@ViewBag.Desde"
+                   asp-route-hasta="@ViewBag.Hasta"
+                   class="page-link-modern">@i</a>
+            }
+        }
 
-</table>
+        @if (ViewBag.PageAuditoria < ViewBag.TotalAuditoria)
+        {
+            <a asp-action="AuditoriaCajas" 
+               asp-route-pageResumen="@ViewBag.PageResumen" 
+               asp-route-pageVentas="@ViewBag.PageVentas"
+               asp-route-pageAuditoria="@(ViewBag.PageAuditoria + 1)"
+               asp-route-desde="@ViewBag.Desde"
+               asp-route-hasta="@ViewBag.Hasta"
+               class="page-link-modern">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+        }
+    </div>
+}

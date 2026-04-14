@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniMercado.Models;
 using MiniMercado.Models.ViewModels;
 using MiniMercado.Services;
@@ -25,16 +26,26 @@ public class UsuariosController : Controller
     // ============================
     // LISTADO
     // ============================
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
+        if (page < 1) page = 1;
         var tenantId = _tenantService.GetTenantId();
 
         if (!tenantId.HasValue)
             return Unauthorized();
 
-        var usuarios = _userManager.Users
-            .Where(u => u.TenantId == tenantId.Value)
-            .ToList();
+        int pageSize = 10;
+        var query = _userManager.Users
+            .Where(u => u.TenantId == tenantId.Value);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+        var usuarios = await query
+            .OrderBy(u => u.Email)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
         var lista = new List<UsuarioListadoVM>();
 
@@ -49,6 +60,9 @@ public class UsuariosController : Controller
                 Rol = roles.FirstOrDefault()
             });
         }
+
+        ViewBag.PaginaActual = page;
+        ViewBag.TotalPaginas = totalPaginas;
 
         return View(lista);
     }

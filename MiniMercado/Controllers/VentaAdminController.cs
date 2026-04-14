@@ -75,46 +75,55 @@ public class VentaAdminController : Controller
     // LISTADO DE VENTAS
     // =====================================================
     [Authorize(Roles = "Admin,Caja")]
-    public IActionResult Index(DateTime? desde, DateTime? hasta, string? estado)
+    public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, string? estado, int page = 1)
     {
+        if (page < 1) page = 1;
         var tenantId = _tenantService.GetTenantId().Value;
+        int pageSize = 10;
 
-        var ventas = _context.Ventas
+        var query = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
                                  ClienteId, TenantId, CajaId 
                           FROM Ventas 
                           WHERE TenantId = {0}", tenantId)
-            .OrderByDescending(v => v.Fecha)
             .AsQueryable();
 
         if (desde.HasValue)
-            ventas = ventas.Where(v => v.Fecha >= desde.Value);
+            query = query.Where(v => v.Fecha >= desde.Value);
 
         if (hasta.HasValue)
-            ventas = ventas.Where(v => v.Fecha <= hasta.Value.AddDays(1));
+            query = query.Where(v => v.Fecha <= hasta.Value.AddDays(1));
 
         if (estado == "activa")
-            ventas = ventas.Where(v => !v.Activa); // Activas
+            query = query.Where(v => !v.Activa); // Activas
 
         if (estado == "anulada")
-            ventas = ventas.Where(v => v.Activa); // Anuladas
+            query = query.Where(v => v.Activa); // Anuladas
 
-        // Asignar el valor a ViewBag.Estado para usar en la vista
-        ViewBag.Estado = estado;
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
 
-        ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
-        ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
-
-        var listaVentas = ventas.ToList();
+        var listaVentas = await query
+            .OrderByDescending(v => v.Fecha)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
         // Cargar detalles manualmente para evitar JOINs automáticos en la consulta base
         foreach (var v in listaVentas)
         {
-            v.Detalles = _context.VentaDetalles
+            v.Detalles = await _context.VentaDetalles
                 .Where(d => d.VentaId == v.Id && d.TenantId == tenantId)
-                .ToList();
+                .ToListAsync();
         }
+
+        // Asignar el valor a ViewBag.Estado para usar en la vista
+        ViewBag.Estado = estado;
+        ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
+        ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
+        ViewBag.PaginaActual = page;
+        ViewBag.TotalPaginas = totalPaginas;
 
         return View(listaVentas);
     }

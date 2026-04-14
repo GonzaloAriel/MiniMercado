@@ -359,11 +359,13 @@ namespace MiniMercado.Controllers
             return View(venta);
         }
 
-        public IActionResult Index(DateTime? desde, DateTime? hasta, int? ventaId, string? nombreVenta)
+        public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, int? ventaId, string? nombreVenta, int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
-            var ventas = _context.Ventas
+            var query = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
                                      ClienteId, TenantId, CajaId 
@@ -372,22 +374,34 @@ namespace MiniMercado.Controllers
                 .AsQueryable();
 
             if (ventaId.HasValue)
-                ventas = ventas.Where(v => v.Id == ventaId.Value);
+                query = query.Where(v => v.Id == ventaId.Value);
 
             if (!string.IsNullOrWhiteSpace(nombreVenta))
-                ventas = ventas.Where(v => v.NombreVenta.Contains(nombreVenta));
+                query = query.Where(v => v.NombreVenta.Contains(nombreVenta));
 
             if (desde.HasValue)
-                ventas = ventas.Where(v => v.Fecha >= desde.Value);
+                query = query.Where(v => v.Fecha >= desde.Value);
 
             if (hasta.HasValue)
-                ventas = ventas.Where(v => v.Fecha <= hasta.Value);
+                query = query.Where(v => v.Fecha <= hasta.Value);
 
-            return View(
-                ventas
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var ventas = await query
                 .OrderByDescending(v => v.Fecha)
-                .ToList()
-            );
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
+            ViewBag.VentaId = ventaId;
+            ViewBag.NombreVenta = nombreVenta;
+
+            return View(ventas);
         }
 
 
@@ -442,30 +456,42 @@ namespace MiniMercado.Controllers
             return View(venta);
         }
 
-        public IActionResult Caja(DateTime? fecha)
+        public async Task<IActionResult> Caja(DateTime? fecha, int page = 1)
         {
+            if (page < 1) page = 1;
             var tenantId = _tenantService.GetTenantId().Value;
+            int pageSize = 10;
 
             DateTime dia = fecha ?? DateTime.Today;
 
             DateTime desde = dia.Date;
             DateTime hasta = dia.Date.AddDays(1);
 
-            var ventas = _context.Ventas
+            var query = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                      NombreVenta, UsuarioId, Usuario, EsFiado, 
                                      ClienteId, TenantId, CajaId 
                               FROM Ventas 
                               WHERE Activa = 0 AND TenantId = {0}", tenantId)
                 .Where(v => v.Fecha >= desde && v.Fecha < hasta)
-                .OrderBy(v => v.Fecha)
-                .ToList();
+                .AsQueryable();
 
-            var total = ventas.Sum(v => v.Total);
+            var totalRegistros = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            var ventas = await query
+                .OrderBy(v => v.Fecha)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var totalMonto = await query.SumAsync(v => v.Total);
 
             ViewBag.Fecha = dia;
-            ViewBag.Total = total;
-            ViewBag.CantidadVentas = ventas.Count;
+            ViewBag.Total = totalMonto;
+            ViewBag.CantidadVentas = totalRegistros;
+            ViewBag.PaginaActual = page;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(ventas);
         }

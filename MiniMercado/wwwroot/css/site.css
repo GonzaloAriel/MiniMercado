@@ -180,4 +180,51 @@ body.dark-mode .notif-item:hover {
     animation-name: fadeIn;
 }
 
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Paginación */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+    gap: 8px;
+    padding-bottom: 24px;
+}
+
+.page-link-modern {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid var(--border, #ccc);
+    background: var(--bg-card, #fff);
+    color: var(--text-primary, #000);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.page-link-modern:hover:not(.disabled) {
+    background: var(--blue, #007bff);
+    color: #fff;
+    border-color: var(--blue, #007bff);
+}
+
+.page-link-modern.active {
+    background: var(--blue, #007bff);
+    color: #fff;
+    border-color: var(--blue, #007bff);
+}
+
+.page-link-modern.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: var(--text-secondary, #666);
+}
+
 

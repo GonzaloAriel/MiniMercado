@@ -294,53 +294,55 @@
             <form method="post" id="formVenta">
                 @Html.AntiForgeryToken()
                 <div class="table-container">
-                    <table class="db-table" id="tablaVenta">
-                        <thead>
-                            <tr>
-                                <th style="width:45%">Producto</th>
-                                <th style="width:15%" class="text-center">Cant / Kg</th>
-                                <th style="width:15%" class="text-end">Precio</th>
-                                <th style="width:15%" class="text-end">Subtotal</th>
-                                <th style="width:10%"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model != null)
-                            {
-                                for (int i = 0; i < Model.Count; i++)
+                    <div class="table-responsive">
+                        <table class="db-table table" id="tablaVenta">
+                            <thead>
+                                <tr>
+                                    <th style="width:45%">Producto</th>
+                                    <th style="width:15%" class="text-center">Cant / Kg</th>
+                                    <th style="width:15%" class="text-end">Precio</th>
+                                    <th style="width:15%" class="text-end">Subtotal</th>
+                                    <th style="width:10%"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null)
                                 {
-                                    if (!Model[i].ProductoId.HasValue) continue;
-                                    <tr>
-                                        <td>
-                                            <div class="product-info">
-                                                <span class="name">@Model[i].Producto?.Nombre</span>
-                                                <span class="code">ID: @Model[i].ProductoId</span>
-                                                <input type="hidden" name="detalles[@i].ProductoId" value="@Model[i].ProductoId" class="producto-id" />
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <input type="number" name="detalles[@i].Cantidad" class="qty-input cantidad" value="@Model[i].Cantidad" step="0.01" min="0.01" />
-                                        </td>
-                                        <td class="text-end">
-                                            <input type="text" name="detalles[@i].PrecioUnitario" class="price-input precio" value="@Model[i].PrecioUnitario" />
-                                            @if (Model[i].Producto?.ProductoBaseId != null)
-                                            {
-                                                <span class="suggested-price">Precio sugerido, puedes modificarlo</span>
-                                            }
-                                        </td>
-                                        <td class="text-end">
-                                            <span class="subtotal-text subtotal">$@(Model[i].Cantidad * Model[i].PrecioUnitario)</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn-action btn btn-outline-danger btn-sm border-0" onclick="eliminarFila(this)">
-                                                <i class="bi bi-trash fs-5"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    for (int i = 0; i < Model.Count; i++)
+                                    {
+                                        if (!Model[i].ProductoId.HasValue) continue;
+                                        <tr>
+                                            <td>
+                                                <div class="product-info">
+                                                    <span class="name">@Model[i].Producto?.Nombre</span>
+                                                    <span class="code">ID: @Model[i].ProductoId</span>
+                                                    <input type="hidden" name="detalles[@i].ProductoId" value="@Model[i].ProductoId" class="producto-id" />
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="number" name="detalles[@i].Cantidad" class="qty-input cantidad" value="@Model[i].Cantidad" step="0.01" min="0.01" />
+                                            </td>
+                                            <td class="text-end">
+                                                <input type="text" name="detalles[@i].PrecioUnitario" class="price-input precio" value="@Model[i].PrecioUnitario" />
+                                                @if (Model[i].Producto?.ProductoBaseId != null)
+                                                {
+                                                    <span class="suggested-price">Precio sugerido, puedes modificarlo</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="subtotal-text subtotal">$@(Model[i].Cantidad * Model[i].PrecioUnitario)</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-action btn btn-outline-danger btn-sm border-0" onclick="eliminarFila(this)">
+                                                    <i class="bi bi-trash fs-5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
                                 }
-                            }
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <input type="hidden" id="esFiadoInput" name="EsFiado" value="false" />

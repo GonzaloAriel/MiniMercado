@@ -212,73 +212,126 @@
     </div>
 
     <div class="data-card">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th style="width: 30%">Comercio / Tenant</th>
-                    <th>Vencimiento</th>
-                    <th class="text-end">Total Pagado</th>
-                    <th class="text-center">Estado</th>
-                    <th class="text-end">Acciones Administrativas</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var tenant in Model)
-                {
+        <div class="table-responsive">
+            <table class="db-table table">
+                <thead>
                     <tr>
-                        <td>
-                            <div class="fw-bold">@tenant.NombreComercio</div>
-                            <div class="text-muted small">Último Pago: @(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "—")</div>
-                        </td>
-                        <td><span class="mono-text">@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")</span></td>
-                        <td class="text-end"><span class="price-text">@tenant.TotalPagado.ToString("C0")</span></td>
-                        <td class="text-center">
-                            @if (!tenant.Activo)
-                            {
-                                <span class="badge-modern secondary"><i class="bi bi-eye-slash"></i> OCULTO</span>
-                            }
-                            
-                            @if (tenant.Bloqueado)
-                            {
-                                <span class="badge-modern danger"><i class="bi bi-lock-fill"></i> BLOQUEADO</span>
-                            }
-                            else if (tenant.EstaVencido)
-                            {
-                                <span class="badge-modern danger"><i class="bi bi-calendar-x"></i> VENCIDO</span>
-                            }
-                            else if (tenant.PorVencer)
-                            {
-                                <span class="badge-modern amber"><i class="bi bi-clock-history"></i> POR VENCER</span>
-                            }
-                            else if (tenant.Activo)
-                            {
-                                <span class="badge-modern success"><i class="bi bi-check-circle"></i> ACTIVO</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-2">
-                                <a asp-action="RegistrarPago" asp-route-id="@tenant.Id" class="btn-modern primary btn-sm" title="Registrar Cobro">
-                                    <i class="bi bi-cash-stack"></i> Cobrar
-                                </a>
-
-                                <form asp-action="ToggleBloqueo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn-modern @(tenant.Bloqueado ? "outline" : "danger") btn-sm" title="@(tenant.Bloqueado ? "Desbloquear" : "Bloquear")">
-                                        <i class="bi @(tenant.Bloqueado ? "bi-unlock" : "bi-lock")"></i>
-                                    </button>
-                                </form>
-
-                                <form asp-action="ToggleActivo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn-modern outline btn-sm" title="@(tenant.Activo ? "Desactivar" : "Activar")">
-                                        <i class="bi @(tenant.Activo ? "bi-eye-slash" : "bi-eye")"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
+                        <th style="width: 30%">Comercio / Tenant</th>
+                        <th>Vencimiento</th>
+                        <th class="text-end">Total Pagado</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end">Acciones Administrativas</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var tenant in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@tenant.NombreComercio</div>
+                                <div class="text-muted small">Último Pago: @(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "—")</div>
+                            </td>
+                            <td><span class="mono-text">@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")</span></td>
+                            <td class="text-end"><span class="price-text">@tenant.TotalPagado.ToString("C0")</span></td>
+                            <td class="text-center">
+                                @if (!tenant.Activo)
+                                {
+                                    <span class="badge-modern secondary"><i class="bi bi-eye-slash"></i> OCULTO</span>
+                                }
+                                
+                                @if (tenant.Bloqueado)
+                                {
+                                    <span class="badge-modern danger"><i class="bi bi-lock-fill"></i> BLOQUEADO</span>
+                                }
+                                else if (tenant.EstaVencido)
+                                {
+                                    <span class="badge-modern danger"><i class="bi bi-calendar-x"></i> VENCIDO</span>
+                                }
+                                else if (tenant.PorVencer)
+                                {
+                                    <span class="badge-modern amber"><i class="bi bi-clock-history"></i> POR VENCER</span>
+                                }
+                                else if (tenant.Activo)
+                                {
+                                    <span class="badge-modern success"><i class="bi bi-check-circle"></i> ACTIVO</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-action="RegistrarPago" asp-route-id="@tenant.Id" class="btn-modern primary btn-sm" title="Registrar Cobro">
+                                        <i class="bi bi-cash-stack"></i> Cobrar
+                                    </a>
+    
+                                    <form asp-action="ToggleBloqueo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-modern @(tenant.Bloqueado ? "outline" : "danger") btn-sm" title="@(tenant.Bloqueado ? "Desbloquear" : "Bloquear")">
+                                            <i class="bi @(tenant.Bloqueado ? "bi-unlock" : "bi-lock")"></i>
+                                        </button>
+                                    </form>
+    
+                                    <form asp-action="ToggleActivo" asp-route-id="@tenant.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-modern outline btn-sm" title="@(tenant.Activo ? "Desactivar" : "Activar")">
+                                            <i class="bi @(tenant.Activo ? "bi-eye-slash" : "bi-eye")"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    @if (ViewBag.TotalPaginas > 1)
+    {
+        <div class="pagination-container">
+            @if (ViewBag.PaginaActual > 1)
+            {
+                <a asp-action="Tenants" 
+                   asp-route-page="@(ViewBag.PaginaActual - 1)" 
+                   asp-route-search="@ViewBag.CurrentSearch"
+                   asp-route-ocultarDesactivados="@ViewBag.OcultarDesactivados"
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
+            }
+
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                if (i == ViewBag.PaginaActual)
+                {
+                    <span class="page-link-modern active">@i</span>
+                }
+                else
+                {
+                    <a asp-action="Tenants" 
+                       asp-route-page="@i" 
+                       asp-route-search="@ViewBag.CurrentSearch"
+                       asp-route-ocultarDesactivados="@ViewBag.OcultarDesactivados"
+                       class="page-link-modern">@i</a>
+                }
+            }
+
+            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+            {
+                <a asp-action="Tenants" 
+                   asp-route-page="@(ViewBag.PaginaActual + 1)" 
+                   asp-route-search="@ViewBag.CurrentSearch"
+                   asp-route-ocultarDesactivados="@ViewBag.OcultarDesactivados"
+                   class="page-link-modern">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+            }
+        </div>
+    }
 </div>

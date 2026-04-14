@@ -1,33 +1,83 @@
-﻿@using MiniMercado.Models.ViewModels
+@using MiniMercado.Models.ViewModels
 @model List<UsuarioListadoVM>
 
 <h2>Usuarios - @ViewBag.TenantNombre</h2>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Acción</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
+<div class="table-responsive">
+    <table class="table table-bordered table">
+        <thead>
             <tr>
-                <td>@user.Email</td>
-                <td>@user.Rol</td>
-                <td>
-                    <a asp-action="ResetPassword"
-                       asp-route-id="@user.Id"
-                       class="btn btn-sm btn-warning">
-                        Reset Password
-                    </a>
-                </td>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Acción</th>
             </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Email</td>
+                    <td>@user.Rol</td>
+                    <td>
+                        <a asp-action="ResetPassword"
+                           asp-route-id="@user.Id"
+                           class="btn btn-sm btn-warning">
+                            Reset Password
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (ViewBag.TotalPaginas > 1)
+{
+    <div class="pagination-container">
+        @if (ViewBag.PaginaActual > 1)
+        {
+            <a asp-action="UsuariosPorTenant" 
+               asp-route-page="@(ViewBag.PaginaActual - 1)" 
+               asp-route-tenantId="@ViewBag.TenantId"
+               class="page-link-modern">
+                <i class="bi bi-chevron-left"></i>
+            </a>
         }
-    </tbody>
-</table>
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-left"></i></span>
+        }
+
+        @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+        {
+            if (i == ViewBag.PaginaActual)
+            {
+                <span class="page-link-modern active">@i</span>
+            }
+            else
+            {
+                <a asp-action="UsuariosPorTenant" 
+                   asp-route-page="@i" 
+                   asp-route-tenantId="@ViewBag.TenantId"
+                   class="page-link-modern">@i</a>
+            }
+        }
+
+        @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+        {
+            <a asp-action="UsuariosPorTenant" 
+               asp-route-page="@(ViewBag.PaginaActual + 1)" 
+               asp-route-tenantId="@ViewBag.TenantId"
+               class="page-link-modern">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        }
+        else
+        {
+            <span class="page-link-modern disabled"><i class="bi bi-chevron-right"></i></span>
+        }
+    </div>
+}
 
 <a asp-action="Tenants" class="btn btn-secondary">
     Volver
