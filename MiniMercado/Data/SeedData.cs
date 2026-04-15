@@ -53,7 +53,7 @@ public static class SeedData
                 TenantId = null // AdminGlobal no pertenece a tenant
             };
 
-            var result = await userManager.CreateAsync(globalUser, "Admin123!");
+            var result = await userManager.CreateAsync(globalUser, "zubZero123&");
 
             if (result.Succeeded)
                 await userManager.AddToRoleAsync(globalUser, "AdminGlobal");

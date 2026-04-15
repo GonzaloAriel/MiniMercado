@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "Panel de Control";
+    var tenantId = User.FindFirst("TenantId")?.Value ?? "0";
 }
 
 <style>
@@ -503,6 +504,31 @@
         font-family: 'DM Mono', monospace;
     }
 
+    /* ── Onboarding Modal ────────────────────────── */
+    .onboarding-modal .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        background: var(--bg-card);
+        overflow: hidden;
+    }
+    .onboarding-modal .modal-header { border: none; padding: 32px 32px 16px; }
+    .onboarding-modal .modal-body { padding: 0 32px 32px; text-align: center; }
+    .onboarding-modal .modal-footer { border: none; padding: 0 32px 32px; justify-content: center; }
+    .onboarding-icon { 
+        width: 80px; height: 80px; background: rgba(16,185,129,0.15); 
+        border-radius: 24px; display: flex; align-items: center; 
+        justify-content: center; margin: 0 auto 24px; color: #10b981;
+    }
+    .onboarding-title { font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+    .onboarding-text { font-size: 16px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0; }
+    .btn-onboarding { 
+        background: #10b981; color: #fff; font-weight: 700; 
+        padding: 14px 40px; border-radius: 16px; border: none; 
+        transition: var(--home-transition); width: 100%;
+    }
+    .btn-onboarding:hover { background: #059669; transform: translateY(-2px); }
+
     /* ── Responsive general ───────────────────────── */
     @@media (max-width: 600px) {
         .home-hero-title { font-size: 22px; }
@@ -907,6 +933,32 @@
 
 </div>
 
+<!-- ONBOARDING MODAL -->
+<div class="modal fade onboarding-modal" id="onboardingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="onboarding-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                </div>
+                <h3 class="onboarding-title">¡Bienvenido a MiniMercado!</h3>
+                <p class="onboarding-text">
+                    Ya podés comenzar a vender.<br>
+                    Podés configurar productos, rubros y proveedores cuando lo necesites.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-onboarding shadow-sm" data-bs-dismiss="modal">¡Entendido!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     function toggleSection(id) {
         const card = document.getElementById('card-' + id);
@@ -926,4 +978,28 @@
             body.style.maxHeight = body.scrollHeight + 'px';
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const tenantKey = `onboardingShown_${@tenantId}`;
+        const onboardingShown = localStorage.getItem(tenantKey);
+        
+        @if (User.Identity.IsAuthenticated)
+        {
+            <text>
+            if (!onboardingShown) {
+                const modalEl = document.getElementById('onboardingModal');
+                if (modalEl) {
+                    const myModal = new bootstrap.Modal(modalEl);
+                    myModal.show();
+                    localStorage.setItem(tenantKey, "true");
+
+                    // Auto-cierre opcional después de 7 segundos
+                    setTimeout(() => {
+                        myModal.hide();
+                    }, 7000);
+                }
+            }
+            </text>
+        }
+    });
 </script>
