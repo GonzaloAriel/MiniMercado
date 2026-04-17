@@ -216,10 +216,11 @@
             <table class="db-table table">
                 <thead>
                     <tr>
-                        <th style="width: 30%">Comercio / Tenant</th>
-                        <th>Vencimiento</th>
+                        <th style="width: 25%">Comercio / Tenant</th>
+                        <th>Plan</th>
+                        <th class="text-center">Vencimiento</th>
                         <th class="text-end">Total Pagado</th>
-                        <th class="text-center">Estado</th>
+                        <th class="text-center">Estado Suscripción</th>
                         <th class="text-end">Acciones Administrativas</th>
                     </tr>
                 </thead>
@@ -229,31 +230,32 @@
                         <tr>
                             <td>
                                 <div class="fw-bold">@tenant.NombreComercio</div>
-                                <div class="text-muted small">Último Pago: @(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "—")</div>
+                                <div class="text-muted small">ID: #@tenant.Id | Último Pago: @(tenant.UltimoPago?.ToString("dd/MM/yyyy") ?? "—")</div>
                             </td>
-                            <td><span class="mono-text">@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")</span></td>
+                            <td><span class="badge-modern outline">@tenant.Plan</span></td>
+                            <td class="text-center"><span class="mono-text">@(tenant.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")</span></td>
                             <td class="text-end"><span class="price-text">@tenant.TotalPagado.ToString("C0")</span></td>
                             <td class="text-center">
-                                @if (!tenant.Activo)
-                                {
-                                    <span class="badge-modern secondary"><i class="bi bi-eye-slash"></i> OCULTO</span>
-                                }
-                                
                                 @if (tenant.Bloqueado)
                                 {
-                                    <span class="badge-modern danger"><i class="bi bi-lock-fill"></i> BLOQUEADO</span>
+                                    <span class="badge-modern danger"><i class="bi bi-lock-fill"></i> SUSPENDIDA</span>
                                 }
-                                else if (tenant.EstaVencido)
+                                else if (tenant.EstadoSuscripcion == "Activa")
                                 {
-                                    <span class="badge-modern danger"><i class="bi bi-calendar-x"></i> VENCIDO</span>
+                                    <span class="badge-modern success"><i class="bi bi-check-circle"></i> ACTIVA</span>
                                 }
-                                else if (tenant.PorVencer)
+                                else if (tenant.EstadoSuscripcion == "Vencida")
                                 {
-                                    <span class="badge-modern amber"><i class="bi bi-clock-history"></i> POR VENCER</span>
+                                    <span class="badge-modern danger"><i class="bi bi-calendar-x"></i> VENCIDA</span>
                                 }
-                                else if (tenant.Activo)
+                                else if (tenant.EstadoSuscripcion == "PendientePago")
                                 {
-                                    <span class="badge-modern success"><i class="bi bi-check-circle"></i> ACTIVO</span>
+                                    <span class="badge-modern amber"><i class="bi bi-clock-history"></i> PENDIENTE</span>
+                                }
+                                
+                                @if (!tenant.Activo)
+                                {
+                                    <div class="mt-1 small text-muted font-italic">Oculto del sistema</div>
                                 }
                             </td>
                             <td class="text-end">

@@ -11,11 +11,26 @@ namespace MiniMercado.Controllers
     {
         private readonly MiniMercadoContext _context;
         private readonly ITenantService _tenantService;
+        private readonly ISuscripcionService _suscripcionService;
 
-        public ConfiguracionController(MiniMercadoContext context, ITenantService tenantService)
+        public ConfiguracionController(MiniMercadoContext context, ITenantService tenantService, ISuscripcionService suscripcionService)
         {
             _context = context;
             _tenantService = tenantService;
+            _suscripcionService = suscripcionService;
+        }
+
+        public async Task<IActionResult> Suscripcion()
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            var tenant = await _suscripcionService.GetSuscripcionActualAsync(tenantId);
+            
+            if (tenant == null) return NotFound();
+
+            ViewBag.EstadoCalculado = _suscripcionService.CalcularEstado(tenant);
+            ViewBag.DiasRestantes = _suscripcionService.CalcularDiasRestantes(tenant);
+
+            return View(tenant);
         }
 
         public IActionResult Index()

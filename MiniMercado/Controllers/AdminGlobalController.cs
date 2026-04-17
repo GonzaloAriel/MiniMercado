@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using MiniMercado.Data;
 using MiniMercado.Models;
 using MiniMercado.Models.ViewModels;
+using MiniMercado.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,14 +17,14 @@ namespace MiniMercado.Controllers
     {
         private readonly MiniMercadoContext _context;
         private readonly IMemoryCache _cache;
+        private readonly ISuscripcionService _suscripcionService;
 
-        public AdminGlobalController(MiniMercadoContext context, IMemoryCache cache)
+        public AdminGlobalController(MiniMercadoContext context, IMemoryCache cache, ISuscripcionService suscripcionService)
         {
             _context = context;
             _cache = cache;
+            _suscripcionService = suscripcionService;
         }
-
-        // ... (Dashboard y Tenants sin cambios)
 
         // Dashboard global de ingresos y estados
         public async Task<IActionResult> Dashboard()
@@ -36,11 +37,11 @@ namespace MiniMercado.Controllers
                 
                 // Un tenant es "Activo" si Activo == true y no está bloqueado ni vencido
                 TenantsActivos = await _context.Tenants.AsNoTracking()
-                    .CountAsync(t => t.Activo && !t.Bloqueado && (!t.FechaVencimiento.HasValue || t.FechaVencimiento > hoy)),
+                    .CountAsync(t => t.Activo && !t.Bloqueado && (!t.FechaProximoPago.HasValue || t.FechaProximoPago > hoy)),
 
                 // Un tenant es "Vencido" si tiene fecha de vencimiento y es anterior a hoy
                 TenantsVencidos = await _context.Tenants.AsNoTracking()
-                    .CountAsync(t => t.FechaVencimiento.HasValue && t.FechaVencimiento < hoy),
+                    .CountAsync(t => t.FechaProximoPago.HasValue && t.FechaProximoPago < hoy),
 
                 TenantsBloqueados = await _context.Tenants.AsNoTracking().CountAsync(t => t.Bloqueado),
                 TotalTenants = await _context.Tenants.AsNoTracking().CountAsync()
@@ -83,11 +84,13 @@ namespace MiniMercado.Controllers
                 {
                     Id = t.Id,
                     NombreComercio = t.NombreComercio,
-                    FechaVencimiento = t.FechaVencimiento,
+                    Plan = t.Plan,
+                    FechaVencimiento = t.FechaProximoPago ?? t.FechaVencimiento,
                     Bloqueado = t.Bloqueado,
                     Activo = t.Activo,
-                    UltimoPago = t.Cobros.OrderByDescending(c => c.FechaPago).Select(c => (DateTime?)c.FechaPago).FirstOrDefault(),
-                    TotalPagado = t.Cobros.Sum(c => c.Monto)
+                    UltimoPago = t.UltimoPagoRegistrado,
+                    TotalPagado = t.Cobros.Sum(c => c.Monto),
+                    EstadoSuscripcion = t.EstadoSuscripcion.ToString()
                 })
                 .ToListAsync();
 
@@ -112,7 +115,8 @@ namespace MiniMercado.Controllers
                 TenantId = tenant.Id,
                 NombreComercio = tenant.NombreComercio,
                 PrecioSugerido = tenant.PrecioMensual,
-                Monto = tenant.PrecioMensual // Valor sugerido inicial
+                Monto = tenant.PrecioMensual, // Valor sugerido inicial
+                Plan = tenant.Plan
             };
 
             return View(model);
@@ -134,31 +138,17 @@ namespace MiniMercado.Controllers
                 return NotFound();
             }
 
-            // 1. Crear el nuevo cobro
-            var nuevoCobro = new CobroTenant
-            {
-                TenantId = tenant.Id,
-                Monto = model.Monto,
-                FechaPago = DateTime.Now,
-                // Si el admin ingresó una fecha, se usa esa, sino por defecto +30 días
-                FechaVencimiento = model.FechaVencimiento ?? DateTime.Now.AddDays(30),
-                Observacion = model.Observacion
-            };
-
-            // 2. Actualizar el estado del Tenant
-            tenant.FechaVencimiento = nuevoCobro.FechaVencimiento;
-            tenant.Bloqueado = false;
-            tenant.Activo = true; // Aseguramos que esté activo si paga
-
-            _context.CobrosTenants.Add(nuevoCobro);
-            _context.Update(tenant);
-
-            await _context.SaveChangesAsync();
+            // Usar el servicio para toda la lógica de negocio
+            await _suscripcionService.RegistrarPagoAsync(
+                model.TenantId, 
+                model.Meses ?? 1, 
+                model.Plan ?? "Mensual", 
+                model.Observacion);
 
             // 🎯 Invalidar cache para que el middleware refleje el cambio
             _cache.Remove($"tenant_{tenant.Id}");
 
-            TempData["Success"] = $"Pago registrado con éxito para {tenant.NombreComercio}. Nueva fecha de vencimiento: {tenant.FechaVencimiento:dd/MM/yyyy}";
+            TempData["Success"] = $"Pago registrado con éxito para {tenant.NombreComercio}.";
 
             return RedirectToAction(nameof(Tenants));
         }

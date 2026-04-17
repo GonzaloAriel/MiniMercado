@@ -5,6 +5,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniMercado.Models
 {
+    public enum EstadoSuscripcion
+    {
+        Activa = 1,
+        PendientePago = 2,
+        Vencida = 3,
+        Suspendida = 4
+    }
+
     public class Tenant
     {
         public int Id { get; set; }
@@ -33,6 +41,21 @@ namespace MiniMercado.Models
         public decimal PrecioMensual { get; set; }
 
         public bool Bloqueado { get; set; } = false;
+
+        // --- Suscripción ---
+        public string Plan { get; set; } = "Mensual"; // "Mensual" / "Anual"
+
+        public DateTime? FechaInicioSuscripcion { get; set; }
+
+        public DateTime? FechaProximoPago { get; set; }
+
+        public EstadoSuscripcion EstadoSuscripcion { get; set; } = EstadoSuscripcion.PendientePago;
+
+        public int MesesPagados { get; set; } = 0;
+
+        public int SaldoAFavorMeses { get; set; } = 0;
+
+        public DateTime? UltimoPagoRegistrado { get; set; }
 
         [ValidateNever]
         public virtual ICollection<CobroTenant> Cobros { get; set; } = new List<CobroTenant>();

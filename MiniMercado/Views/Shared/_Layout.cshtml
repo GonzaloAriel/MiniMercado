@@ -1,3 +1,7 @@
+@using MiniMercado.Services
+@inject ISuscripcionService SuscripcionService
+@inject ITenantService TenantService
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +13,39 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/uala-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MiniMercado.styles.css" asp-append-version="true" />
+    <style>
+        .sub-alert-bar {
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 2000;
+        }
+        .sub-alert-bar.warning { background: #f59e0b; }
+        .sub-alert-bar a { color: white; text-decoration: underline; margin-left: 10px; }
+
+        .notif-dropdown {
+            width: 320px;
+            max-width: 90vw;
+            max-height: 450px;
+            overflow-y: auto;
+            right: 0;
+            left: auto;
+        }
+
+       @@media (max-width: 768px) {
+    
+           .notif-dropdown {
+                position: fixed !important;
+                top: 60px;
+                right: 10px;
+                width: 90vw;
+                z-index: 1050;
+           }
+       }
+    </style>
     <script>
         // Aplicar modo antes de renderizar para evitar flash
         if (localStorage.getItem("darkMode") === "true") {
@@ -20,6 +57,36 @@
 
 
 <body>
+    @if (User.Identity.IsAuthenticated && !User.IsInRole("AdminGlobal"))
+    {
+        var tenantId = TenantService.GetTenantId();
+        if (tenantId.HasValue)
+        {
+            // Nota: En un entorno de alto tráfico, esto se cachearía o vendría en el Claim
+            var tenant = SuscripcionService.GetSuscripcionActualAsync(tenantId.Value).Result;
+            if (tenant != null)
+            {
+                var estado = SuscripcionService.CalcularEstado(tenant);
+                var dias = SuscripcionService.CalcularDiasRestantes(tenant);
+
+                if (estado == MiniMercado.Models.EstadoSuscripcion.Vencida)
+                {
+                    <div class="sub-alert-bar">
+                        <i class="bi bi-exclamation-octagon-fill"></i> Su suscripción está VENCIDA. Por favor regularice su pago.
+                        <a asp-controller="Configuracion" asp-action="Suscripcion">Ver detalles</a>
+                    </div>
+                }
+                else if (estado == MiniMercado.Models.EstadoSuscripcion.Activa && dias <= 5)
+                {
+                    <div class="sub-alert-bar warning">
+                        <i class="bi bi-clock-fill"></i> Su suscripción vence en @dias días.
+                        <a asp-controller="Configuracion" asp-action="Suscripcion">Ver detalles</a>
+                    </div>
+                }
+            }
+        }
+    }
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4 sticky-top">
             <div class="container-fluid">
@@ -90,8 +157,8 @@
                                         0
                                     </span>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom animated fadeIn p-0" 
-                                    aria-labelledby="notifDropdown" style="width: 320px; max-height: 450px; overflow-y: auto;">
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom animated fadeIn p-0 notif-dropdown" 
+                                            aria-labelledby="notifDropdown">
                                     <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0 fw-bold text-info">Notificaciones</h6>
                                         <span class="badge bg-primary rounded-pill" id="notifCountBadge">0</span>

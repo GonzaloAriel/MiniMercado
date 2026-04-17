@@ -826,6 +826,47 @@
                         </div>
                         <span class="btn-label">Configuración</span>
                     </a>
+                    <a asp-controller="Configuracion" asp-action="Suscripcion" class="action-btn">
+                        <div class="btn-icon" style="background:rgba(79,70,229,0.10)">
+                            <svg viewBox="0 0 24 24" stroke="#4f46e5">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                <line x1="2" y1="10" x2="22" y2="10"/>
+                            </svg>
+                        </div>
+                        <span class="btn-label">Mi Suscripción</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        // AYUDA
+        <div class="section-card" id="card-ayuda">
+            <div class="section-header" onclick="toggleSection('ayuda')">
+                <div class="section-icon" style="background:rgba(59,130,246,0.12)">
+                    <svg viewBox="0 0 24 24" stroke="#3b82f6">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="section-info">
+                    <p class="section-name">Ayuda y Soporte</p>
+                    <p class="section-desc">Preguntas frecuentes, guías de uso y asistencia técnica</p>
+                </div>
+                <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+            <div class="section-body" id="body-ayuda">
+                <div class="section-body-inner">
+                    <a asp-controller="Ayuda" asp-action="Index" class="action-btn">
+                        <div class="btn-icon" style="background:rgba(59,130,246,0.10)">
+                            <svg viewBox="0 0 24 24" stroke="#3b82f6">
+                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                            </svg>
+                        </div>
+                        <span class="btn-label">Ver FAQ</span>
+                    </a>
                 </div>
             </div>
         </div>

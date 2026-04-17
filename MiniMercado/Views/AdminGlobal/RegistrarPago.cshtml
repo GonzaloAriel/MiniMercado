@@ -24,23 +24,32 @@
                         <input type="hidden" asp-for="TenantId" />
                         <input type="hidden" asp-for="NombreComercio" />
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Plan" class="form-label fw-bold">Plan</label>
+                                <select asp-for="Plan" class="form-select">
+                                    <option value="Mensual">Mensual</option>
+                                    <option value="Anual">Anual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Meses" class="form-label fw-bold">Cantidad de Meses</label>
+                                <input asp-for="Meses" class="form-control" type="number" id="inputMeses" min="1" max="60" />
+                                <span asp-validation-for="Meses" class="text-danger small"></span>
+                            </div>
+                        </div>
+
                         <div class="mb-4">
-                            <label asp-for="Monto" class="form-label fw-bold"></label>
+                            <label asp-for="Monto" class="form-label fw-bold">Monto Total a Cobrar</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input asp-for="Monto" class="form-control form-control-lg text-primary fw-bold" placeholder="0.00" />
+                                <input asp-for="Monto" class="form-control form-control-lg text-primary fw-bold" placeholder="0.00" id="inputMonto" />
                             </div>
                             <span asp-validation-for="Monto" class="text-danger small"></span>
                             <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i> Precio mensual configurado: <strong>@Model.PrecioSugerido.ToString("C")</strong></div>
                         </div>
 
                         <hr class="my-4">
-
-                        <div class="mb-3">
-                            <label asp-for="FechaVencimiento" class="form-label fw-bold"></label>
-                            <input asp-for="FechaVencimiento" class="form-control" type="date" />
-                            <div class="form-text"><i class="bi bi-lightbulb me-1"></i> Dejar vacío para renovar por 30 días automáticamente.</div>
-                        </div>
 
                         <div class="mb-4">
                             <label asp-for="Observacion" class="form-label fw-bold"></label>
@@ -50,7 +59,7 @@
 
                         <div class="d-grid gap-2 mt-4">
                             <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-                                <i class="bi bi-check-lg"></i> Guardar Pago
+                                <i class="bi bi-check-lg"></i> Confirmar Suscripción
                             </button>
                             <a asp-action="Tenants" class="btn btn-outline-secondary">Cancelar</a>
                         </div>
@@ -63,4 +72,16 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputMeses = document.getElementById('inputMeses');
+            const inputMonto = document.getElementById('inputMonto');
+            const precioMensual = @Json.Serialize(Model.PrecioSugerido);
+
+            inputMeses.addEventListener('input', function() {
+                const meses = parseInt(this.value) || 0;
+                inputMonto.value = (meses * precioMensual).toFixed(2);
+            });
+        });
+    </script>
 }

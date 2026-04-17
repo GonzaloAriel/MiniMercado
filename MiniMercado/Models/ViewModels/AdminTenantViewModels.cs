@@ -8,11 +8,13 @@ namespace MiniMercado.Models.ViewModels
     {
         public int Id { get; set; }
         public string NombreComercio { get; set; }
+        public string? Plan { get; set; }
         public DateTime? UltimoPago { get; set; }
         public decimal TotalPagado { get; set; }
         public DateTime? FechaVencimiento { get; set; }
         public bool Bloqueado { get; set; }
         public bool Activo { get; set; }
+        public string? EstadoSuscripcion { get; set; }
         public bool EstaVencido => FechaVencimiento.HasValue && FechaVencimiento.Value < DateTime.Now;
         public bool PorVencer => FechaVencimiento.HasValue && !EstaVencido && (FechaVencimiento.Value - DateTime.Now).TotalDays <= 5;
     }
@@ -27,6 +29,12 @@ namespace MiniMercado.Models.ViewModels
         [Required(ErrorMessage = "El monto es obligatorio")]
         [Range(0.01, 9999999, ErrorMessage = "Monto inválido")]
         public decimal Monto { get; set; }
+
+        [Required(ErrorMessage = "Seleccione la cantidad de meses")]
+        [Range(1, 60)]
+        public int? Meses { get; set; } = 1;
+
+        public string? Plan { get; set; } = "Mensual";
 
         [Display(Name = "Observación")]
         public string? Observacion { get; set; }

@@ -34,6 +34,7 @@ builder.Services.AddScoped<
     CustomClaimsPrincipalFactory>();
 
 builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<ISuscripcionService, SuscripcionService>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<ProveedorService>();
@@ -47,6 +48,22 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MiniMercadoContext>();
+    
+    // ⚡ Parche de emergencia: Asegurar columnas de suscripción
+    string sql = @"
+        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Tenants') AND name = 'Plan')
+        BEGIN
+            ALTER TABLE Tenants ADD 
+                [Plan] nvarchar(max) NOT NULL DEFAULT 'Mensual',
+                FechaInicioSuscripcion datetime2 NULL,
+                FechaProximoPago datetime2 NULL,
+                EstadoSuscripcion int NOT NULL DEFAULT 1,
+                MesesPagados int NOT NULL DEFAULT 0,
+                SaldoAFavorMeses int NOT NULL DEFAULT 0,
+                UltimoPagoRegistrado datetime2 NULL;
+        END";
+    db.Database.ExecuteSqlRaw(sql);
+
     db.Database.Migrate();
 }
 
