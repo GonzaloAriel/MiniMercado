@@ -55,7 +55,8 @@ namespace MiniMercado.Services
                     Precio = baseInfo.PrecioReferencia ?? 0,
                     Stock = 0,
                     Activo = true,
-                    RubroId = rubroId
+                    RubroId = rubroId,
+                    EsPorPeso = true // Asumimos que los productos base son por peso, pero esto podría ajustarse según la lógica de tu negocio.
                 };
 
                 _context.Productos.Add(producto);

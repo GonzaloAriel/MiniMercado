@@ -80,7 +80,7 @@ namespace MiniMercado.Controllers
                         nombre = productoCreado.Nombre,
                         precio = productoCreado.Precio,
                         stock = productoCreado.Stock,
-                        esPorPeso = productoCreado.EsPorPeso,
+                        esPorPeso = true,
                         codigoBarra = productoCreado.CodigoBarra
                     });
                 }
@@ -115,7 +115,7 @@ namespace MiniMercado.Controllers
                 nombre = producto.Nombre,
                 precio = producto.Precio,
                 stock = producto.Stock,
-                esPorPeso = producto.EsPorPeso
+                esPorPeso = true
             });
         }
 
@@ -196,10 +196,13 @@ namespace MiniMercado.Controllers
                 }
 
                 var producto = _context.Productos
-                    .FirstOrDefault(p => p.Id == item.ProductoId && p.TenantId == tenantId);
+     .Include(p => p.ProductoBase)
+     .FirstOrDefault(p => p.Id == item.ProductoId && p.TenantId == tenantId);
 
-                if (producto == null)
-                    return BadRequest();
+                if (producto != null && producto.ProductoBase != null)
+                {
+                    producto.EsPorPeso = true;
+                }
 
                 item.PrecioUnitario = producto.PrecioEditable
                     ? decimal.Round(item.PrecioUnitario, 2)

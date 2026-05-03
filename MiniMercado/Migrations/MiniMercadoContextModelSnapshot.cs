@@ -628,6 +628,9 @@ namespace MiniMercado.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("EsPorPeso")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Marca")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -771,21 +774,43 @@ namespace MiniMercado.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("EstadoSuscripcion")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaInicioSuscripcion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaProximoPago")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("FechaVencimiento")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("MensajeTicket")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("MesesPagados")
+                        .HasColumnType("int");
+
                     b.Property<string>("NombreComercio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Plan")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("PrecioMensual")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("SaldoAFavorMeses")
+                        .HasColumnType("int");
+
                     b.Property<string>("Telefono")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UltimoPagoRegistrado")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

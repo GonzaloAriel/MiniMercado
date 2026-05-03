@@ -30,7 +30,7 @@ namespace MiniMercado.Models
         [Range(0, 100000, ErrorMessage = "El stock no puede ser negativo")]
         public decimal Stock { get; set; }
 
-        public bool EsPorPeso { get; set; } = false;
+        public bool EsPorPeso { get; set; } = true;
 
         public bool PrecioEditable { get; set; } = false;
 
