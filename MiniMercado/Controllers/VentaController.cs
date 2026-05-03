@@ -139,7 +139,7 @@ namespace MiniMercado.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(List<VentaDetalle> detalles, bool EsFiado, int? ClienteId)
+        public async Task<IActionResult> Create(List<VentaDetalle> detalles, bool EsFiado, int? ClienteId, string? MetodoPago, decimal? MontoRecibido)
         {
             var tenantId = _tenantService.GetTenantId().Value;
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -289,6 +289,28 @@ namespace MiniMercado.Controllers
 
             //Guardamos los cambios en la base de datos
             await _context.SaveChangesAsync();
+
+            // REGISTRO DE PAGO (DESACOPLADO)
+            if (!EsFiado)
+            {
+                var pago = new Pago
+                {
+                    VentaId = venta.Id,
+                    TenantId = tenantId,
+                    Metodo = string.IsNullOrWhiteSpace(MetodoPago) ? "EFECTIVO" : MetodoPago.ToUpper(),
+                    Monto = venta.Total,
+                    Fecha = DateTime.Now
+                };
+
+                if (pago.Metodo == "EFECTIVO")
+                {
+                    pago.MontoRecibido = MontoRecibido ?? venta.Total;
+                    pago.Vuelto = pago.MontoRecibido - venta.Total;
+                }
+
+                _context.Pagos.Add(pago);
+                await _context.SaveChangesAsync();
+            }
 
             //Auditoria
             _auditoria.Registrar(

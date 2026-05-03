@@ -36,6 +36,7 @@ namespace MiniMercado.Data
         public DbSet<Configuracion> Configuraciones { get; set; }
         public DbSet<Proveedor> Proveedores { get; set; }
         public DbSet<ProductoProveedor> ProductoProveedores { get; set; }
+        public DbSet<Pago> Pagos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,8 +59,21 @@ namespace MiniMercado.Data
             modelBuilder.Entity<Caja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Configuracion>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Proveedor>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<Pago>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
 
             // CONFIGURACIONES FLUENT API EXISTENTES
+
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Venta)
+                .WithMany(v => v.Pagos)
+                .HasForeignKey(p => p.VentaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Tenant)
+                .WithMany()
+                .HasForeignKey(p => p.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ProductoProveedor>()
                 .HasKey(pp => new { pp.ProductoId, pp.ProveedorId });

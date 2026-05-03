@@ -1,7 +1,18 @@
 @model MiniMercado.Models.Venta
 @using MiniMercado.Models
 
+<style>
+
+@@media print {
+    body {
+        width: 280px;
+    }
+}
+
+</style>
+
 @{
+    Layout = null;
     var tenant = ViewBag.Tenant as Tenant;
 }
 
@@ -9,11 +20,13 @@
 <html>
 <head>
     <style>
-        body { font-family: monospace; width: 280px; }
-        h3 { text-align: center; }
+        body { font-family: monospace; width: 280px; margin: 0; padding: 0; }
+        h3 { text-align: center; margin: 5px 0; }
+        p { margin: 2px 0; }
         p.centro { text-align: center; }
-        table { width: 100%; }
-        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; font-size: 12px; }
+        td { padding: 2px 0; }
+        hr { margin: 5px 0; }
     </style>
 </head>
 <body onload="window.print()">
@@ -35,24 +48,25 @@
 
     <hr />
 
-   <p>Venta #@Model.Id | @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+    <p>Venta #@Model.Id | @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
 
     <hr />
 
-    <div class="table-responsive">
-        <table class="table">
-            @foreach (var d in Model.Detalles)
-            {
-                <tr>
-                    <td>@d.Producto.Nombre</td>
-                    <td>x @d.Cantidad.ToString("0.##")</td>
-                    <td>$@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))</td>
-                </tr>
-            }
-        </table>
-    </div>
+    <table>
+        @foreach (var d in Model.Detalles)
+        {
+            <tr>
+                <td>@d.Producto.Nombre</td>
+                <td>x @d.Cantidad.ToString("0.##")</td>
+                <td style="text-align:right">
+                    $@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))
+                </td>
+            </tr>
+        }
+    </table>
 
     <hr />
+
     <p><strong>Total: $@Model.Total.ToString("0.##")</strong></p>
 
     @if (!string.IsNullOrEmpty(tenant?.MensajeTicket))

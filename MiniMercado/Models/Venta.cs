@@ -37,7 +37,8 @@ namespace MiniMercado.Models
         public int? CajaId { get; set; }
         public Caja? Caja { get; set; }
 
-        
+        [ValidateNever]
+        public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 
     }
 }

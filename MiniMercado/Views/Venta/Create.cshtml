@@ -269,6 +269,73 @@
         line-height: 1.2;
         text-align: right;
     }
+
+    /* SECCION PAGO */
+    .payment-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .method-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 12px 8px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .method-btn i { font-size: 1.2rem; }
+
+    .method-btn.active {
+        background: var(--blue-bg);
+        border-color: var(--blue);
+        color: var(--blue-text);
+    }
+
+    .change-display {
+        background: var(--bg-tertiary);
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .change-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .change-amount {
+        font-family: 'DM Mono', monospace;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .text-success-custom { color: #10b981; }
+    .text-danger-custom { color: #ef4444; }
 </style>
 
 <div class="db-wrap">
@@ -379,7 +446,32 @@
                 </div>
             </div>
 
-            <button type="button" class="btn-confirm" onclick="document.getElementById('formVenta').submit()">
+            <!-- NUEVA SECCION PAGO -->
+            <div class="payment-section" id="seccionPago">
+                <div class="payment-methods">
+                    <button type="button" class="method-btn active" onclick="setMetodo('EFECTIVO')">
+                        <i class="bi bi-cash-stack"></i> EFECTIVO
+                    </button>
+                    <button type="button" class="method-btn" onclick="setMetodo('MP')">
+                        <i class="bi bi-phone"></i> MP
+                    </button>
+                    <button type="button" class="method-btn" onclick="setMetodo('TARJETA')">
+                        <i class="bi bi-credit-card"></i> TARJETA
+                    </button>
+                </div>
+
+                <div id="efectivoInputs">
+                    <label class="change-label">Monto Recibido</label>
+                    <input type="number" id="montoRecibidoInput" class="form-control-pos text-center fw-bold fs-4" placeholder="0" oninput="calcularVuelto()" />
+                    
+                    <div class="change-display mt-3">
+                        <span class="change-label">Vuelto</span>
+                        <div class="change-amount" id="vueltoDisplay">$0</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-confirm" onclick="confirmarVenta()">
                 <i class="bi bi-check2-circle me-2"></i> Confirmar Venta
             </button>
 
@@ -406,6 +498,7 @@
     <script>
     let index = @(Model?.Count ?? 0);
     let fiadoActivo = false;
+    let metodoActual = "EFECTIVO";
     let toastBootstrap;
 
     const beep = new Audio('/sounds/beep.mp3');
@@ -428,7 +521,7 @@
 
         document.addEventListener("keydown", function(e) {
             if (e.key === "F2") { e.preventDefault(); toggleFiado(); }
-            if (e.key === "F10" || e.key === "End") { e.preventDefault(); document.getElementById("formVenta").submit(); }
+            if (e.key === "F10" || e.key === "End") { e.preventDefault(); confirmarVenta(); }
             if (e.key === "Escape") {
                 const buscador = document.getElementById("superBuscador");
                 buscador.value = "";
@@ -437,6 +530,71 @@
             }
         });
     });
+
+    function setMetodo(m) {
+        metodoActual = m;
+        document.querySelectorAll(".method-btn").forEach(b => {
+            b.classList.toggle("active", b.innerText.includes(m));
+        });
+
+        const seccionEfectivo = document.getElementById("efectivoInputs");
+        if (m === "EFECTIVO") {
+            seccionEfectivo.style.display = "block";
+            document.getElementById("montoRecibidoInput").focus();
+        } else {
+            seccionEfectivo.style.display = "none";
+        }
+    }
+
+    function calcularVuelto() {
+        const total = parseFloat(document.getElementById("totalVenta").innerText) || 0;
+        const recibido = parseFloat(document.getElementById("montoRecibidoInput").value) || 0;
+        const vuelto = recibido - total;
+        const display = document.getElementById("vueltoDisplay");
+        
+        display.innerText = "$" + vuelto.toFixed(0);
+        display.className = "change-amount " + (vuelto >= 0 ? "text-success-custom" : "text-danger-custom");
+    }
+
+    function confirmarVenta() {
+        const form = document.getElementById("formVenta");
+        const total = parseFloat(document.getElementById("totalVenta").innerText) || 0;
+        
+        if (total <= 0) {
+            alert("No hay productos en la venta.");
+            return;
+        }
+
+        if (fiadoActivo) {
+            if (!document.getElementById("clienteId").value) {
+                alert("Seleccione un cliente para la venta al fiado.");
+                return;
+            }
+        } else if (metodoActual === "EFECTIVO") {
+            const recibido = parseFloat(document.getElementById("montoRecibidoInput").value) || 0;
+            if (recibido < total) {
+                alert("El monto recibido es menor al total.");
+                return;
+            }
+        }
+
+        // Agregar campos de pago dinámicamente al form
+        const inputMetodo = document.createElement("input");
+        inputMetodo.type = "hidden";
+        inputMetodo.name = "MetodoPago";
+        inputMetodo.value = metodoActual;
+        form.appendChild(inputMetodo);
+
+        if (metodoActual === "EFECTIVO") {
+            const inputRecibido = document.createElement("input");
+            inputRecibido.type = "hidden";
+            inputRecibido.name = "MontoRecibido";
+            inputRecibido.value = document.getElementById("montoRecibidoInput").value;
+            form.appendChild(inputRecibido);
+        }
+
+        form.submit();
+    }
 
     function mostrarToast(mensaje) {
         document.getElementById("toastMessage").innerText = mensaje;
