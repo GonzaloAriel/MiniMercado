@@ -1,16 +1,6 @@
 @model MiniMercado.Models.Venta
 @using MiniMercado.Models
 
-<style>
-
-@@media print {
-    body {
-        width: 280px;
-    }
-}
-
-</style>
-
 @{
     Layout = null;
     var tenant = ViewBag.Tenant as Tenant;
@@ -20,16 +10,70 @@
 <html>
 <head>
     <style>
-        body { font-family: monospace; width: 280px; margin: 0; padding: 0; }
-        h3 { text-align: center; margin: 5px 0; }
-        p { margin: 2px 0; }
-        p.centro { text-align: center; }
-        table { width: 100%; font-size: 12px; }
-        td { padding: 2px 0; }
-        hr { margin: 5px 0; }
+            body {
+                font-family: monospace;
+                width: 280px; /* 80mm approx */
+                margin: 0;
+                padding: 0;
+                font-size: 12px;
+            }
+
+            h3 {
+                text-align: center;
+                margin: 4px 0;
+            }
+
+            p {
+                margin: 2px 0;
+            }
+
+            .centro {
+                text-align: center;
+            }
+
+            .linea {
+                border-top: 1px dashed #000;
+                margin: 5px 0;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            td {
+                padding: 2px 0;
+                vertical-align: top;
+            }
+
+            .producto {
+                width: 50%;
+            }
+
+            .cantidad {
+                width: 15%;
+                text-align: center;
+            }
+
+            .precio {
+                width: 35%;
+                text-align: right;
+            }
+
+            .total {
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            @@media print {
+                body {
+                    width: 280px;
+                }
+            }
     </style>
 </head>
-<body onload="window.print()">
+
+<body onload="window.print(); setTimeout(() => window.close(), 800);">
 
     <h3>@(tenant?.NombreComercio ?? "MiniMercado")</h3>
 
@@ -37,42 +81,72 @@
     {
         <p class="centro">@tenant.Direccion</p>
     }
+
     @if (!string.IsNullOrEmpty(tenant?.Telefono))
     {
         <p class="centro">Tel: @tenant.Telefono</p>
     }
+
     @if (!string.IsNullOrEmpty(tenant?.CUIT))
     {
         <p class="centro">CUIT: @tenant.CUIT</p>
     }
 
-    <hr />
+    <div class="linea"></div>
 
-    <p>Venta #@Model.Id | @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+    <p>Venta #@Model.Id</p>
+    <p>@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
 
-    <hr />
+    <div class="linea"></div>
 
     <table>
         @foreach (var d in Model.Detalles)
         {
             <tr>
-                <td>@d.Producto.Nombre</td>
-                <td>x @d.Cantidad.ToString("0.##")</td>
-                <td style="text-align:right">
+                <td colspan="3">@d.Producto.Nombre</td>
+            </tr>
+            <tr>
+                <td class="producto"></td>
+                <td class="cantidad">x@(d.Cantidad.ToString("0.##"))</td>
+                <td class="precio">
                     $@((d.Cantidad * d.PrecioUnitario).ToString("0.##"))
                 </td>
             </tr>
         }
     </table>
 
-    <hr />
+    <div class="linea"></div>
 
-    <p><strong>Total: $@Model.Total.ToString("0.##")</strong></p>
+    <p class="total">TOTAL: $@Model.Total.ToString("0.##")</p>
+
+    @if (Model.Pagos != null && Model.Pagos.Any())
+    {
+        <div class="linea"></div>
+
+        foreach (var pago in Model.Pagos)
+        {
+            <p>Pago: @pago.Metodo</p>
+
+            @if (pago.MontoRecibido.HasValue)
+            {
+                <p>Recibido: $@pago.MontoRecibido.Value.ToString("0.##")</p>
+            }
+
+            @if (pago.Vuelto.HasValue)
+            {
+                <p>Vuelto: $@pago.Vuelto.Value.ToString("0.##")</p>
+            }
+        }
+    }
+
+    <div class="linea"></div>
 
     @if (!string.IsNullOrEmpty(tenant?.MensajeTicket))
     {
         <p class="centro">@tenant.MensajeTicket</p>
     }
+
+    <p class="centro">¡Gracias por su compra!</p>
 
 </body>
 </html>

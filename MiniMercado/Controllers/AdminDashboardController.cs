@@ -141,6 +141,55 @@ namespace MiniMercado.Controllers
 
             ViewBag.ProductosSinRotacion = productosSinRotacion;
 
+            // --- DATOS DE PAGOS (RESUMEN ANUAL) ---
+            var pagosAnuales = _context.Pagos
+                .Where(p => p.TenantId == tenantId && p.Fecha.Year == year)
+                .ToList();
+
+            ViewBag.TotalEfectivo = pagosAnuales.Where(p => p.Metodo == "EFECTIVO").Sum(p => p.Monto);
+            ViewBag.TotalDigital = pagosAnuales.Where(p => p.Metodo == "MP" || p.Metodo == "TARJETA").Sum(p => p.Monto);
+            ViewBag.TotalVuelto = pagosAnuales.Where(p => p.Metodo == "EFECTIVO").Sum(p => p.Vuelto ?? 0);
+
+            return View();
+        }
+
+        public IActionResult Pagos(int? anio)
+        {
+            var tenantId = _tenantService.GetTenantId().Value;
+            int year = anio ?? DateTime.Today.Year;
+
+            var pagosQuery = _context.Pagos
+                .Where(p => p.TenantId == tenantId && p.Fecha.Year == year);
+
+            var resumenPagos = pagosQuery
+                .GroupBy(p => p.Metodo)
+                .Select(g => new
+                {
+                    Metodo = g.Key,
+                    Total = g.Sum(p => p.Monto),
+                    Cantidad = g.Count(),
+                    TicketPromedio = g.Average(p => p.Monto)
+                })
+                .ToList();
+
+            ViewBag.Anio = year;
+            ViewBag.ResumenPagos = resumenPagos;
+            ViewBag.TotalVuelto = pagosQuery.Where(p => p.Metodo == "EFECTIVO").Sum(p => p.Vuelto ?? 0);
+            ViewBag.TotalGeneral = resumenPagos.Sum(r => r.Total);
+
+            // --- PAGOS POR DÍA (PARA GRÁFICO DE LÍNEAS) ---
+            var pagosPorDia = pagosQuery
+                .GroupBy(p => p.Fecha.Date)
+                .Select(g => new
+                {
+                    Fecha = g.Key,
+                    Total = g.Sum(x => x.Monto)
+                })
+                .OrderBy(x => x.Fecha)
+                .ToList();
+
+            ViewBag.PagosPorDia = pagosPorDia;
+
             return View();
         }
     }

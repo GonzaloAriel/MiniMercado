@@ -1,0 +1,296 @@
+@{
+    ViewData["Title"] = "Dashboard de Pagos";
+    var resumenPagos = ViewBag.ResumenPagos;
+    var anioActual = ViewBag.Anio;
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+    .db-wrap {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        color: var(--text-primary);
+        background: var(--bg-primary);
+        padding: 40px 32px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        margin: 32px 0 20px;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .kpi-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: .1em;
+    }
+
+    .kpi-value {
+        font-size: 32px;
+        font-weight: 700;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .kpi-value.green { color: var(--green-text); }
+    .kpi-value.blue { color: var(--blue-text); }
+    .kpi-value.amber { color: var(--amber-text); }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 28px 24px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+        width: 100%;
+    }
+
+    .data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+
+    .db-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .db-table th {
+        padding: 14px 24px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .db-table td {
+        padding: 14px 24px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .btn-back {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-back:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+</style>
+
+<div class="db-wrap">
+    <div class="db-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/AdminDashboard/Index?anio=@anioActual" class="btn-back mb-3">
+                <i class="bi bi-arrow-left"></i> Volver al Dashboard
+            </a>
+            <h1 class="fw-bold">Detalle de Pagos @anioActual</h1>
+            <p class="text-secondary">Análisis de métodos de pago y flujo de caja</p>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Ingresos Totales</span>
+            <span class="kpi-value green">$@ViewBag.TotalGeneral.ToString("N0")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Vuelto Total Anual</span>
+            <span class="kpi-value amber">$@ViewBag.TotalVuelto.ToString("N0")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Métodos Registrados</span>
+            <span class="kpi-value blue">@(((IEnumerable<dynamic>)resumenPagos).Count())</span>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <h5 class="fw-bold mb-4">Volumen de Pagos por Día</h5>
+        <div class="chart-container" style="height: 250px;">
+            <canvas id="dailyChart"></canvas>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h5 class="fw-bold mb-4">Distribución por Método</h5>
+            <div class="chart-container">
+                <canvas id="distribucionChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h5 class="fw-bold mb-4">Monto por Método ($)</h5>
+            <div class="chart-container">
+                <canvas id="montosChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <p class="section-title">Resumen Estadístico</p>
+    <div class="data-card">
+        <table class="db-table table">
+            <thead>
+                <tr>
+                    <th>Método</th>
+                    <th style="text-align:center">Transacciones</th>
+                    <th style="text-align:right">Ticket Promedio</th>
+                    <th style="text-align:right">Total Acumulado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in resumenPagos)
+                {
+                    <tr>
+                        <td class="fw-bold">
+                            <i class="bi @(r.Metodo == "EFECTIVO" ? "bi-cash-stack text-success" : r.Metodo == "MP" ? "bi-phone text-primary" : "bi-credit-card text-info") me-2"></i>
+                            @r.Metodo
+                        </td>
+                        <td style="text-align:center">@r.Cantidad</td>
+                        <td style="text-align:right" class="font-monospace">$@r.TicketPromedio.ToString("N2")</td>
+                        <td style="text-align:right" class="fw-bold font-monospace">$@r.Total.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctxDist = document.getElementById('distribucionChart');
+        const ctxMontos = document.getElementById('montosChart');
+
+        const labels = [@Html.Raw(string.Join(",", ((IEnumerable<dynamic>)resumenPagos).Select(r => $"\"{r.Metodo}\"")))];
+        const dataCant = [@string.Join(",", ((IEnumerable<dynamic>)resumenPagos).Select(r => r.Cantidad))];
+        const dataMontos = [@string.Join(",", ((IEnumerable<dynamic>)resumenPagos).Select(r => r.Total.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)))];
+
+        new Chart(ctxDist, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataCant,
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 20, font: { size: 14 } } }
+                }
+            }
+        });
+
+        new Chart(ctxMontos, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total $',
+                    data: dataMontos,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // GRÁFICO DIARIO
+        const ctxDaily = document.getElementById('dailyChart');
+        const dailyLabels = [@Html.Raw(string.Join(",", ((IEnumerable<dynamic>)ViewBag.PagosPorDia).Select(p => $"\"{p.Fecha.ToString("dd/MM")}\"")))];
+        const dailyData = [@string.Join(",", ((IEnumerable<dynamic>)ViewBag.PagosPorDia).Select(p => p.Total.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)))];
+
+        new Chart(ctxDaily, {
+            type: 'line',
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: 'Pagos $',
+                    data: dailyData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+}

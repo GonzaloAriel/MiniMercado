@@ -256,6 +256,26 @@
         </div>
     </div>
 
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <p class="section-title m-0">Pagos (Resumen)</p>
+        <a href="/AdminDashboard/Pagos?anio=@anioActual" class="btn-table">Ver más</a>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-label">Efectivo</span>
+            <span class="kpi-value green">$@ViewBag.TotalEfectivo.ToString("N0")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Digital (MP/Tarjeta)</span>
+            <span class="kpi-value blue">$@ViewBag.TotalDigital.ToString("N0")</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Vuelto Total</span>
+            <span class="kpi-value amber">$@ViewBag.TotalVuelto.ToString("N0")</span>
+        </div>
+    </div>
+
     <p class="section-title">Gráficos de Rendimiento</p>
     <div class="charts-grid">
         <div class="chart-card">
