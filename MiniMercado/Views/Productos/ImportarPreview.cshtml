@@ -29,6 +29,7 @@
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
+                        <th>Rubro</th>
                         <th class="text-end">Precio</th>
                         <th class="text-end">Stock</th>
                         <th>Estado</th>
@@ -48,6 +49,10 @@
                             <td>
                                 @item.Nombre
                                 <input type="hidden" name="items[@i].Nombre" value="@item.Nombre" />
+                            </td>
+                            <td>
+                                @item.Rubro
+                                <input type="hidden" name="items[@i].Rubro" value="@item.Rubro" />
                             </td>
                             <td class="text-end">
                                 @item.Precio.ToString("C")

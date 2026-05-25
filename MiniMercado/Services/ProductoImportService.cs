@@ -11,6 +11,7 @@ namespace MiniMercado.Services
         private readonly string[] _aliasNombre = { "nombre", "producto", "descripcion", "artículo", "articulo", "detalle" };
         private readonly string[] _aliasPrecio = { "precio", "p.venta", "precioventa", "pventa", "venta", "costo" };
         private readonly string[] _aliasStock = { "stock", "cantidad", "existencia", "disponible", "cant" };
+        private readonly string[] _aliasRubro = { "rubro", "categoria", "categoría", "familia", "sector", "tipo" };
 
         private string Normalizar(string texto)
         {
@@ -92,6 +93,7 @@ namespace MiniMercado.Services
                 if (BuscarColumna(fila, _aliasNombre) != null) coincidencias++;
                 if (BuscarColumna(fila, _aliasPrecio) != null) coincidencias++;
                 if (BuscarColumna(fila, _aliasStock) != null) coincidencias++;
+                if (BuscarColumna(fila, _aliasRubro) != null) coincidencias++;
 
                 if (coincidencias > maxCoincidencias)
                 {
@@ -116,6 +118,7 @@ namespace MiniMercado.Services
             int? colNom = BuscarColumna(headerRow, _aliasNombre);
             int? colPre = BuscarColumna(headerRow, _aliasPrecio);
             int? colSto = BuscarColumna(headerRow, _aliasStock);
+            int? colRub = BuscarColumna(headerRow, _aliasRubro);
 
             // Empezar desde la fila siguiente a la de encabezados
             var rows = worksheet.RowsUsed(r => r.RowNumber() > headerRow.RowNumber());
@@ -128,6 +131,7 @@ namespace MiniMercado.Services
                     {
                         CodigoBarra = colCod.HasValue ? row.Cell(colCod.Value).GetString() : "",
                         Nombre = colNom.HasValue ? row.Cell(colNom.Value).GetString() : "",
+                        Rubro = colRub.HasValue ? row.Cell(colRub.Value).GetString() : "Sin clasificar",
                         Precio = colPre.HasValue ? ParseDecimalSeguro(row.Cell(colPre.Value).GetString()) ?? 0 : 0,
                         Stock = colSto.HasValue ? ParseDecimalSeguro(row.Cell(colSto.Value).GetString()) ?? 0 : 0
                     };
@@ -159,6 +163,7 @@ namespace MiniMercado.Services
             int? colNom = BuscarColumna(headerRow, _aliasNombre);
             int? colPre = BuscarColumna(headerRow, _aliasPrecio);
             int? colSto = BuscarColumna(headerRow, _aliasStock);
+            int? colRub = BuscarColumna(headerRow, _aliasRubro);
 
             // Validar columnas obligatorias
             if (colCod == null || colNom == null || colPre == null)
@@ -178,6 +183,7 @@ namespace MiniMercado.Services
             {
                 var codigo = row.Cell(colCod.Value).GetString()?.Trim();
                 var nombre = row.Cell(colNom.Value).GetString()?.Trim();
+                var rubro = colRub.HasValue ? row.Cell(colRub.Value).GetString()?.Trim() : "Sin clasificar";
                 var precioStr = row.Cell(colPre.Value).GetString()?.Trim();
                 var stockStr = colSto.HasValue ? row.Cell(colSto.Value).GetString()?.Trim() : "0";
 
@@ -190,6 +196,7 @@ namespace MiniMercado.Services
                 {
                     CodigoBarra = codigo,
                     Nombre = nombre,
+                    Rubro = string.IsNullOrEmpty(rubro) ? "Sin clasificar" : rubro,
                     EsValido = true,
                     MensajeError = ""
                 };

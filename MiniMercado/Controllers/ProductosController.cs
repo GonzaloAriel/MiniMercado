@@ -554,23 +554,29 @@ namespace MiniMercado.Controllers
 
             var tenantId = _tenantService.GetTenantId();
 
-            // Buscar rubro por defecto
-            var rubroDefault = await _context.Rubros
-                .FirstOrDefaultAsync(r =>
-                    r.Nombre == "Sin clasificar" &&
-                    r.TenantId == tenantId);
+            // Obtener todos los rubros actuales del tenant para cachear de forma segura
+            var rubrosExistentesLista = await _context.Rubros
+                .Where(r => r.TenantId == tenantId)
+                .ToListAsync();
 
-            // Si no existe, crearlo
-            if (rubroDefault == null)
+            var rubrosExistentes = rubrosExistentesLista
+                .GroupBy(r => r.Nombre.Trim().ToLower())
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.First()
+                );
+
+            // Asegurar "Sin clasificar"
+            if (!rubrosExistentes.ContainsKey("sin clasificar"))
             {
-                rubroDefault = new Rubro
+                var rubroDefault = new Rubro
                 {
                     Nombre = "Sin clasificar",
                     TenantId = tenantId.Value
                 };
-
                 _context.Rubros.Add(rubroDefault);
                 await _context.SaveChangesAsync();
+                rubrosExistentes.Add("sin clasificar", rubroDefault);
             }
 
             int importados = 0;
@@ -581,6 +587,22 @@ namespace MiniMercado.Controllers
             {
                 try
                 {
+                    // Lógica de Rubro
+                    var nombreRubro = string.IsNullOrWhiteSpace(item.Rubro) ? "Sin clasificar" : item.Rubro.Trim();
+                    var rubroKey = nombreRubro.ToLower();
+
+                    if (!rubrosExistentes.TryGetValue(rubroKey, out var rubro))
+                    {
+                        rubro = new Rubro
+                        {
+                            Nombre = nombreRubro,
+                            TenantId = tenantId.Value
+                        };
+                        _context.Rubros.Add(rubro);
+                        await _context.SaveChangesAsync();
+                        rubrosExistentes.Add(rubroKey, rubro);
+                    }
+
                     var existente = await _context.Productos
                         .FirstOrDefaultAsync(p =>
                             p.CodigoBarra == item.CodigoBarra &&
@@ -591,6 +613,7 @@ namespace MiniMercado.Controllers
                         existente.Nombre = item.Nombre;
                         existente.Precio = item.Precio;
                         existente.Stock = item.Stock;
+                        existente.RubroId = rubro.Id;
                         actualizados++;
                     }
                     else
@@ -603,7 +626,7 @@ namespace MiniMercado.Controllers
                             Stock = item.Stock,
                             TenantId = tenantId.Value,
                             Activo = true,
-                            RubroId = rubroDefault.Id
+                            RubroId = rubro.Id
                         };
 
                         _context.Productos.Add(producto);
