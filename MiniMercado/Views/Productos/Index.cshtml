@@ -234,6 +234,10 @@
             <a asp-action="Create" class="btn-modern success">
                 <i class="bi bi-plus-lg"></i> Nuevo Producto
             </a>
+            <a asp-action="Importar"            
+                class="btn-modern success">
+                Importar Excel
+            </a>
         </div>
     </div>
 
@@ -276,6 +280,22 @@
             </div>
         </form>
     </div>
+
+    @if (TempData["Importados"] != null)
+    {
+        <div class="alert alert-success">
+            Productos importados:
+        <strong>@TempData["Importados"]</strong>
+        <br />
+
+        Productos actualizados:
+        <strong>@TempData["Actualizados"]</strong>
+        <br />
+
+        Errores:
+        <strong>@TempData["Errores"]</strong>
+        </div>
+    }
 
     <!-- TABLA -->
     <div class="data-card">

@@ -41,6 +41,7 @@ builder.Services.AddScoped<ProveedorService>();
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
 builder.Services.AddScoped<AlertasService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ProductoImportService>();
 
 
 var app = builder.Build();

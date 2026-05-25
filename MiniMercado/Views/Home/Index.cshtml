@@ -590,10 +590,9 @@
         </div>
     }
 
-    <p class="sections-label">Módulos disponibles</p>
-
     @if (User.IsInRole("Caja") || User.IsInRole("Admin"))
     {
+        <p class="sections-label">Módulos disponibles</p>
         <div class="section-card" id="card-ventas">
             <div class="section-header" onclick="toggleSection('ventas')">
                 <div class="section-icon" style="background:rgba(16,185,129,0.12)">

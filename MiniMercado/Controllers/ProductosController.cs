@@ -16,8 +16,8 @@ namespace MiniMercado.Controllers
         private readonly AuditoriaService _auditoria;
         private readonly ProductoService _productoService;
 
-        public ProductosController(MiniMercadoContext context, 
-                                   ITenantService tenantService, 
+        public ProductosController(MiniMercadoContext context,
+                                   ITenantService tenantService,
                                    AuditoriaService auditoria,
                                    ProductoService productoService)
         {
@@ -455,7 +455,7 @@ namespace MiniMercado.Controllers
         {
             var tenantId = _tenantService.GetTenantId().Value;
             var lote = await _context.LotesProducto.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
-            
+
             if (lote == null) return NotFound();
 
             var productoId = lote.ProductoId;
@@ -489,12 +489,12 @@ namespace MiniMercado.Controllers
         {
             var tenantId = _tenantService.GetTenantId().Value;
             var lote = await _context.LotesProducto.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
-            
+
             if (lote == null) return NotFound();
 
             lote.Cantidad = cantidad;
             lote.FechaVencimiento = fechaVencimiento;
-            
+
             await _context.SaveChangesAsync();
             SincronizarStock(lote.ProductoId, tenantId);
 
@@ -512,6 +512,100 @@ namespace MiniMercado.Controllers
                     .Sum(l => (decimal?)l.Cantidad) ?? 0;
                 _context.SaveChanges();
             }
+        }
+
+        public IActionResult Importar()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Importar(IFormFile archivo, [FromServices] ProductoImportService importService)
+        {
+            if (archivo == null || archivo.Length == 0)
+            {
+                TempData["Error"] = "Debe subir un archivo.";
+                return View();
+            }
+
+            var tenantId = _tenantService.GetTenantId();
+
+            // Buscar rubro por defecto
+            var rubroDefault = await _context.Rubros
+                .FirstOrDefaultAsync(r =>
+                    r.Nombre == "Sin clasificar" &&
+                    r.TenantId == tenantId);
+
+            // Si no existe, crearlo
+            if (rubroDefault == null)
+            {
+                rubroDefault = new Rubro
+                {
+                    Nombre = "Sin clasificar",
+                    TenantId = tenantId.Value
+                };
+
+                _context.Rubros.Add(rubroDefault);
+
+                await _context.SaveChangesAsync();
+            }
+
+            var productosExcel =
+                importService.LeerExcel(archivo.OpenReadStream());
+
+            int importados = 0;
+            int actualizados = 0;
+            int errores = 0;
+
+            foreach (var item in productosExcel)
+            {
+                try
+                {
+                    var existente = await _context.Productos
+                   .FirstOrDefaultAsync(p =>
+                       p.CodigoBarra == item.CodigoBarra &&
+                       p.TenantId == tenantId);
+
+                    if (existente != null)
+                    {
+                        existente.Nombre = item.Nombre;
+                        existente.Precio = item.Precio;
+                        existente.Stock = item.Stock;
+                        actualizados++;
+                    }
+                    else
+                    {
+                        var producto = new Producto
+                        {
+                            CodigoBarra = item.CodigoBarra,
+                            Nombre = item.Nombre,
+                            Precio = item.Precio,
+                            Stock = item.Stock,
+                            TenantId = tenantId.Value,
+                            Activo = true,
+
+                            // Rubro seguro multi-tenant
+                            RubroId = rubroDefault.Id
+                        };
+
+                        _context.Productos.Add(producto);
+                        importados++;
+                    }
+                }
+                catch
+                {
+                    errores++;
+                }
+
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Importados"] = importados;
+            TempData["Actualizados"] = actualizados;
+            TempData["Errores"] = errores;
+
+            return RedirectToAction(nameof(Index));
         }
 
     }
