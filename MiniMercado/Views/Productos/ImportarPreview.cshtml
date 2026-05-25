@@ -1,0 +1,106 @@
+@model MiniMercado.Models.Importacion.ImportPreviewViewModel
+
+@{
+    ViewData["Title"] = "Vista Previa de Importación";
+}
+
+<div class="container mt-4">
+    <h2 class="text-white">Vista Previa de Importación</h2>
+    <p class="text-white">Revisa los productos antes de confirmar la importación definitiva.</p>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Resumen</h5>
+                    <p class="mb-0">
+                        <span class="badge bg-success p-2 me-2">Válidos: @Model.TotalValidos</span>
+                        <span class="badge bg-danger p-2">Errores: @Model.TotalErrores</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="ConfirmarImportacion" method="post">
+        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="db-table table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-end">Stock</th>
+                        <th>Estado</th>
+                        <th>Mensaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Items.Count; i++)
+                    {
+                        var item = Model.Items[i];
+                        <tr class="@(item.EsValido ? "table-success-light" : "table-danger-light")" 
+                            style="background-color: @(item.EsValido ? "#d1e7dd" : "#f8d7da")">
+                            <td>
+                                @item.CodigoBarra
+                                <input type="hidden" name="items[@i].CodigoBarra" value="@item.CodigoBarra" />
+                            </td>
+                            <td>
+                                @item.Nombre
+                                <input type="hidden" name="items[@i].Nombre" value="@item.Nombre" />
+                            </td>
+                            <td class="text-end">
+                                @item.Precio.ToString("C")
+                                <input type="hidden" name="items[@i].Precio" value="@item.Precio" />
+                            </td>
+                            <td class="text-end">
+                                @item.Stock
+                                <input type="hidden" name="items[@i].Stock" value="@item.Stock" />
+                            </td>
+                            <td>
+                                @if (item.EsValido)
+                                {
+                                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> OK</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Error</span>
+                                }
+                                <input type="hidden" name="items[@i].EsValido" value="@item.EsValido.ToString().ToLower()" />
+                            </td>
+                            <td class="small">
+                                @item.MensajeError
+                                <input type="hidden" name="items[@i].MensajeError" value="@item.MensajeError" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 pb-5">
+            <a asp-action="Importar" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a subir
+            </a>
+            
+            @if (Model.TotalValidos > 0)
+            {
+                <button type="submit" class="btn btn-primary float-end">
+                    <i class="bi bi-cloud-upload"></i> Confirmar Importación (@Model.TotalValidos productos)
+                </button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary float-end" disabled>
+                    Sin productos válidos
+                </button>
+            }
+        </div>
+    </form>
+</div>
+
+<style>
+    .table-success-light { background-color: #d1e7dd !important; }
+    .table-danger-light { background-color: #f8d7da !important; }
+    .sticky-top { top: -1px; z-index: 10; }
+</style>

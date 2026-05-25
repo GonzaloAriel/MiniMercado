@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.Models;
+using MiniMercado.Models.Importacion;
 using MiniMercado.Services;
 using System.Linq;
 
@@ -528,6 +529,29 @@ namespace MiniMercado.Controllers
                 return View();
             }
 
+            try
+            {
+                var previewItems = importService.ObtenerPreview(archivo.OpenReadStream());
+                var viewModel = new ImportPreviewViewModel { Items = previewItems };
+
+                return View("ImportarPreview", viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return View();
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmarImportacion(List<ImportItemPreviewViewModel> items)
+        {
+            if (items == null || !items.Any())
+            {
+                TempData["Error"] = "No hay productos válidos para importar.";
+                return RedirectToAction(nameof(Importar));
+            }
+
             var tenantId = _tenantService.GetTenantId();
 
             // Buscar rubro por defecto
@@ -546,25 +570,21 @@ namespace MiniMercado.Controllers
                 };
 
                 _context.Rubros.Add(rubroDefault);
-
                 await _context.SaveChangesAsync();
             }
-
-            var productosExcel =
-                importService.LeerExcel(archivo.OpenReadStream());
 
             int importados = 0;
             int actualizados = 0;
             int errores = 0;
 
-            foreach (var item in productosExcel)
+            foreach (var item in items.Where(i => i.EsValido))
             {
                 try
                 {
                     var existente = await _context.Productos
-                   .FirstOrDefaultAsync(p =>
-                       p.CodigoBarra == item.CodigoBarra &&
-                       p.TenantId == tenantId);
+                        .FirstOrDefaultAsync(p =>
+                            p.CodigoBarra == item.CodigoBarra &&
+                            p.TenantId == tenantId);
 
                     if (existente != null)
                     {
@@ -583,8 +603,6 @@ namespace MiniMercado.Controllers
                             Stock = item.Stock,
                             TenantId = tenantId.Value,
                             Activo = true,
-
-                            // Rubro seguro multi-tenant
                             RubroId = rubroDefault.Id
                         };
 
@@ -596,7 +614,6 @@ namespace MiniMercado.Controllers
                 {
                     errores++;
                 }
-
             }
 
             await _context.SaveChangesAsync();
