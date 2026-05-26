@@ -6,6 +6,8 @@ using MiniMercado.Models;
 using MiniMercado.Models.Importacion;
 using MiniMercado.Services;
 using System.Linq;
+using ClosedXML.Excel;
+using System.IO;
 
 namespace MiniMercado.Controllers
 {
@@ -646,6 +648,56 @@ namespace MiniMercado.Controllers
             TempData["Errores"] = errores;
 
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public IActionResult DescargarPlantillaImportacion()
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Productos");
+
+                // Encabezados
+                worksheet.Cell(1, 1).Value = "Código";
+                worksheet.Cell(1, 2).Value = "Producto";
+                worksheet.Cell(1, 3).Value = "Precio";
+                worksheet.Cell(1, 4).Value = "Stock";
+                worksheet.Cell(1, 5).Value = "Categoría";
+
+                // Formato encabezados
+                var headerRow = worksheet.Row(1);
+                headerRow.Style.Font.Bold = true;
+
+                // Ejemplos
+                worksheet.Cell(2, 1).Value = "7791234567890";
+                worksheet.Cell(2, 2).Value = "Coca Cola 2L";
+                worksheet.Cell(2, 3).Value = 3500;
+                worksheet.Cell(2, 4).Value = 10;
+                worksheet.Cell(2, 5).Value = "Bebidas";
+
+                worksheet.Cell(3, 1).Value = "7790001112223";
+                worksheet.Cell(3, 2).Value = "Pan Lactal";
+                worksheet.Cell(3, 3).Value = 2500;
+                worksheet.Cell(3, 4).Value = 5;
+                worksheet.Cell(3, 5).Value = "Panificados";
+
+                worksheet.Cell(4, 1).Value = "1234567890123";
+                worksheet.Cell(4, 2).Value = "Cerveza Quilmes";
+                worksheet.Cell(4, 3).Value = 1800;
+                worksheet.Cell(4, 4).Value = 24;
+                worksheet.Cell(4, 5).Value = "Cervezas";
+
+                // Ajuste y congelar
+                worksheet.Columns().AdjustToContents();
+                worksheet.SheetView.FreezeRows(1);
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Plantilla_Importacion_Productos.xlsx");
+                }
+            }
         }
 
     }

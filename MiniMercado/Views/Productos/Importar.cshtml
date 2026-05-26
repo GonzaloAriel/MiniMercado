@@ -4,6 +4,15 @@
 
 <h2>Importar Productos</h2>
 
+<div class="mb-4 mt-3">
+    <a asp-action="DescargarPlantillaImportacion" class="btn btn-primary">
+        <i class="bi bi-file-earmark-excel"></i> Descargar Plantilla de Importación
+    </a>
+    <a asp-controller="Ayuda" asp-action="Index" asp-fragment="faq-importacion-excel" class="btn btn-sm btn-primary ms-1" title="Ver ayuda de importación" data-bs-toggle="tooltip">
+        <i class="bi bi-question-circle"></i> ?
+    </a>
+</div>
+
 <form asp-action="Importar"
       method="post"
       enctype="multipart/form-data">
