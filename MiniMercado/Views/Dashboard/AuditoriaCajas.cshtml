@@ -1,16 +1,16 @@
 @model MiniMercado.ViewModels.DashboardCajasViewModel
 
-<h2 class="mt-4">📋 Auditoría de Cajas</h2>
+<h2 class="mt-4 text-white">📋 Auditoría de Cajas</h2>
 
 <form method="get" class="row mb-4">
 
     <div class="col-md-3">
-        <label>Desde</label>
+        <label class="text-white">Desde</label>
         <input type="date" name="desde" value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" class="form-control" />
     </div>
 
     <div class="col-md-3">
-        <label>Hasta</label>
+        <label class="text-white">Hasta</label>
         <input type="date" name="hasta" value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" class="form-control" />
     </div>
 
@@ -21,7 +21,7 @@
 </form>
 
 
-<h4>💰 Ventas por Caja / Día</h4>
+<h4 class="text-white">💰 Ventas por Caja / Día</h4>
 
 <div class="table-responsive">
     <table class="table table-bordered table-hover table">
@@ -112,7 +112,7 @@
 }
 
 
-<h4 class="mt-5">🧾 Ventas por Usuario</h4>
+<h4 class="mt-5 text-white">🧾 Ventas por Usuario</h4>
 
 <div class="table-responsive">
     <table class="table table-bordered table-hover table">
@@ -215,7 +215,7 @@
 }
 
 
-<h4 class="mt-5">🛡 Registro de Auditoría</h4>
+<h4 class="mt-5 text-white">🛡 Registro de Auditoría</h4>
 
 <div class="table-responsive">
     <table class="table table-bordered table-hover table">
