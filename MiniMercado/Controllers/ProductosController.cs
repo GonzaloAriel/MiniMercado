@@ -11,7 +11,7 @@ using System.IO;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "AdminGlobal,Admin,Caja")]
     public class ProductosController : Controller
     {
         private readonly MiniMercadoContext _context;
@@ -391,6 +391,7 @@ namespace MiniMercado.Controllers
         }
 
         //INACTIVOS
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Inactivos(string filtro)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -411,6 +412,7 @@ namespace MiniMercado.Controllers
         }
 
         //REACTIVAR
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Reactivar(int id)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -441,9 +443,10 @@ namespace MiniMercado.Controllers
             if (producto == null) return NotFound();
 
             var lotes = _context.LotesProducto
-                .Where(l => l.ProductoId == id && l.TenantId == tenantId && l.Cantidad > 0)
-                .OrderBy(l => l.FechaVencimiento ?? DateTime.MaxValue)
-                .ToList();
+     .Where(l => l.ProductoId == id &&
+                 l.TenantId == tenantId)
+     .OrderBy(l => l.FechaVencimiento ?? DateTime.MaxValue)
+     .ToList();
 
             ViewBag.Lotes = lotes;
             ViewBag.StockTotal = lotes.Sum(l => l.Cantidad);
@@ -517,12 +520,14 @@ namespace MiniMercado.Controllers
             }
         }
 
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult Importar()
         {
             return View();
         }
 
         [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public async Task<IActionResult> Importar(IFormFile archivo, [FromServices] ProductoImportService importService)
         {
             if (archivo == null || archivo.Length == 0)
@@ -546,6 +551,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public async Task<IActionResult> ConfirmarImportacion(List<ImportItemPreviewViewModel> items)
         {
             if (items == null || !items.Any())
@@ -584,6 +590,7 @@ namespace MiniMercado.Controllers
             int importados = 0;
             int actualizados = 0;
             int errores = 0;
+            var productosParaSincronizar = new List<Producto>();
 
             foreach (var item in items.Where(i => i.EsValido))
             {
@@ -612,26 +619,103 @@ namespace MiniMercado.Controllers
 
                     if (existente != null)
                     {
+                        // 1. Actualizar datos descriptivos
                         existente.Nombre = item.Nombre;
                         existente.Precio = item.Precio;
-                        existente.Stock = item.Stock;
                         existente.RubroId = rubro.Id;
+
+                        // 2. Si tiene stock previo pero no tiene lotes, regularizar con un lote de migración
+                        var tieneLotes = await _context.LotesProducto.AnyAsync(l => l.ProductoId == existente.Id);
+                        if (!tieneLotes && existente.Stock > 0)
+                        {
+                            var loteMigracion = new LoteProducto
+                            {
+                                ProductoId = existente.Id,
+                                Cantidad = existente.Stock,
+                                TenantId = tenantId.Value,
+                                FechaIngreso = DateTime.Now
+                            };
+                            _context.LotesProducto.Add(loteMigracion);
+
+                            _context.MovimientosStock.Add(new MovimientoStock
+                            {
+                                ProductoId = existente.Id,
+                                Cantidad = existente.Stock,
+                                Tipo = "MIGRACION_STOCK_PREVIO",
+                                Observacion = "Regularización de stock previo a importación Excel",
+                                TenantId = tenantId.Value,
+                                Fecha = DateTime.Now
+                            });
+                        }
+
+                        // 3. Crear SIEMPRE el nuevo lote por la cantidad del Excel (incluso si es 0)
+                        var nuevoLote = new LoteProducto
+                        {
+                            ProductoId = existente.Id,
+                            Cantidad = item.Stock,
+                            TenantId = tenantId.Value,
+                            FechaIngreso = DateTime.Now
+                        };
+                        _context.LotesProducto.Add(nuevoLote);
+
+                        // 4. Registrar movimiento de importación SOLO si el stock es mayor a 0
+                        if (item.Stock > 0)
+                        {
+                            _context.MovimientosStock.Add(new MovimientoStock
+                            {
+                                ProductoId = existente.Id,
+                                Cantidad = item.Stock,
+                                Tipo = "IMPORTACION_EXCEL",
+                                Observacion = "Importación masiva desde Excel",
+                                TenantId = tenantId.Value,
+                                Fecha = DateTime.Now
+                            });
+                        }
+
+                        productosParaSincronizar.Add(existente);
                         actualizados++;
                     }
                     else
                     {
+                        // PRODUCTO NUEVO
                         var producto = new Producto
                         {
                             CodigoBarra = item.CodigoBarra,
                             Nombre = item.Nombre,
                             Precio = item.Precio,
-                            Stock = item.Stock,
+                            Stock = 0, // Se sincronizará después
                             TenantId = tenantId.Value,
                             Activo = true,
                             RubroId = rubro.Id
                         };
 
                         _context.Productos.Add(producto);
+
+                        // Crear lote inicial SIEMPRE (incluso si es 0)
+                        var loteInicial = new LoteProducto
+                        {
+                            Producto = producto, // EF maneja la relación
+                            Cantidad = item.Stock,
+                            TenantId = tenantId.Value,
+                            FechaIngreso = DateTime.Now
+                        };
+                        _context.LotesProducto.Add(loteInicial);
+
+                        // Registrar movimiento SOLO si el stock es mayor a 0
+                        if (item.Stock > 0)
+                        {
+                            _context.MovimientosStock.Add(new MovimientoStock
+                            {
+                                Producto = producto,
+                                Cantidad = item.Stock,
+                                Tipo = "IMPORTACION_EXCEL",
+                                Observacion = "Importación masiva desde Excel (Nuevo)",
+                                TenantId = tenantId.Value,
+                                Fecha = DateTime.Now
+                            });
+                        }
+
+                        productosParaSincronizar.Add(producto);
                         importados++;
                     }
                 }
@@ -643,6 +727,12 @@ namespace MiniMercado.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Sincronizar stock de todos los productos afectados
+            foreach (var p in productosParaSincronizar)
+            {
+                _productoService.SincronizarStock(p);
+            }
+
             TempData["Importados"] = importados;
             TempData["Actualizados"] = actualizados;
             TempData["Errores"] = errores;
@@ -651,6 +741,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult DescargarPlantillaImportacion()
         {
             using (var workbook = new XLWorkbook())
@@ -700,5 +791,115 @@ namespace MiniMercado.Controllers
             }
         }
 
+        [HttpGet]
+        [Authorize(Roles = "AdminGlobal,Admin")]
+        public async Task<IActionResult> RepararStockImportado()
+        {
+            var productosAReparar = await _context.Productos
+                .Include(p => p.Tenant)
+                .Where(p => !_context.LotesProducto.Any(l => l.ProductoId == p.Id))
+                .ToListAsync();
+
+            ViewBag.Total = productosAReparar.Count;
+
+            return View(productosAReparar);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "AdminGlobal,Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EjecutarReparacion()
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var productosAReparar = await _context.Productos
+                    .Where(p => !_context.LotesProducto.Any(l =>
+                        l.ProductoId == p.Id &&
+                        l.TenantId == p.TenantId))
+                    .ToListAsync();
+
+                if (!productosAReparar.Any())
+                {
+                    TempData["Info"] = "No se encontraron productos sin lotes asociados.";
+                    return RedirectToAction(nameof(RepararStockImportado));
+                }
+
+                int reparados = 0;
+
+                foreach (var producto in productosAReparar)
+                {
+                    // Validación extra de seguridad
+                    bool tieneLotes = await _context.LotesProducto
+                        .AnyAsync(l =>
+                            l.ProductoId == producto.Id &&
+                            l.TenantId == producto.TenantId);
+
+                    if (tieneLotes)
+                        continue;
+
+                    var lote = new LoteProducto
+                    {
+                        ProductoId = producto.Id,
+                        Cantidad = producto.Stock,
+                        FechaIngreso = DateTime.Now,
+                        FechaVencimiento = null,
+                        TenantId = producto.TenantId
+                    };
+
+                    _context.LotesProducto.Add(lote);
+
+                    _context.MovimientosStock.Add(new MovimientoStock
+                    {
+                        ProductoId = producto.Id,
+                        Cantidad = producto.Stock,
+                        Tipo = "MIGRACION_IMPORTADOR",
+                        Observacion = "Lote generado automáticamente desde herramienta de migración de productos importados",
+                        TenantId = producto.TenantId,
+                        Fecha = DateTime.Now
+                    });
+
+                    reparados++;
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Sincronizar stock desde lotes
+                foreach (var producto in productosAReparar)
+                {
+                    _productoService.SincronizarStock(producto);
+                }
+
+                // Auditoría agrupada por tenant
+                var auditorias = productosAReparar
+                    .GroupBy(p => p.TenantId);
+
+                foreach (var grupo in auditorias)
+                {
+                    _auditoria.Registrar(
+                        "MigracionLotes",
+                        "Productos",
+                        0,
+                        $"Se generaron lotes iniciales para {grupo.Count()} productos que no tenían lotes asociados.",
+                        grupo.Key
+                    );
+                }
+
+                await transaction.CommitAsync();
+
+                TempData["Success"] =
+                    $"Migración completada correctamente. Productos procesados: {reparados}.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                TempData["Error"] =
+                    $"Error durante la migración: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(RepararStockImportado));
+        }
     }
 }

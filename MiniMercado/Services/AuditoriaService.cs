@@ -20,15 +20,15 @@ namespace MiniMercado.Services
             _http = http;
         }
 
-        public void Registrar(string accion, string tabla, int? registroId, string descripcion)
+        public void Registrar(string accion, string tabla, int? registroId, string descripcion, int? tenantIdManual = null)
         {
             var usuarioId = _http.HttpContext.User?.Identity?.Name;
-            var tenantId = _tenantService.GetTenantId().Value;
+            var tenantId = tenantIdManual ?? _tenantService.GetTenantId().Value;
 
             var log = new Auditoria
             {
                 TenantId = tenantId,
-                UsuarioId = usuarioId,
+                UsuarioId = usuarioId ?? "Sistema",
                 Accion = accion,
                 Tabla = tabla,
                 RegistroId = registroId,
