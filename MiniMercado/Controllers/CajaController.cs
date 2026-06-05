@@ -69,6 +69,10 @@ namespace MiniMercado.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            ViewBag.TotalEgresos = _context.EgresosCaja
+                .Where(e => e.CajaId == caja.Id && e.TenantId == tenantId)
+                .Sum(e => (decimal?)e.Monto) ?? 0;
+
             return View(caja);
         }
 
@@ -85,8 +89,14 @@ namespace MiniMercado.Controllers
                 return BadRequest();
             }
 
+            var totalEgresos = await _context.EgresosCaja
+                .Where(e => e.CajaId == id && e.TenantId == tenantId)
+                .SumAsync(e => (decimal?)e.Monto) ?? 0;
+
+            decimal saldoEsperado = caja.MontoInicial + caja.TotalVentas - totalEgresos;
+
             caja.MontoReal = montoReal;
-            caja.Diferencia = montoReal - (caja.MontoInicial + caja.TotalVentas);
+            caja.Diferencia = montoReal - saldoEsperado;
             caja.Estado = "CERRADA";
             caja.FechaCierre = DateTime.Now;
 
@@ -100,6 +110,10 @@ namespace MiniMercado.Controllers
             var tenantId = _tenantService.GetTenantId().Value;
             var caja = _context.Cajas.FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
             if (caja == null) return NotFound();
+
+            ViewBag.TotalEgresos = _context.EgresosCaja
+                .Where(e => e.CajaId == id && e.TenantId == tenantId)
+                .Sum(e => (decimal?)e.Monto) ?? 0;
 
             // Calcular ventas fuera de caja realizadas por este usuario durante esta sesión de caja
             var fechaHasta = caja.FechaCierre ?? DateTime.Now;

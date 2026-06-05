@@ -1,0 +1,85 @@
+@model MiniMercado.Models.EgresoCaja
+
+@{
+    ViewData["Title"] = "Registrar Egreso";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 bg-dark text-white">
+                <div class="card-header bg-danger text-white py-3">
+                    <h4 class="mb-0 text-center">
+                        <i class="bi bi-cash-dash me-2"></i>Registrar Salida de Dinero
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="Monto" class="form-label fw-bold">Monto a Retirar</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-secondary border-0 text-white">$</span>
+                                <input asp-for="Monto" class="form-control bg-dark text-white border-secondary text-center" 
+                                       placeholder="0.00" autofocus step="0.01" />
+                            </div>
+                            <span asp-validation-for="Monto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Categoria" class="form-label fw-bold">Categoría</label>
+                                <select asp-for="Categoria" class="form-select bg-dark text-white border-secondary" 
+                                        asp-items="ViewBag.Categorias">
+                                    <option value="">Seleccione...</option>
+                                </select>
+                                <span asp-validation-for="Categoria" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ProveedorId" class="form-label fw-bold">Proveedor (Opcional)</label>
+                                <select asp-for="ProveedorId" class="form-select bg-dark text-white border-secondary" 
+                                        asp-items="ViewBag.Proveedores">
+                                    <option value="">Ninguno / Particular</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Beneficiario" class="form-label fw-bold">Beneficiario / Recibe</label>
+                            <input asp-for="Beneficiario" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Nombre de la persona o entidad que recibe" />
+                            <span asp-validation-for="Beneficiario" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descripcion" class="form-label fw-bold">Descripción Corta</label>
+                            <input asp-for="Descripcion" class="form-control bg-dark text-white border-secondary" 
+                                   placeholder="Ej: Pago de flete, Compra de artículos de limpieza" />
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Observaciones" class="form-label fw-bold">Observaciones adicionales</label>
+                            <textarea asp-for="Observaciones" class="form-control bg-dark text-white border-secondary" 
+                                      rows="2" placeholder="Cualquier otro detalle relevante..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg py-3 shadow">
+                                <i class="bi bi-check-circle me-1"></i>Confirmar Egreso de Caja
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Volver al Historial
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

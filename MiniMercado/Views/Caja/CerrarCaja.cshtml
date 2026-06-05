@@ -22,9 +22,16 @@
                     </div>
                 </div>
 
+                <div class="row text-center mb-4">
+                    <div class="col-12">
+                        <small class="text-muted d-block">Total Egresos (Turno)</small>
+                        <span class="h5 text-danger">$ @(ViewBag.TotalEgresos?.ToString("N2") ?? "0.00")</span>
+                    </div>
+                </div>
+
                 <div class="alert alert-info text-center">
                     <h5>Esperado en Caja:</h5>
-                    <span class="h3">$ @((Model.MontoInicial + Model.TotalVentas).ToString("N2"))</span>
+                    <span class="h3">$ @((Model.MontoInicial + Model.TotalVentas - (decimal)(ViewBag.TotalEgresos ?? 0m)).ToString("N2"))</span>
                 </div>
 
                 <hr />

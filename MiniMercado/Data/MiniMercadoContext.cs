@@ -35,6 +35,7 @@ namespace MiniMercado.Data
         public DbSet<Caja> Cajas { get; set; }
         public DbSet<Configuracion> Configuraciones { get; set; }
         public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<EgresoCaja> EgresosCaja { get; set; }
         public DbSet<ProductoProveedor> ProductoProveedores { get; set; }
         public DbSet<Pago> Pagos { get; set; }
 
@@ -59,6 +60,7 @@ namespace MiniMercado.Data
             modelBuilder.Entity<Caja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Configuracion>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Proveedor>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<EgresoCaja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Pago>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
 
             // CONFIGURACIONES FLUENT API EXISTENTES
@@ -92,6 +94,30 @@ namespace MiniMercado.Data
                 .HasOne(p => p.Proveedor)
                 .WithMany(pr => pr.Productos)
                 .HasForeignKey(p => p.ProveedorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<EgresoCaja>()
+                .HasOne(e => e.Tenant)
+                .WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EgresoCaja>()
+                .HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EgresoCaja>()
+                .HasOne(e => e.Caja)
+                .WithMany()
+                .HasForeignKey(e => e.CajaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EgresoCaja>()
+                .HasOne(e => e.Proveedor)
+                .WithMany()
+                .HasForeignKey(e => e.ProveedorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Proveedor>()

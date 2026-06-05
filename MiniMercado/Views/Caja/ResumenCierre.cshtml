@@ -19,16 +19,22 @@
                             <span class="h4 fw-bold text-dark">$ @Model.MontoInicial.ToString("N2")</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="p-3 bg-light rounded shadow-sm border">
                             <small class="text-muted d-block fw-bold text-uppercase">Total Ventas</small>
                             <span class="h4 fw-bold text-success">$ @Model.TotalVentas.ToString("N2")</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <small class="text-muted d-block fw-bold text-uppercase">Total Egresos</small>
+                            <span class="h4 fw-bold text-danger">$ @(ViewBag.TotalEgresos?.ToString("N2") ?? "0.00")</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mt-4">
                         <div class="p-3 bg-light rounded shadow-sm border">
                             <small class="text-muted d-block fw-bold text-uppercase">Esperado</small>
-                            <span class="h4 fw-bold text-primary">$ @((Model.MontoInicial + Model.TotalVentas).ToString("N2"))</span>
+                            <span class="h4 fw-bold text-primary">$ @((Model.MontoInicial + Model.TotalVentas - (decimal)(ViewBag.TotalEgresos ?? 0m)).ToString("N2"))</span>
                         </div>
                     </div>
                 </div>
