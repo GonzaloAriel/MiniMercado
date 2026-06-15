@@ -60,7 +60,7 @@ namespace MiniMercado.Data
             modelBuilder.Entity<Caja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Configuracion>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
             modelBuilder.Entity<Proveedor>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
-            modelBuilder.Entity<EgresoCaja>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
+            modelBuilder.Entity<EgresoCaja>().HasQueryFilter(e => (!CurrentTenantId.HasValue || e.TenantId == CurrentTenantId) && !e.Anulado);
             modelBuilder.Entity<Pago>().HasQueryFilter(e => !CurrentTenantId.HasValue || e.TenantId == CurrentTenantId);
 
             // CONFIGURACIONES FLUENT API EXISTENTES

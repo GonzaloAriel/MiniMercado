@@ -756,6 +756,47 @@
             </div>
         </div>
 
+        // FINANZAS
+        <div class="section-card" id="card-finanzas">
+            <div class="section-header" onclick="toggleSection('finanzas')">
+                <div class="section-icon" style="background:rgba(16,185,129,0.12)">
+                    <svg viewBox="0 0 24 24" stroke="#10b981">
+                        <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                    </svg>
+                </div>
+                <div class="section-info">
+                    <p class="section-name">Finanzas</p>
+                    <p class="section-desc">Gestión de egresos, gastos y balance de resultados</p>
+                </div>
+                <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+            <div class="section-body" id="body-finanzas">
+                <div class="section-body-inner">
+                    <a asp-controller="Egresos" asp-action="Index" class="action-btn">
+                        <div class="btn-icon" style="background:rgba(239,68,68,0.10)">
+                            <svg viewBox="0 0 24 24" stroke="#ef4444">
+                                <path d="M23 12a11 11 0 11-22 0 11 11 0 0122 0z"/>
+                                <path d="M16 12H8"/>
+                            </svg>
+                        </div>
+                        <span class="btn-label">Egresos</span>
+                    </a>
+                    <a asp-controller="Finanzas" asp-action="Dashboard" class="action-btn">
+                        <div class="btn-icon" style="background:rgba(59,130,246,0.10)">
+                            <svg viewBox="0 0 24 24" stroke="#3b82f6">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                        </div>
+                        <span class="btn-label">Dashboard</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         // ADMINISTRACIÓN
         <div class="section-card" id="card-admin">
             <div class="section-header" onclick="toggleSection('admin')">

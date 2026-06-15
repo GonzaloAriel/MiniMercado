@@ -26,6 +26,62 @@
         </div>
     }
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- FILTROS -->
+    <div class="card shadow border-0 bg-dark text-white mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Desde</label>
+                    <input type="date" name="desde" value="@ViewBag.Desde" class="form-control form-control-sm bg-secondary border-0 text-white shadow-none" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Hasta</label>
+                    <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control form-control-sm bg-secondary border-0 text-white shadow-none" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Categoría</label>
+                    <select name="categoria" class="form-select form-select-sm bg-secondary border-0 text-white shadow-none">
+                        <option value="">Todas</option>
+                        @foreach (var item in (List<SelectListItem>)ViewBag.Categorias)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Proveedor</label>
+                    <select name="proveedorId" class="form-select form-select-sm bg-secondary border-0 text-white shadow-none">
+                        <option value="">Todos</option>
+                        @foreach (var item in (List<SelectListItem>)ViewBag.Proveedores)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Buscar</label>
+                    <input type="text" name="buscar" value="@ViewBag.Buscar" placeholder="Desc./Beneficiario" class="form-control form-control-sm bg-secondary border-0 text-white shadow-none" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-sm btn-outline-info me-2 flex-grow-1">
+                        <i class="bi bi-filter"></i> Filtrar
+                    </button>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow border-0 bg-dark text-white">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -38,16 +94,17 @@
                             <th>Descripción</th>
                             <th class="text-end">Monto</th>
                             <th>Usuario</th>
-                            <th class="pe-4">Caja ID</th>
+                            <th>Caja ID</th>
+                            <th class="pe-4 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (!Model.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
+                                <td colspan="8" class="text-center py-5 text-muted">
                                     <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
-                                    No se encontraron egresos registrados.
+                                    No se encontraron egresos registrados con los filtros aplicados.
                                 </td>
                             </tr>
                         }
@@ -55,6 +112,7 @@
                         {
                             @foreach (var item in Model)
                             {
+                                bool esEditable = !item.Anulado && (item.CajaId.HasValue ? (item.Caja?.Estado == "ABIERTA") : (DateTime.Now - item.Fecha).TotalHours <= 48);
                                 <tr>
                                     <td class="ps-4">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>
@@ -70,7 +128,7 @@
                                     </td>
                                     <td class="text-end fw-bold text-danger ps-4">$ @item.Monto.ToString("N2")</td>
                                     <td>@item.Usuario?.UserName</td>
-                                    <td class="pe-4">
+                                    <td>
                                         @if (item.CajaId.HasValue)
                                         {
                                             <span class="badge bg-secondary">#@item.CajaId</span>
@@ -78,6 +136,27 @@
                                         else
                                         {
                                             <span class="text-muted small">Sin caja</span>
+                                        }
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        @if (esEditable)
+                                        {
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form asp-action="Anular" asp-route-id="@item.Id" method="post" onsubmit="return confirm('¿Está seguro de anular este egreso? Esta acción no se puede deshacer.');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Anular">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary opacity-50">
+                                                <i class="bi bi-lock-fill me-1"></i>Bloqueado
+                                            </span>
                                         }
                                     </td>
                                 </tr>
@@ -97,7 +176,13 @@
                 {
                     <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
                         <a class="page-link @(i == ViewBag.PaginaActual ? "bg-danger border-danger" : "bg-dark text-white border-secondary")" 
-                           asp-action="Index" asp-route-page="@i">@i</a>
+                           asp-action="Index" 
+                           asp-route-page="@i"
+                           asp-route-desde="@ViewBag.Desde"
+                           asp-route-hasta="@ViewBag.Hasta"
+                           asp-route-categoria="@ViewBag.Categoria"
+                           asp-route-proveedorId="@ViewBag.ProveedorId"
+                           asp-route-buscar="@ViewBag.Buscar">@i</a>
                     </li>
                 }
             </ul>

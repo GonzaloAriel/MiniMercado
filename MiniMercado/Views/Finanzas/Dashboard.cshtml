@@ -1,0 +1,113 @@
+@model MiniMercado.Models.ViewModels.DashboardFinancieroViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Financiero";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-white">
+                <i class="bi bi-graph-up-arrow me-2"></i>Dashboard Financiero
+            </h2>
+            <p class="text-muted">Resumen de ingresos y egresos en tiempo real.</p>
+        </div>
+        <div class="col-auto text-end">
+            <span class="badge bg-dark border border-secondary p-2">
+                <i class="bi bi-calendar3 me-1"></i> @Model.FechaConsulta.ToString("dd/MM/yyyy HH:mm")
+            </span>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DÍA -->
+    <h4 class="text-info mb-3 border-bottom border-secondary pb-2">Balance del Día</h4>
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card shadow border-0 bg-dark text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-cart-check fs-3 text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1 small">Ventas Hoy</h6>
+                            <h3 class="card-title mb-0">$ @Model.VentasHoy.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 bg-dark text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-cash-stack fs-3 text-danger"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1 small">Egresos Hoy</h6>
+                            <h3 class="card-title mb-0">$ @Model.EgresosHoy.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 bg-dark text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        @{
+                            var colorDia = Model.ResultadoHoy >= 0 ? "text-info" : "text-warning";
+                            var iconDia = Model.ResultadoHoy >= 0 ? "bi-piggy-bank" : "bi-exclamation-triangle";
+                        }
+                        <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi @iconDia fs-3 @colorDia"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1 small">Resultado Neto</h6>
+                            <h3 class="card-title mb-0 @colorDia">$ @Model.ResultadoHoy.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN MES -->
+    <h4 class="text-info mb-3 border-bottom border-secondary pb-2">Balance del Mes (@Model.FechaConsulta.ToString("MMMM yyyy"))</h4>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow border-0 bg-dark text-white h-100 border-start border-success border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2 small">Ventas Totales</h6>
+                    <h2 class="text-success">$ @Model.VentasMes.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 bg-dark text-white h-100 border-start border-danger border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2 small">Egresos Totales</h6>
+                    <h2 class="text-danger">$ @Model.EgresosMes.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 bg-dark text-white h-100 border-start border-info border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2 small">Resultado Neto</h6>
+                    @{
+                        var colorMes = Model.ResultadoMes >= 0 ? "text-info" : "text-warning";
+                    }
+                    <h2 class="@colorMes">$ @Model.ResultadoMes.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 text-center">
+        <a asp-controller="Egresos" asp-action="Index" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left me-1"></i> Volver a Egresos
+        </a>
+    </div>
+</div>

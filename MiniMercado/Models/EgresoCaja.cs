@@ -39,5 +39,7 @@ namespace MiniMercado.Models
         public Proveedor? Proveedor { get; set; }
 
         public string? Observaciones { get; set; }
+
+        public bool Anulado { get; set; } = false;
     }
 }
