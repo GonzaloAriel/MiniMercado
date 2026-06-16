@@ -62,26 +62,55 @@
         var tenantId = TenantService.GetTenantId();
         if (tenantId.HasValue)
         {
-            // Nota: En un entorno de alto tráfico, esto se cachearía o vendría en el Claim
             var tenant = SuscripcionService.GetSuscripcionActualAsync(tenantId.Value).Result;
-            if (tenant != null)
-            {
-                var estado = SuscripcionService.CalcularEstado(tenant);
-                var dias = SuscripcionService.CalcularDiasRestantes(tenant);
+           
 
-                if (estado == MiniMercado.Models.EstadoSuscripcion.Vencida)
+            if (tenant != null && tenant.FechaVencimiento.HasValue)
+            {
+                var diasRestantes = (tenant.FechaVencimiento.Value - DateTime.Now).TotalDays;
+                
+                string bannerTipo = "";
+                string mensaje = "";
+
+                // Período de gracia: 5 días después del vencimiento (Red)
+                if (diasRestantes <= 0 && diasRestantes >= -5)
                 {
-                    <div class="sub-alert-bar">
-                        <i class="bi bi-exclamation-octagon-fill"></i> Su suscripción está VENCIDA. Por favor regularice su pago.
-                        <a asp-controller="Configuracion" asp-action="Suscripcion">Ver detalles</a>
-                    </div>
+                    bannerTipo = "danger";
+                    mensaje = "Su suscripción está VENCIDA. Dispone de un período de gracia para regularizar su pago y evitar el bloqueo del servicio.";
                 }
-                else if (estado == MiniMercado.Models.EstadoSuscripcion.Activa && dias <= 5)
+                // Aviso previo: 5 días antes del vencimiento (Orange)
+                else if (diasRestantes > 0 && diasRestantes <= 5)
                 {
-                    <div class="sub-alert-bar warning">
-                        <i class="bi bi-clock-fill"></i> Su suscripción vence en @dias días.
-                        <a asp-controller="Configuracion" asp-action="Suscripcion">Ver detalles</a>
+                    bannerTipo = "warning";
+                    mensaje = $"Su suscripción vence en {Math.Ceiling(diasRestantes)} días. Evite cortes en el servicio regularizando su pago.";
+                }
+
+                if (!string.IsNullOrEmpty(bannerTipo))
+                {
+                    <div id="sub-banner" class="sub-alert-bar @(bannerTipo == "warning" ? "warning" : "")" style="display:none;">
+                        <div class="container-fluid d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1 text-center">
+                                <i class="bi @(bannerTipo == "danger" ? "bi-exclamation-octagon-fill" : "bi-clock-fill") me-2"></i> 
+                                <span>@mensaje</span>
+                                <a asp-controller="Configuracion" asp-action="Suscripcion" class="ms-2">Ver detalles de pago</a>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white shadow-none" onclick="dismissBanner()" aria-label="Close"></button>
+                        </div>
                     </div>
+                    <script>
+                        function dismissBanner() {
+                            const hoy = new Date().toISOString().split('T')[0];
+                            localStorage.setItem("bannerSuscripcionOculto_" + hoy, "true");
+                            document.getElementById("sub-banner").style.display = "none";
+                        }
+
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const hoy = new Date().toISOString().split('T')[0];
+                            if (!localStorage.getItem("bannerSuscripcionOculto_" + hoy)) {
+                                document.getElementById("sub-banner").style.display = "block";
+                            }
+                        });
+                    </script>
                 }
             }
         }

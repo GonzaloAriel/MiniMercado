@@ -28,14 +28,15 @@ namespace MiniMercado.Middleware
 
             // 🔹 Ignorar rutas públicas y recursos estáticos
             if (path != null &&
-                (path.StartsWith("/Identity") ||
-                 path.StartsWith("/Account/Login") ||
-                 path.StartsWith("/Tenant/Desactivado") ||
-                 path.StartsWith("/Cuenta/Bloqueado") ||
-                 path.StartsWith("/lib") ||
-                 path.StartsWith("/css") ||
-                 path.StartsWith("/js") ||
-                 path.StartsWith("/images")))
+                (path.StartsWith("/Identity", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/Account/Login", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/Tenant/Desactivado", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/Cuenta/Bloqueado", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/Home/Error", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/lib", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/css", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/js", StringComparison.OrdinalIgnoreCase) ||
+                 path.StartsWith("/images", StringComparison.OrdinalIgnoreCase)))
             {
                 await _next(context);
                 return;
@@ -78,10 +79,20 @@ namespace MiniMercado.Middleware
                             return;
                         }
 
-                        // 2. Validar bloqueo o vencimiento
-                        bool estaVencido = tenant.FechaVencimiento.HasValue && tenant.FechaVencimiento.Value < DateTime.Now;
+                        // 2. Validar bloqueo (Manual o por Vencimiento tras 5 días de gracia)
+                        bool bloqueadoManualmente = tenant.Bloqueado;
+                        bool bloqueadoPorVencimiento = false;
 
-                        if (tenant.Bloqueado || estaVencido)
+                        if (tenant.FechaVencimiento.HasValue)
+                        {
+                            var diasVencido = (DateTime.Now.Date - tenant.FechaVencimiento.Value.Date).Days;
+                            if (diasVencido > 5)
+                            {
+                                bloqueadoPorVencimiento = true;
+                            }
+                        }
+
+                        if (bloqueadoManualmente || bloqueadoPorVencimiento)
                         {
                             context.Response.Redirect("/Cuenta/Bloqueado");
                             return;
