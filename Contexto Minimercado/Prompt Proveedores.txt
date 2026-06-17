@@ -1,0 +1,108 @@
+Aplicación SaaS multi-tenant llamada MiniMercado, construida con ASP.NET Core 6.0 MVC + Razor Views, C#, Entity Framework Core y SQL Server. La arquitectura usa un TenantId como discriminador en todas las entidades, con filtros de consulta globales en el DbContext para aislar datos por comercio. Todas las entidades de negocio implementan la interfaz ITenantEntity que obliga a incluir TenantId.
+
+📁 RUTA DEL PROYECTO (NO MODIFICAR):
+C:\Users\Gonzo\Desktop\Proyecto MiniMercado\MiniMercado
+
+🎯 OBJETIVO:
+Necesito refactorizar Proveedores completo, sin omitir ningún archivo. Seguí estas reglas estrictamente:
+
+MODELOS
+Creá la entidad Proveedor en /Models/Proveedor.cs con los campos: Id, TenantId, Nombre, Contacto, Telefono, Email, Direccion, CUIT, Notas, Activo (default true), FechaAlta (default DateTime.Now). Debe implementar ITenantEntity y tener navegación a Tenant y a List<Producto>.
+Creá la entidad intermedia ProductoProveedor en /Models/ProductoProveedor.cs con: ProductoId, ProveedorId, PrecioCosto (decimal nullable), EsPrincipal (bool). Clave primaria compuesta. Navegación a Producto y Proveedor.
+Modificá la entidad existente Producto.cs agregando: ProveedorId (int nullable), Proveedor (nullable navigation property) y List<ProductoProveedor> Proveedores.
+
+DBCONTEXT
+En MiniMercadoContext.cs agregá:
+
+DbSet<Proveedor> Proveedores
+DbSet<ProductoProveedor> ProductoProveedores
+Filtro global para Proveedor: p.TenantId == CurrentTenantId
+Configuración Fluent API para ProductoProveedor con clave compuesta (ProductoId, ProveedorId)
+Relación Producto → Proveedor como opcional (foreign key nullable)
+
+
+CONTROLLER
+Creá /Controllers/ProveedoresController.cs con:
+
+Autorización con [Authorize(Roles = "Admin")]
+Inyección de MiniMercadoContext y TenantService
+Acciones: Index, Create (GET/POST), Edit (GET/POST), Detalle (GET), ToggleActivo (POST)
+En Index: listar proveedores del tenant actual, incluir conteo de productos asociados
+En Detalle: mostrar datos del proveedor y lista de productos que provee
+En Create y Edit: usar un ProveedorViewModel con validaciones [Required] en Nombre y Telefono
+En todos los POST: registrar acción en AuditoriaService
+Usar TenantService para asignar TenantId al crear
+
+
+VISTAS RAZOR
+Creá las 4 vistas en /Views/Proveedores/ con el siguiente estilo visual: sin Bootstrap pesado, usar cards con border-radius: 12px, box-shadow suave, tipografía limpia, colores: verde #16a34a para acciones principales, rojo #dc2626 para eliminar/desactivar, gris #f4f4f5 para fondos de tabla. Sin emojis. Usar íconos SVG inline. Sin dark mode.
+
+Index.cshtml: tabla con columnas Nombre, Contacto, Teléfono, Productos asociados (conteo), Estado (activo/inactivo), Acciones (Ver detalle, Editar, Activar/Desactivar). Botón "Nuevo proveedor" en el header.
+Create.cshtml: formulario con campos Nombre, Contacto, Teléfono, Email, Dirección, CUIT, Notas. Validación con asp-validation-for.
+Edit.cshtml: igual que Create pero precargado. Incluir asp-route-id.
+Detalle.cshtml: card con todos los datos del proveedor arriba, y debajo una tabla con los productos que provee (Nombre, Stock actual, Precio costo, Es principal). Botón para volver al Index.
+
+
+INTEGRACIÓN CON MÓDULOS EXISTENTES
+En la vista /Views/Productos/Edit.cshtml (y Create.cshtml si existe), agregá un campo <select> para asignar el proveedor principal del producto. El select debe cargarse con los proveedores activos del tenant desde un ViewBag.Proveedores (tipo SelectList).
+En el ProductosController.cs, en los métodos Edit GET, Edit POST, Create GET y Create POST, agregá la carga y guardado del ProveedorId.
+En la vista del Dashboard (/Views/AdminDashboard/Index.cshtml), en la tabla de productos con bajo stock, agregá una columna "Proveedor" que muestre el nombre del proveedor principal del producto (o "Sin proveedor" si no tiene).
+En AdminDashboardController.cs, en la query de bajo stock, incluir .Include(p => p.Proveedor).
+
+MIGRACIÓN
+Escribí el comando exacto para generar y aplicar la migración:
+dotnet ef migrations add AddProveedores
+dotnet ef database update
+Y mostrá el fragmento de código que va en MiniMercadoContext.cs para que la migración funcione correctamente con el filtro multi-tenant.
+
+RESTRICCIONES IMPORTANTES
+
+No uses scaffolding genérico. Escribí cada archivo completo y funcional.
+No uses ViewData para pasar modelos — usá ViewBag solo para listas auxiliares (como el select de proveedores).
+No rompas la lógica de filtros multi-tenant existente.
+Todos los archivos deben estar completos, sin comentarios como "// resto del código igual".
+El estilo visual debe ser coherente con cards limpias, sin Bootstrap pesado, usando CSS custom en cada vista dentro de un bloque <style>.
+No incluyas dark mode ni variables CSS con prefers-color-scheme.
+
+🚫 REGLAS CRÍTICAS:
+
+NO romper multi-tenancy
+TODAS las entidades deben respetar TenantId
+NO usar IgnoreQueryFilters()
+NO acceder datos de otros tenants
+NO hardcodear valores
+NO duplicar lógica existente
+
+✅ OBLIGATORIO:
+
+Usar _tenantService para obtener TenantId actual
+Validar pertenencia de datos al tenant
+Manejar errores correctamente
+Código asincrónico (async/await)
+
+🔒 SEGURIDAD:
+
+Validar inputs
+Evitar overposting
+No exponer datos sensibles
+
+📦 ARQUITECTURA:
+
+Mantener separación Service / Controller
+No mover lógica al Controller
+No acceder DbContext desde Controller
+
+📥 INPUT:
+Código parcial o requerimiento funcional
+
+📤 OUTPUT:
+
+Código listo para producción
+Métodos completos
+Sin explicaciones
+
+✅ VALIDACIÓN:
+
+Compila
+Respeta multi-tenant
+No rompe lógica existente

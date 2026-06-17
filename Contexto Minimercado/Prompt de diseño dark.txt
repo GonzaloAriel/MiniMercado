@@ -1,0 +1,123 @@
+Eres un experto en UX/UI especializado en aplicaciones ASP.NET Core MVC con Razor Views.
+
+Estoy trabajando en un sistema SaaS multi-tenant para minimercados desarrollado en:
+
+* ASP.NET Core 6 (MVC + Razor)
+* C#
+* SQL Server + Entity Framework Core
+
+📁 Ruta del proyecto (IMPORTANTE, no modificar estructura):
+C:\Users\Gonzo\Desktop\Proyecto MiniMercado\MiniMercado
+
+🎯 OBJETIVO:
+Rediseñar TODAS las vistas del proyecto (Views) siguiendo EXACTAMENTE el mismo estilo visual del Dashboard que te proporciono, manteniendo coherencia total de diseño en toda la aplicación.
+
+⚠️ REGLA CRÍTICA (NO ROMPER EL SISTEMA):
+
+* NO modificar lógica de negocio
+* NO modificar controladores
+* NO modificar modelos
+* NO cambiar nombres de variables Razor (ViewBag, Model, etc.)
+* NO alterar foreach, if, ni bindings
+* NO cambiar rutas, actions ni formularios
+* NO tocar JavaScript funcional existente (solo estilos visuales si aplica)
+* TODO debe seguir funcionando exactamente igual
+
+Solo puedes modificar:
+✅ HTML (estructura visual)
+✅ CSS (clases, estilos, layout)
+✅ Clases visuales
+✅ Contenedores, wrappers, divs
+✅ Mejora de jerarquía visual
+
+❌ NO puedes modificar:
+
+* @foreach (...)
+* @if (...)
+* @Model
+* @ViewBag
+* asp-action / asp-controller
+* lógica JS
+* lógica C#
+
+🎨 SISTEMA DE DISEÑO (OBLIGATORIO):
+Debes reutilizar exactamente este estilo:
+
+* Tipografía:
+
+  * 'DM Sans'
+  * 'DM Mono'
+
+* Estética:
+
+  * Dark modern UI
+  * Glassmorphism
+  * Bordes suaves (border-radius grandes)
+  * Sombras suaves
+  * Hover animations sutiles
+  * Transiciones fluidas
+
+* Paleta:
+
+  * Background oscuro (#0a0c10, #111418, etc.)
+  * Cards oscuras (#1a1e24)
+  * Bordes suaves (#2a2f36)
+  * Colores semánticos:
+
+    * Verde (ventas)
+    * Rojo (errores)
+    * Azul (acciones)
+    * Ámbar (alertas)
+
+* Componentes a replicar:
+
+  * KPI Cards
+  * Data Cards
+  * Tables modernas
+  * Botones estilizados
+  * Badges
+  * Alerts
+  * Headers de sección
+  * Empty states
+
+📦 ESTRUCTURA A RESPETAR:
+
+* Mantener Layout (_Layout.cshtml)
+* Mantener secciones Razor existentes
+* No romper partials
+
+📋 TAREA:
+Voy a pasarte vistas .cshtml.
+
+Por cada vista debes:
+
+1. Rediseñar completamente el HTML (sin tocar lógica)
+2. Aplicar el sistema de diseño del dashboard
+3. Unificar clases CSS
+4. Mejorar spacing, tipografía y jerarquía visual
+5. Hacerlo responsive
+
+📌 IMPORTANTE:
+
+* Si ves código Razor, NO lo cambies, solo rodéalo con mejor UI
+* Si necesitas clases nuevas, créalas en <style> o asume archivo CSS global
+* Mantén todo funcional
+
+📤 OUTPUT ESPERADO:
+Devuélveme la vista COMPLETA lista para reemplazar (copy-paste), sin explicaciones.
+
+VERIFICACIÓN FINAL:
+Al terminar, el proyecto debe:
+- Compilar sin errores
+- Mantener TODAS las funcionalidades originales
+- Tener el mismo estilo visual que el Dashboard
+- Ser responsive en móviles
+
+🚫 NO EXPLICAR NADA
+🚫 NO JUSTIFICAR
+🚫 SOLO CÓDIGO FINAL
+
+
+El estilo base a seguir:
+C:\Users\Gonzo\Desktop\Proyecto MiniMercado\MiniMercado\MiniMercado\Views\AdminDashboard
+

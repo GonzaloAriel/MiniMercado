@@ -355,5 +355,142 @@
             $(document).ready(cargarNotificaciones);
         </script>
     }
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- BURBUJA DE NOVEDADES -->
+        <div id="novedades-bubble" class="novedades-bubble-wrap" style="display:none;">
+            <div class="novedades-bubble-content">
+                <button type="button" class="btn-close-novedades" onclick="dismissNovedades()">✕</button>
+                <div class="novedades-bubble-body">
+                    <div class="novedades-icon-top">💜 Novedades</div>
+                    <h5 class="novedades-bubble-title">✨ Nuevo módulo de Egresos</h5>
+                    <p class="novedades-bubble-text">Registrá gastos, operativos, administrativos y más.</p>
+                    <hr class="novedades-divider">
+                    <h5 class="novedades-bubble-title">🎨 Hero Personalizado</h5>
+                    <p class="novedades-bubble-text">Tu negocio ahora tiene identidad propia en la portada.</p>
+                    <a asp-controller="Home" asp-action="Novedades" class="btn-novedades-action" onclick="dismissNovedades()">Ver todas las novedades</a>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .novedades-bubble-wrap {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 300px;
+                z-index: 9999;
+                animation: slideInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+
+            .novedades-bubble-content {
+                background: var(--bg-card);
+                border: 1px solid var(--border);
+                border-radius: 24px;
+                box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+                padding: 24px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            body.dark-mode .novedades-bubble-content {
+                box-shadow: 0 15px 45px rgba(0,0,0,0.4);
+            }
+
+            .btn-close-novedades {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                font-size: 18px;
+                cursor: pointer;
+                padding: 5px;
+                line-height: 1;
+                transition: color 0.2s;
+            }
+
+            .btn-close-novedades:hover {
+                color: var(--text-primary);
+            }
+
+            .novedades-icon-top {
+                font-size: 0.9rem;
+                font-weight: 800;
+                color: #6366f1;
+                margin-bottom: 12px;
+            }
+
+            .novedades-bubble-title {
+                font-size: 14px;
+                font-weight: 700;
+                margin-bottom: 4px;
+                color: var(--text-primary);
+            }
+
+            .novedades-bubble-text {
+                font-size: 13px;
+                color: var(--text-secondary);
+                line-height: 1.4;
+                margin-bottom: 12px;
+            }
+
+            .novedades-divider {
+                margin: 12px 0;
+                opacity: 0.1;
+            }
+
+            .btn-novedades-action {
+                display: block;
+                width: 100%;
+                background: #6366f1;
+                color: white;
+                text-align: center;
+                padding: 10px;
+                border-radius: 12px;
+                text-decoration: none !important;
+                font-size: 13px;
+                font-weight: 600;
+                margin-top: 15px;
+                transition: transform 0.2s, background 0.2s;
+            }
+
+            .btn-novedades-action:hover {
+                background: #4f46e5;
+                transform: translateY(-2px);
+                color: white;
+            }
+
+            @@keyframes slideInUp {
+                from { transform: translateY(100px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+
+            @@media (max-width: 480px) {
+                .novedades-bubble-wrap {
+                    right: 15px;
+                    left: 15px;
+                    bottom: 20px;
+                    width: auto;
+                }
+            }
+        </style>
+
+        <script>
+            function dismissNovedades() {
+                localStorage.setItem("minimercado_novedades_v1", "true");
+                document.getElementById("novedades-bubble").style.display = "none";
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                if (!localStorage.getItem("minimercado_novedades_v1")) {
+                    setTimeout(() => {
+                        document.getElementById("novedades-bubble").style.display = "block";
+                    }, 2000);
+                }
+            });
+        </script>
+    }
 </body>
 </html>

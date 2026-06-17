@@ -1,0 +1,31 @@
+ Para que puedas actualizar las novedades en el futuro, aquí tienes la guía de dónde se encuentra cada parte del
+  código:
+
+  1. El Contenido de la Página de Novedades
+  Si quieres cambiar los textos, iconos o agregar nuevas noticias en la página principal de novedades:
+   * Archivo: Views/Home/Novedades.cshtml
+   * Qué buscar: Busca los bloques <div class="novedad-card">. Cada bloque es una de las tarjetas que ves en pantalla.
+     Solo tienes que copiar y pegar uno nuevo para agregar otra novedad.
+
+  2. La Burbuja Flotante (Popup)
+  Para cambiar lo que dice el mensajito que aparece abajo a la derecha:
+   * Archivo: Views/Shared/_Layout.cshtml
+   * Qué buscar: Casi al final del archivo, busca el bloque <!-- BURBUJA DE NOVEDADES -->.
+   * Importante (Control de Versión): Si cambias el contenido y quieres que a todos los usuarios les vuelva a aparecer
+     (aunque ya lo hayan cerrado antes), debes cambiar el nombre de la versión en el código JavaScript que está ahí
+     mismo:
+       * Busca: minimercado_novedades_v1
+       * Cámbialo por: minimercado_novedades_v2 (en los dos lugares donde aparece en ese archivo).
+
+  3. Las Preguntas Frecuentes (FAQ)
+  Para agregar o modificar las respuestas de ayuda relacionadas con las novedades:
+   * Archivo: Views/Ayuda/Index.cshtml
+   * Qué buscar: Busca los bloques <div class="accordion-item faq-item">.
+
+  4. La Lógica del Controlador
+  Si necesitas que la página de novedades haga algo especial en el servidor (aunque por ahora es solo visual):
+   * Archivo: Controllers/HomeController.cs
+   * Qué buscar: El método public IActionResult Novedades().
+
+  Resumen rápido: Para cambiar los textos que ve el cliente hoy, el archivo más importante es
+  Views/Home/Novedades.cshtml.

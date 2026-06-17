@@ -1,0 +1,68 @@
+ 📜 Contexto Maestro del Sistema: MiniMercado SaaS (Actualizado 2026)
+
+  1. Identidad y Propósito
+  MiniMercado es un ecosistema integral de gestión (ERP/POS) diseñado bajo el modelo SaaS Multi-tenant. Permite que
+  múltiples comercios independientes compartan la misma infraestructura y base de datos, garantizando un aislamiento
+  total de los datos mediante un identificador único por comercio (TenantId).
+
+  2. Stack Tecnológico
+   - Framework: ASP.NET Core 6.0 (MVC + Razor Pages).
+   - Lenguaje: C# / .NET 6.
+   - Base de Datos: SQL Server (Azure SQL) con Entity Framework Core.
+   - Autenticación: ASP.NET Core Identity con Claims personalizados para TenantId.
+   - UI: Bootstrap 5 con tema personalizado (Dark Mode nativo).
+
+  3. Arquitectura Multi-tenant (El Núcleo)
+   - Estrategia: Base de datos única con discriminador TenantId.
+   - Filtros Globales: MiniMercadoContext.cs aplica un HasQueryFilter automático a todas las entidades que implementan
+     ITenantEntity. Esto evita que un Tenant vea datos de otro por error en cualquier consulta LINQ.
+   - Seguridad: El TenantId se inyecta en los Claims del usuario al autenticarse mediante un
+     CustomClaimsPrincipalFactory.
+
+  4. Gestión de Inventario (Fuente de Verdad)
+   - Lotes como Origen: El stock no se edita directamente en el producto. La "fuente de verdad" son los LoteProducto.
+   - Sincronización: Producto.Stock es una suma dinámica gestionada por ProductoService.SincronizarStock.
+   - Importador Excel: Permite carga masiva. Si el producto existe, suma stock mediante nuevos lotes y actualiza
+     precios; si no existe, lo crea y genera lotes de migración.
+
+  5. Módulo de Finanzas y Egresos (Novedad 2026)
+  Este módulo gestiona la salud financiera del comercio fuera del flujo directo de ventas.
+   - EgresoCaja: Representa salidas de dinero (Sueldos, Mercadería, Impuestos, etc.).
+   - Vínculo con Caja: Si hay un turno de caja abierto, el egreso se asocia automáticamente a CajaId y se resta del
+     arqueo final.
+   - Filtros Avanzados: El historial de egresos permite filtrar por fecha (desde/hasta), categoría, proveedor y búsqueda
+     de texto libre sobre beneficiarios y descripciones.
+   - Dashboard Financiero: Panel en tiempo real que calcula:
+       - Hoy: Ventas Totales - Egresos = Resultado Neto.
+       - Mes: Ventas del Mes - Egresos del Mes = Resultado Neto Mensual.
+       - Nota: Los cálculos se realizan mediante sumatorias (SUM) en tiempo real sobre Ventas (activas) y EgresosCaja.
+
+  6. Gestión de Caja y Turnos
+   - Ciclo de Vida: Apertura (monto inicial) -> Operaciones (ventas/egresos) -> Cierre (arqueo).
+   - Arqueo Dinámico: El sistema calcula el "Saldo Esperado" sumando ventas y restando egresos vinculados al ID de la
+     caja.
+   - Fiados: Las ventas a cuenta corriente (fiados) no suman efectivo a la caja hasta que el cliente realiza un
+     PagoFiado.
+
+  7. Entidades Principales
+   - Tenant: El comercio/empresa.
+   - Producto / ProductoBase: Inventario local vs. catálogo global estandarizado.
+   - Venta / VentaDetalle: Transacciones comerciales y su desglose.
+   - EgresoCaja: Salidas de dinero tipificadas por CategoriaEgreso.
+   - Caja: Sesiones de trabajo y control de efectivo.
+   - LoteProducto: Trazabilidad de stock, costos y vencimientos.
+   - Proveedor: Entidades que suministran mercadería o servicios.
+
+  8. Reglas de Oro para el Desarrollo
+   1. Aislamiento: Jamás realices una consulta a la base de datos sin considerar el TenantId (manejado por filtros
+      globales de EF Core).
+   2. Stock: Nunca modifiques Producto.Stock manualmente. Crea un LoteProducto o un MovimientoStock y dispara
+      SincronizarStock.
+   3. Auditoría: Todo cambio crítico debe registrarse mediante AuditoriaService.Registrar.
+   4. UI/UX: Mantén el estilo de tarjetas oscuras, botones con iconos de Bootstrap Icons y respuestas rápidas.
+   5. Cálculos Financieros: No almacenes totales calculados en tablas de base de datos; utiliza consultas LINQ con
+      SumAsync para garantizar datos siempre actualizados.
+
+  9. Estructura de Ayuda (FAQ)
+  El sistema incluye un centro de ayuda en Ayuda/Index.cshtml categorizado por módulos (Ventas, Stock, Finanzas, etc.)
+  para que el usuario resuelva dudas comunes sobre el flujo de trabajo sin salir de la plataforma.

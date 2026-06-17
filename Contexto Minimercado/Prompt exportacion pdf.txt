@@ -1,0 +1,134 @@
+Soy desarrollador de una aplicación SaaS multi-tenant llamada MiniMercado, construida con ASP.NET Core 6.0 MVC + Razor Views, C#, Entity Framework Core y SQL Server. El sistema tiene un diseño fintech inspirado en Ualá, con variables CSS (--bg-card, --text-primary, --border, etc.), soporte de dark mode via clase body.dark-mode, tipografía DM Sans y DM Mono.
+Necesito implementar exportación a PDF en todas las tablas y listados del sistema, con las siguientes características:
+
+📁 RUTA DEL PROYECTO (NO MODIFICAR):
+C:\Users\Gonzo\Desktop\Proyecto MiniMercado\MiniMercado
+
+REQUISITOS GENERALES
+
+La exportación debe funcionar del lado del cliente usando la librería jsPDF + jsPDF-AutoTable, cargadas desde CDN (https://cdnjs.cloudflare.com). No se usa ningún paquete NuGet ni lógica del servidor para generar el PDF.
+El PDF generado debe poder descargarse y luego imprimirse desde el navegador. Incluir un botón "Imprimir" que abra el diálogo de impresión del sistema operativo directamente sobre el PDF.
+Cada PDF debe tener:
+
+Header con el nombre del comercio (disponible en ViewBag.NombreComercio o User.Identity.Name como fallback), el título del listado, la fecha y hora de generación.
+Footer con número de página y texto "MiniMercado - Sistema de Gestión".
+Logo si existe en ~/images/Minimercado.png, cargado como base64 antes de generar.
+Colores coherentes con el sistema: fondo de encabezado de tabla en #4f46e5 (indigo), texto blanco, filas alternas en #f8fafc, bordes sutiles.
+
+
+IMPLEMENTACIÓN
+Creá un archivo JavaScript centralizado en /wwwroot/js/export-pdf.js con una función reutilizable:
+javascriptexportTableToPDF(tableId, titulo, columnas, opciones)
+Donde:
+
+tableId: ID del elemento <table> HTML a exportar
+titulo: string con el nombre del reporte (ej: "Historial de Ventas")
+columnas: array de strings con los encabezados de columnas a incluir (permite excluir columnas de acciones)
+opciones: objeto opcional con { orientation: 'landscape' | 'portrait', fileName: 'nombre.pdf' }
+
+La función debe:
+
+Cargar el logo como base64 usando fetch + canvas
+Crear el documento PDF con jsPDF
+Insertar el header con logo, nombre del comercio, título y fecha
+Usar autoTable para renderizar la tabla con estilos
+Insertar el footer en cada página
+Disparar la descarga automática del archivo
+
+
+BOTÓN DE EXPORTACIÓN
+En cada vista que tenga una tabla o listado, agregar un botón con este estilo consistente con el sistema:
+html<button onclick="exportTableToPDF('id-tabla', 'Título', ['Col1','Col2','Col3'])"
+        class="btn-export-pdf">
+  <svg><!-- ícono de descarga --></svg>
+  Exportar PDF
+</button>
+El botón debe tener estilo propio definido en el archivo CSS global o en cada vista con:
+
+Fondo #4f46e5, color blanco, border-radius 10px, padding 8px 18px, font-weight 600
+Hover: fondo #6366f1, leve elevación con box-shadow
+Ícono SVG de descarga inline, 16x16px
+En dark mode debe mantener el mismo color (no usar variables que se inviertan)
+
+
+VISTAS A MODIFICAR
+Agregá el botón de exportación en cada una de estas vistas, respetando el tableId correcto de cada tabla existente:
+
+Views/Venta/Index.cshtml → tabla de historial de ventas → orientación landscape
+Views/Venta/Caja.cshtml → tabla resumen de caja diaria → orientación portrait
+Views/VentaAdmin/Index.cshtml → tabla de administración de ventas → landscape
+Views/Productos/Index.cshtml → tabla de productos → landscape
+Views/Cliente/Index.cshtml → tabla de clientes y fiados → portrait
+Views/Caja/Historial.cshtml → tabla historial de cajas → landscape
+Views/Auditoria/Index.cshtml → tabla de auditorías → landscape
+Views/Proveedores/Index.cshtml → tabla de proveedores → portrait
+Views/AdminDashboard/Index.cshtml → tabla de bajo stock y tabla de stock muerto → portrait
+
+En cada vista, el botón va ubicado en el header de la sección, alineado a la derecha junto a otros botones existentes (como "Ver todos", "Nuevo", etc.), sin romper el layout actual.
+
+EXCLUSIÓN DE COLUMNAS DE ACCIONES
+La última columna de cada tabla que contenga botones de acción (Editar, Ver, Reponer, etc.) no debe exportarse al PDF. La función exportTableToPDF debe aceptar un array de índices de columnas a excluir:
+javascriptexportTableToPDF('tabla-ventas', 'Historial de Ventas',
+  ['Fecha', 'Producto', 'Total', 'Vendedor'],
+  { orientation: 'landscape', excluirColumnas: [4] })
+
+REGISTRO EN _Layout.cshtml
+Agregar al final del _Layout.cshtml, antes del cierre de </body>:
+html<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="~/js/export-pdf.js"></script>
+
+RESTRICCIONES IMPORTANTES
+
+No usar librerías de servidor (no Rotativa, no DinkToPdf, no SelectPdf).
+No modificar la lógica de los controllers ni los modelos.
+No romper el diseño existente de ninguna vista.
+El archivo export-pdf.js debe ser el único lugar donde vive la lógica de generación. Nada de código duplicado en cada vista.
+Todos los archivos entregados deben estar completos, sin comentarios del tipo "// resto igual" o "// mismo que antes".
+El botón debe funcionar aunque la tabla esté vacía (en ese caso mostrar solo el header y un texto "Sin datos para exportar").
+
+🚫 REGLAS CRÍTICAS:
+
+NO romper multi-tenancy
+TODAS las entidades deben respetar TenantId
+NO usar IgnoreQueryFilters()
+NO acceder datos de otros tenants
+NO hardcodear valores
+NO duplicar lógica existente
+
+✅ OBLIGATORIO:
+
+Usar _tenantService para obtener TenantId actual
+Validar pertenencia de datos al tenant
+Manejar errores correctamente
+Código asincrónico (async/await)
+
+🔒 SEGURIDAD:
+
+Validar inputs
+Evitar overposting
+No exponer datos sensibles
+
+📦 ARQUITECTURA:
+
+Mantener separación Service / Controller
+No mover lógica al Controller
+No acceder DbContext desde Controller
+
+📥 INPUT:
+Código parcial o requerimiento funcional
+
+📤 OUTPUT:
+
+Código listo para producción
+Métodos completos
+Sin explicaciones
+
+✅ VALIDACIÓN:
+
+Compila
+Respeta multi-tenant
+No rompe lógica existente
+
+TIP
+Cuando entregueS el export-pdf.js, muestrA un ejemplo funcionando con la tabla de Ventas antes de que modifiques las otras 8 vistas. Así verificO que el logo carga bien, que las columnas de acciones se excluyen correctamente y que el header/footer aparecen, y después replicás con confianza en el resto.

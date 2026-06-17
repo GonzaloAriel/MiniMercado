@@ -1,10 +1,25 @@
+@using MiniMercado.Services
+@inject ISuscripcionService SuscripcionService
+@inject ITenantService TenantService
+
 @{
     ViewData["Title"] = "Panel de Control";
-    var tenantId = User.FindFirst("TenantId")?.Value ?? "0";
+    
+    // Obtención dinámica del nombre del comercio para la marquesina
+    var tId = TenantService.GetTenantId();
+    string nombreComercio = "MiniMercado";
+    if (tId.HasValue)
+    {
+        var tenant = SuscripcionService.GetSuscripcionActualAsync(tId.Value).Result;
+        nombreComercio = !string.IsNullOrWhiteSpace(tenant?.NombreComercio) ? tenant.NombreComercio : "MiniMercado";
+    }
+
+    // Para el script de onboarding
+    var tenantId = tId?.ToString() ?? "0";
 }
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
 
     /* ── Variables que extienden el sistema global ─── */
     :root {
@@ -21,7 +36,7 @@
         font-family: 'DM Sans', system-ui, sans-serif;
     }
 
-    /* ── Hero / Logo ──────────────────────────────── */
+    /* ── Hero Anterir (COMENTADO) ──────────────────── 
     .home-hero {
         display: flex;
         flex-direction: column;
@@ -42,32 +57,118 @@
         transition: var(--home-transition);
         filter: drop-shadow(0 4px 16px rgba(79,70,229,0.18));
     }
+    ─────────────────────────────────────────────── */
 
-    .home-hero img:hover {
-        border-color: #c084fc;
-        transform: scale(1.04) rotate(-1deg);
+    /* ── Hero Fintech (Modern SaaS) ──────────────── */
+    .hero-fintech {
+        padding: 24px 0 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        text-align: center;
     }
 
-    body.dark-mode .home-hero img {
-        filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+    .hero-content {
+        background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+        padding: 32px 24px;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 100%;
+        position: relative;
+        box-shadow: 0 15px 40px rgba(67, 56, 202, 0.15);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        transition: var(--home-transition);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .home-hero-title {
-        font-size: 26px;
-        font-weight: 700;
-        letter-spacing: -0.03em;
+    .hero-content:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 25px 60px rgba(67, 56, 202, 0.2);
+    }
+
+    body.dark-mode .hero-content {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .hero-title {
+        font-weight: 900;
+        font-size: clamp(32px, 7vw, 52px);
         color: #fff;
-        margin: 0 0 8px;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        margin: 0;
+        line-height: 1;
+        letter-spacing: -0.03em;
     }
 
+    .hero-subtitle {
+        font-size: clamp(15px, 4vw, 19px);
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 500;
+        margin: 0;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+    }
+
+    .hero-badge-wrap {
+        margin-top: 6px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .status-badge.open {
+        color: #10b981;
+    }
+
+    .status-badge.closed {
+        color: #ef4444;
+    }
+
+    .status-badge::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 8px currentColor;
+    }
+
+    .status-badge:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+    /* ── Subtítulo Hero ────────────────────────── */
     .home-hero-sub {
         font-size: 14px;
         color: rgba(255,255,255,0.65);
         font-weight: 400;
-        max-width: 340px;
+        max-width: 400px;
         line-height: 1.5;
         margin: 0;
+    }
+
+    body:not(.dark-mode) .home-hero-sub {
+        color: #64748b;
     }
 
     /* ── Login CTA (sin sesión) ───────────────────── */
@@ -129,20 +230,27 @@
         align-items: center;
         gap: 16px;
         width: 100%;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
         border-radius: var(--home-radius);
         padding: 20px 24px;
         margin-bottom: 20px;
         text-decoration: none;
         transition: var(--home-transition);
-        border: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         cursor: pointer;
+        box-shadow: 0 10px 25px rgba(67, 56, 202, 0.15);
     }
 
     .nueva-venta-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(16,185,129,0.35);
+        box-shadow: 0 12px 28px rgba(67, 56, 202, 0.25);
         text-decoration: none;
+    }
+
+    body.dark-mode .nueva-venta-btn {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.05);
     }
 
     .nueva-venta-btn:active { transform: translateY(0); }
@@ -531,16 +639,32 @@
 
     /* ── Responsive general ───────────────────────── */
     @@media (max-width: 600px) {
-        .home-hero-title { font-size: 22px; }
         .nueva-venta-btn { padding: 16px 18px; }
         .nv-text h2 { font-size: 16px; }
+        .hero-content { padding: 24px 16px; }
     }
 </style>
 
 <div class="home-wrap">
+    
+    @* --- HERO ANTERIOR (COMENTADO) ---
     <div class="home-hero">
         <img src="~/images/Minimercado.png" alt="MiniMercado" />
         <p class="home-hero-sub">Gestioná tu negocio de forma inteligente, simple y rápida.</p>
+    </div>
+    *@
+
+    <!-- HERO FINTECH MODERN -->
+    <div class="hero-fintech">
+        <div class="hero-content">
+            <h1 class="hero-title">@nombreComercio</h1>
+            <p class="hero-subtitle">Tu negocio. Más simple. <br class="d-sm-none"> Más inteligente.</p>
+            <div class="hero-badge-wrap">
+                <div id="statusSign" class="status-badge open" onclick="toggleStatusSign()">
+                    ABIERTO
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (!(User.IsInRole("Caja")) && !(User.IsInRole("Admin")) && !(User.IsInRole("AdminGlobal")))
@@ -713,7 +837,6 @@
             </div>
         </div>
 
-        // CLIENTES
         <div class="section-card" id="card-clientes">
             <div class="section-header" onclick="toggleSection('clientes')">
                 <div class="section-icon" style="background:rgba(139,92,246,0.12)">
@@ -756,7 +879,6 @@
             </div>
         </div>
 
-        // FINANZAS
         <div class="section-card" id="card-finanzas">
             <div class="section-header" onclick="toggleSection('finanzas')">
                 <div class="section-icon" style="background:rgba(16,185,129,0.12)">
@@ -797,7 +919,6 @@
             </div>
         </div>
 
-        // ADMINISTRACIÓN
         <div class="section-card" id="card-admin">
             <div class="section-header" onclick="toggleSection('admin')">
                 <div class="section-icon" style="background:rgba(100,116,139,0.12)">
@@ -879,7 +1000,6 @@
             </div>
         </div>
 
-        // AYUDA
         <div class="section-card" id="card-ayuda">
             <div class="section-header" onclick="toggleSection('ayuda')">
                 <div class="section-icon" style="background:rgba(59,130,246,0.12)">
@@ -890,8 +1010,8 @@
                     </svg>
                 </div>
                 <div class="section-info">
-                    <p class="section-name">Ayuda y Soporte</p>
-                    <p class="section-desc">Preguntas frecuentes, guías de uso y asistencia técnica</p>
+                    <p class="section-name">Ayuda, Soporte y Novedades</p>
+                    <p class="section-desc">Preguntas frecuentes, novedades del sistema y asistencia técnica</p>
                 </div>
                 <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <polyline points="6 9 12 15 18 9"/>
@@ -906,6 +1026,14 @@
                             </svg>
                         </div>
                         <span class="btn-label">Ver FAQ</span>
+                    </a>
+                    <a asp-controller="Home" asp-action="Novedades" class="action-btn">
+                        <div class="btn-icon" style="background:rgba(139,92,246,0.12)">
+                            <svg viewBox="0 0 24 24" stroke="#8b5cf6" fill="none" stroke-width="2">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                        </div>
+                        <span class="btn-label">Novedades</span>
                     </a>
                 </div>
             </div>
@@ -1041,6 +1169,20 @@
 </div>
 
 <script>
+    // Lógica para el cartel de ABIERTO/CERRADO
+    function toggleStatusSign() {
+        const sign = document.getElementById('statusSign');
+        if (sign.innerText.trim() === 'ABIERTO') {
+            sign.innerText = 'CERRADO';
+            sign.classList.remove('open');
+            sign.classList.add('closed');
+        } else {
+            sign.innerText = 'ABIERTO';
+            sign.classList.remove('closed');
+            sign.classList.add('open');
+        }
+    }
+
     function toggleSection(id) {
         const card = document.getElementById('card-' + id);
         const body = document.getElementById('body-' + id);

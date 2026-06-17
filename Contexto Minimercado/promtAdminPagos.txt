@@ -1,0 +1,99 @@
+ Contexto del Proyecto: MiniMercado
+
+  Este es un sistema de gestión integral para comercios minoristas (Minimercados) desarrollado como una aplicación SaaS
+  (Software as a Service) Multi-tenant. Permite que múltiples comercios utilicen la misma infraestructura manteniendo
+  sus datos aislados.
+
+  1. Stack Tecnológico
+   * Framework: ASP.NET Core 6.0 (MVC + Razor Pages).
+   * Lenguaje: C#.
+   * Base de Datos: SQL Server (utilizando Entity Framework Core como ORM).
+   * Autenticación: ASP.NET Core Identity (personalizado con ApplicationUser).
+   * Arquitectura de Datos: Multi-tenancy basado en discriminador (TenantId) con filtros de consulta globales en el
+     DbContext para garantizar el aislamiento de datos.
+
+  2. Estructura de Datos y Entidades Principales
+   * Tenant: Representa a cada comercio. Incluye nombre, dirección, estado de suscripción (activo/bloqueado), fecha de
+     vencimiento y configuración de tickets.
+   * Producto: Gestión de inventario con soporte para códigos de barras, control de stock, precios, fechas de
+     vencimiento y productos por peso. Se vinculan opcionalmente a un ProductoBase (catálogo global).
+   * Venta y DetalleVenta: Registro de transacciones comerciales, vinculadas a un usuario (vendedor) y un tenant.
+   * Caja: Gestión de turnos de caja y cierres diarios (ResumenCajaDia).
+   * Cliente y PagoFiado: Sistema de cuentas corrientes para clientes ("fiado"), permitiendo registrar deudas y abonos.
+   * Auditoría: Registro automático de acciones críticas en el sistema.
+   * Notificaciones y Alertas: Sistema para avisar sobre stock bajo, vencimientos próximos o estados de cuenta.
+
+  3. Componentes de Lógica de Negocio
+   * Servicios (Services):
+       * TenantService: Gestiona la identificación del comercio actual en cada petición.
+       * ProductoService: Lógica compleja de inventario y movimientos de stock.
+       * AuditoriaService: Encargado de persistir el rastro de cambios.
+       * AlertasService: Evalúa condiciones de stock y fechas para generar avisos.
+   * Middleware:
+       * TenantValidationMiddleware: Valida que el tenant esté activo y no bloqueado antes de procesar cualquier
+         solicitud.
+   * Seguridad:
+       * Uso de CustomClaimsPrincipalFactory para inyectar el TenantId en los Claims del usuario autenticado.
+
+  4. Flujos Clave para la IA
+   * Aislamiento: Todas las consultas a la base de datos están filtradas automáticamente por CurrentTenantId en
+     MiniMercadoContext.cs. Si CurrentTenantId es nulo, el sistema actúa en modo "Admin Global".
+   * Inicialización: Existe un proceso de SeedData que configura roles iniciales, un administrador global y un tenant de
+     demostración.
+   * Frontend: Utiliza vistas MVC tradicionales con componentes Razor (ViewComponents) y archivos estáticos en wwwroot.
+
+ Estructura Detallada de Archivos y Carpetas (Arquitectura Completa)
+
+  Esta estructura refleja la organización física del proyecto en C:\Users\Gonzo\Desktop\Proyecto
+  MiniMercado\MiniMercado\MiniMercado:
+
+  📂 /Data (Capa de Persistencia)
+   * MiniMercadoContext.cs: Configuración de EF Core, filtros Multi-tenant y Fluent API.
+   * SeedData.cs: Lógica de inicialización de Roles (AdminGlobal, AdminTenant, Vendedor) y datos de prueba.
+
+  📂 /Models (Entidades de Negocio)
+   * Tenant.cs: Gestión de comercios, suscripciones y bloqueos.
+   * Producto.cs: Lógica de stock, precios, vencimientos y códigos de barras.
+   * Venta.cs / VentaDetalle.cs: Registro de transacciones y sus ítems.
+   * Caja.cs / ResumenCajaDia.cs: Control de flujo de dinero y cierres de turno.
+   * Cliente.cs / PagoFiado.cs: Gestión de cuentas corrientes de clientes.
+   * Auditoria.cs: Registro de logs de acciones críticas.
+   * Notificacion.cs / AlertasService.cs: Sistema de avisos internos.
+   * ProductoBase.cs: Catálogo global de productos para estandarización.
+   * ITenantEntity.cs: Interfaz que obliga a incluir TenantId para el aislamiento.
+
+  📂 /Services (Lógica de Negocio)
+   * ProductoService.cs: Gestión compleja de inventario y movimientos de stock.
+   * TenantService.cs: Obtención y validación del contexto del comercio actual.
+   * AuditoriaService.cs: Servicio centralizado para persistir logs de auditoría.
+   * NotificacionService.cs: Despacho de avisos al sistema.
+   * AlertasService.cs: Lógica de detección de stock bajo y vencimientos.
+
+  📂 /Controllers (Lógica de Control)
+   * ProductosController.cs: CRUD y gestión de inventario.
+   * VentasController.cs: Punto de venta (POS) y reportes de ventas.
+   * CajasController.cs: Apertura, cierre y movimientos de caja.
+   * ClientesController.cs: Gestión de deudores y pagos.
+   * TenantsController.cs: (Admin Global) Alta y baja de comercios.
+   * AuditoriaController.cs: Visualización de logs del sistema.
+
+  📂 /Middleware & Extensions (Infraestructura)
+   * TenantValidationMiddleware.cs: Bloquea acceso si el comercio está desactivado/vencido.
+   * CustomClaimsPrincipalFactory.cs: Inyecta el TenantId en la identidad del usuario.
+
+  📂 /Views (Interfaz de Usuario - Razor)
+   * /Productos: Vistas de catálogo, edición y gestión de stock.
+   * /Ventas: Interfaz de punto de venta y detalle de facturación.
+   * /Cajas: Formularios de apertura/cierre y reportes diarios.
+   * /Shared:
+       * _Layout.cshtml: Plantilla base del sistema.
+       * _LoginPartial.cshtml: Gestión de sesión de usuario.
+
+  📂 /wwwroot (Recursos Estáticos)
+   * /css, /js, /lib: Estilos y scripts (Bootstrap, jQuery, validaciones).
+   * /Images: Directorio de almacenamiento para fotos de productos y logos.
+
+  Archivos de Configuración Raíz
+   * Program.cs: Configuración de Inyección de Dependencias (DI), Pipeline de middleware y Rutas.
+   * appsettings.json: Configuración de ConnectionStrings y parámetros globales.
+   * MiniMercado.csproj: Definición de dependencias NuGet (.NET 6.0).

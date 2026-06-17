@@ -1,0 +1,468 @@
+ Auditoría del Sistema de Vencimiento y Bloqueo - MiniMercado SaaS
+
+  Este informe detalla la implementación actual de la lógica de suscripciones, avisos de vencimiento y restricciones de
+  acceso en el sistema MiniMercado.
+
+  ---
+
+  1. Entidad de Datos: Tenant
+  ARCHIVO: MiniMercado/Models/Tenant.cs
+
+  MOTIVO: Define las propiedades base para el control de la suscripción y el estado del comercio.
+
+  CÓDIGO RELEVANTE:
+
+    1 public enum EstadoSuscripcion
+    2 {
+    3     Activa = 1,
+    4     PendientePago = 2,
+    5     Vencida = 3,
+    6     Suspendida = 4
+    7 }
+    8
+    9 public class Tenant
+   10 {
+   11     public int Id { get; set; }
+   12     public bool Activo { get; set; } = true; // Control administrativo manual
+   13     public bool Bloqueado { get; set; } = false; // Control por falta de pago o sanción
+   14
+   15     [Display(Name = "Fecha de Vencimiento")]
+   16     public DateTime? FechaVencimiento { get; set; } // Campo principal de validación
+   17
+   18     public DateTime? FechaProximoPago { get; set; }
+   19     public EstadoSuscripcion EstadoSuscripcion { get; set; } = EstadoSuscripcion.PendientePago;
+   20     // ... otros campos de membresía
+   21 }
+
+  ---
+
+  2. Middleware de Validación (El Núcleo del Bloqueo)
+  ARCHIVO: MiniMercado/Middleware/TenantValidationMiddleware.cs
+
+  MOTIVO: Es el componente responsable de interceptar cada petición y validar si el Tenant tiene permiso para operar.
+  Maneja tanto el bloqueo manual como el vencimiento automático y las notificaciones previas.
+
+  CÓDIGO RELEVANTE:
+
+    1 public async Task InvokeAsync(HttpContext context, ...)
+    2 {
+    3     var path = context.Request.Path.Value;
+    4     // 🔹 Ignorar rutas públicas (Login, Bloqueado, Recursos estáticos)
+    5     if (path != null && (path.StartsWith("/Account/Login") || path.StartsWith("/Cuenta/Bloqueado") || ...))
+    6     {
+    7         await _next(context);
+    8         return;
+    9     }
+   10
+   11     if (context.User.Identity.IsAuthenticated)
+   12     {
+   13         // ... obtención del tenant desde cache o DB
+   14         if (tenant != null)
+   15         {
+   16             // 1. Validar si el tenant está inactivo (Cierra sesión)
+   17             if (!tenant.Activo)
+   18             {
+   19                 await signInManager.SignOutAsync();
+   20                 context.Response.Redirect("/Tenant/Desactivado");
+   21                 return;
+   22             }
+   23
+   24             // 2. Validar bloqueo manual o vencimiento automático
+   25             bool estaVencido = tenant.FechaVencimiento.HasValue && tenant.FechaVencimiento.Value < DateTime.Now;
+   26             if (tenant.Bloqueado || estaVencido)
+   27             {
+   28                 context.Response.Redirect("/Cuenta/Bloqueado");
+   29                 return;
+   30             }
+   31
+   32             // 🔔 3. Notificación de vencimiento próximo (7 días antes)
+   33             if (tenant.FechaVencimiento.HasValue)
+   34             {
+   35                 var diasRestantes = (tenant.FechaVencimiento.Value - DateTime.Now).TotalDays;
+   36                 if (diasRestantes > 0 && diasRestantes <= 7)
+   37                 {
+   38                     // Genera notificación interna una vez cada 24hs
+   39                     await notificacionService.CrearNotificacion(
+   40                         "Suscripción por vencer",
+   41                         $"Tu suscripción vence en {Math.Ceiling(diasRestantes)} días...",
+   42                         "Pago"
+   43                     );
+   44                 }
+   45             }
+   46         }
+   47     }
+   48     await _next(context);
+   49 }
+
+  ---
+
+  3. Servicio de Suscripción
+  ARCHIVO: MiniMercado/Services/SuscripcionService.cs
+
+  MOTIVO: Contiene la lógica de cálculo de estados y el procesamiento de pagos para renovar suscripciones.
+
+  CÓDIGO RELEVANTE:
+
+    1 public EstadoSuscripcion CalcularEstado(Tenant tenant)
+    2 {
+    3     if (tenant.Bloqueado) return EstadoSuscripcion.Suspendida;
+    4     if (!tenant.FechaProximoPago.HasValue) return EstadoSuscripcion.PendientePago;
+    5
+    6     if (DateTime.Now > tenant.FechaProximoPago.Value)
+    7     {
+    8         return EstadoSuscripcion.Vencida;
+    9     }
+   10     return EstadoSuscripcion.Activa;
+   11 }
+   12
+   13 public async Task RegistrarPagoAsync(int tenantId, int meses, string plan, ...)
+   14 {
+   15     // ... lógica para extender la fecha
+   16     tenant.FechaProximoPago = baseFecha.AddMonths(meses);
+   17     tenant.EstadoSuscripcion = EstadoSuscripcion.Activa;
+   18     tenant.FechaVencimiento = tenant.FechaProximoPago; // Sincronización de campos
+   19     // ... registro en historial de cobros
+   20 }
+
+  ---
+
+  4. Gestión Global de Tenants (AdminGlobal)
+  ARCHIVO: MiniMercado/Controllers/AdminGlobalController.cs
+
+  MOTIVO: Permite al administrador del SaaS bloquear/desbloquear tenants y registrar pagos manualmente.
+
+  CÓDIGO RELEVANTE:
+
+   1 [HttpPost]
+   2 public async Task<IActionResult> ToggleBloqueo(int id)
+   3 {
+   4     var tenant = await _context.Tenants.FindAsync(id);
+   5     tenant.Bloqueado = !tenant.Bloqueado;
+   6     _cache.Remove($"tenant_{id}"); // Invalida cache para aplicar bloqueo inmediato
+   7     await _context.SaveChangesAsync();
+   8     return RedirectToAction(nameof(Tenants));
+   9 }
+
+  ---
+
+  RESUMEN DE RESPONSABILIDADES
+
+  ┌───────────────────────────────┬──────────────────────────────────────────────────────────────────────────┐
+  │ ARCHIVO                       │ RESPONSABILIDAD                                                          │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Tenant.cs                     │ Almacena FechaVencimiento, Bloqueado y EstadoSuscripcion.                │
+  │ TenantValidationMiddleware.cs │ Principal responsable. Bloquea el acceso y redirige a /Cuenta/Bloqueado. │
+  │ SuscripcionService.cs         │ Lógica de cálculo de días restantes y actualización tras pagos.          │
+  │ AdminGlobalController.cs      │ Interfaz para que el administrador bloquee o registre pagos.             │
+  │ ConfiguracionController.cs    │ Permite al usuario ver su estado actual de suscripción.                  │
+  │ NotificacionService.cs        │ Registra las alertas de vencimiento en la base de datos para el usuario. │
+  │ Program.cs                    │ Registra el middleware en el pipeline de ASP.NET Core.                   │
+  └───────────────────────────────┴──────────────────────────────────────────────────────────────────────────┘
+  ---
+
+  FLUJO DEL SISTEMA
+
+   1. Aviso de Vencimiento: El TenantValidationMiddleware detecta que faltan 7 días o menos para la FechaVencimiento.
+      Llama a NotificacionService para crear una alerta que el usuario verá en su campana de notificaciones. Se usa
+      cache para evitar duplicar la notificación el mismo día.
+   2. Vencimiento: Al llegar la fecha, el TenantValidationMiddleware detecta que FechaVencimiento < DateTime.Now.
+   3. Bloqueo de Acceso: En la siguiente petición del usuario, el middleware detecta el vencimiento (o el flag Bloqueado      == true) y ejecuta un Redirect("/Cuenta/Bloqueado").
+   4. Redirección: El usuario es enviado a la vista Views/Cuenta/Bloqueado.cshtml, donde solo puede cerrar sesión o
+
+******************************************************************************************************************
+
+
+ Informe de Auditoría Profunda: Ciclo de Vida de Suscripciones y Bloqueos
+
+  Este informe detalla el flujo completo de las propiedades críticas de membresía y los mecanismos de control de acceso
+  en MiniMercado SaaS.
+
+  ---
+
+  1. Mapa de Responsabilidades
+
+  ┌───────────────────────────────┬────────────────────────┬─────────────────────────────────────────────────────────┐
+  │ ARCHIVO                       │ MÉTODO                 │ ACCIÓN                                                  │
+  ├───────────────────────────────┼────────────────────────┼─────────────────────────────────────────────────────────┤
+  │ Tenant.cs                     │ (Constructor/Defaults) │ Inicializa EstadoSuscripcion en PendientePago y         │
+  │                               │                        │ Bloqueado en false.                                     │
+  │ TenantsController.cs          │ Create (POST)          │ Crea el registro inicial del Tenant con valores por     │
+  │                               │                        │ defecto (null en fechas).                               │
+  │ SuscripcionService.cs         │ RegistrarPagoAsync     │ Extiende FechaProximoPago, sincroniza FechaVencimiento  │
+  │                               │                        │ y activa la suscripción.                                │
+  │ SuscripcionService.cs         │ CalcularEstado         │ Calcula el estado en tiempo real (Activa, Vencida,      │
+  │                               │                        │ Suspendida) sin mutar la DB.                            │
+  │ AdminGlobalController.cs      │ ToggleBloqueo          │ Permite al administrador global cambiar manualmente el  │
+  │                               │                        │ flag Bloqueado.                                         │
+  │ TenantValidationMiddleware.cs │ InvokeAsync            │ Ejecuta la lógica de bloqueo inmediato y genera alertas │
+  │                               │                        │ previas (7 días).                                       │
+  └───────────────────────────────┴────────────────────────┴─────────────────────────────────────────────────────────┘
+  ---
+
+  2. Análisis del Ciclo de Vida
+
+  A. Creación Inicial
+  La FechaVencimiento y FechaProximoPago se crean inicialmente como null cuando se registra un nuevo comercio a través
+  de TenantsController.Index. El estado inicial es PendientePago.
+
+  B. Actualización y Extensión (Pagos)
+  La extensión de la suscripción ocurre exclusivamente en SuscripcionService.RegistrarPagoAsync. La lógica permite la
+  acumulación: si el usuario paga antes de vencer, los meses se suman a la fecha futura; si ya venció, se suman desde
+  "hoy".
+
+  C. Lógica de Bloqueo y Vencimiento
+   * Vencimiento Automático: Se calcula comparando FechaVencimiento < DateTime.Now. Es evaluado en cada petición por el
+     Middleware.
+   * Bloqueo Manual: Controlado por la propiedad Bloqueado. Un AdminGlobal puede activarlo en cualquier momento.
+   * Período de Gracia: No existe. El sistema bloquea el acceso en el segundo exacto en que la fecha de vencimiento es
+     superada.
+   * Configuración de Alertas: Existe un aviso hardcodeado de 7 días en el Middleware que genera una notificación
+     interna.
+
+  D. Tareas Automáticas
+  No existen procesos en segundo plano (Workers, Hangfire o Cron Jobs). Toda la validación de estados y envíos de
+  notificaciones de vencimiento se disparan "on-demand" cuando el usuario navega por el sistema, procesadas por el
+  TenantValidationMiddleware.
+
+  ---
+
+  3. Métodos Críticos Involucrados
+
+  Registro de Pago y Extensión (SuscripcionService.cs)
+
+    1 public async Task RegistrarPagoAsync(int tenantId, int meses, string plan, string? observacion = null)
+    2 {
+    3     var tenant = await _context.Tenants.FindAsync(tenantId);
+    4     if (tenant == null) return;
+    5
+    6     DateTime hoy = DateTime.Now;
+    7
+    8     // Sincronización y Acumulación
+    9     DateTime baseFecha = (tenant.FechaProximoPago.HasValue && tenant.FechaProximoPago > hoy)
+   10                          ? tenant.FechaProximoPago.Value
+   11                          : hoy;
+   12
+   13     tenant.FechaProximoPago = baseFecha.AddMonths(meses);
+   14     tenant.Plan = plan;
+   15     tenant.MesesPagados += meses;
+   16     tenant.UltimoPagoRegistrado = hoy;
+   17     tenant.EstadoSuscripcion = EstadoSuscripcion.Activa;
+   18
+   19     // Sincronización para compatibilidad con lógica de Middleware
+   20     tenant.FechaVencimiento = tenant.FechaProximoPago;
+   21
+   22     // Registro de Cobro
+   23     var cobro = new CobroTenant { ... };
+   24     _context.CobrosTenants.Add(cobro);
+   25     await _context.SaveChangesAsync();
+   26 }
+
+  Validación de Acceso (TenantValidationMiddleware.cs)
+
+    1 public async Task InvokeAsync(HttpContext context, ...)
+    2 {
+    3     // ... (omitiendo búsqueda de tenant)
+    4     if (tenant != null)
+    5     {
+    6         // Validación de bloqueo o vencimiento
+    7         bool estaVencido = tenant.FechaVencimiento.HasValue && tenant.FechaVencimiento.Value < DateTime.Now;
+    8
+    9         if (tenant.Bloqueado || estaVencido)
+   10         {
+   11             context.Response.Redirect("/Cuenta/Bloqueado");
+   12             return;
+   13         }
+   14
+   15         // Notificación de vencimiento (Hardcoded: 7 días)
+   16         if (tenant.FechaVencimiento.HasValue)
+   17         {
+   18             var diasRestantes = (tenant.FechaVencimiento.Value - DateTime.Now).TotalDays;
+   19             if (diasRestantes > 0 && diasRestantes <= 7)
+   20             {
+   21                 // Generar notificación si no se hizo en las últimas 24hs...
+   22             }
+   23         }
+   24     }
+   25 }
+
+  Bloqueo Manual (AdminGlobalController.cs)
+
+    1 [HttpPost]
+    2 public async Task<IActionResult> ToggleBloqueo(int id)
+    3 {
+    4     var tenant = await _context.Tenants.FindAsync(id);
+    5     if (tenant == null) return NotFound();
+    6
+    7     tenant.Bloqueado = !tenant.Bloqueado;
+    8     _context.Update(tenant);
+    9     await _context.SaveChangesAsync();
+   10
+   11     _cache.Remove($"tenant_{id}"); // Fuerza al Middleware a re-leer el estado
+   12     return RedirectToAction(nameof(Tenants));
+   13 }
+
+***********************************************************************************************************
+***********************************************************************************************************
+***********************************************************************************************************
+
+ Estado Actual del Módulo de Suscripciones SaaS - MiniMercado - 15/6/2025
+
+  Este documento detalla la implementación técnica, lógica de negocio y mecanismos de control del módulo de
+  suscripciones del sistema MiniMercado SaaS.
+
+  ---
+
+  1. Objetivo del Módulo
+  El objetivo principal es gestionar el ciclo de vida comercial de cada comercio (Tenant) dentro de la plataforma. El
+  sistema garantiza el cobro del servicio mediante un flujo progresivo de advertencias, un período de gracia y,
+  finalmente, la restricción total del acceso para garantizar la rentabilidad del SaaS.
+
+  ---
+
+  2. Entidades Involucradas
+
+  Tenant
+   * Archivo: MiniMercado/Models/Tenant.cs
+   * Propiedades Relevantes:
+       * Activo (bool): Control administrativo manual para habilitar/deshabilitar el comercio.
+       * Bloqueado (bool): Flag manual de suspensión inmediata.
+       * FechaVencimiento (DateTime?): Fecha límite de uso del servicio.
+       * FechaProximoPago (DateTime?): Sincronizada con el vencimiento para cálculos de extensión.
+       * EstadoSuscripcion (Enum): Activa, PendientePago, Vencida, Suspendida.
+
+  Notificacion
+   * Archivo: MiniMercado/Models/Notificacion.cs
+   * Propiedades Relevantes:
+       * Tipo: Identificador "Pago" para alertas de suscripción.
+       * Leida: Estado de visualización por el usuario.
+       * Url: Link hacia /Configuracion/Suscripcion.
+
+  ---
+
+  3. Flujo Completo de Negocio
+
+   1. Tenant Activo: El comercio opera con normalidad.
+   2. Aviso Preventivo (7 días antes): El sistema genera una Notificación Interna (campana) visible en el dashboard.
+   3. Advertencia Visual (5 días antes): Se activa un Banner Naranja persistente (pero descartable por 24hs) en la parte
+      superior.
+   4. Día de Vencimiento: El banner cambia a Rojo y el mensaje indica que la suscripción ha expirado.
+   5. Período de Gracia (Día 1 a 5 post-vencimiento): Se mantiene el acceso al sistema pero con el Banner Rojo
+      inamovible (descartable por 24hs).
+   6. Bloqueo Automático (Día 6 post-vencimiento): El sistema impide la navegación y redirige forzosamente a la pantalla
+      de bloqueo.
+   7. Pantalla de Bloqueo: Interfaz aislada sin menús. Ofrece contacto vía WhatsApp y botón de Logout.
+   8. Reactivación: Tras el registro manual de un pago por el administrador global, se extiende la fecha y se recupera
+      el acceso.
+
+  ---
+
+  4. Middleware: TenantValidationMiddleware.cs
+
+  Es el motor de seguridad del sistema. Se ejecuta en cada solicitud HTTP.
+
+   * Exclusiones: Ignora rutas de login, recursos estáticos (/css, /js, /lib), la ruta de error y la propia ruta
+     /Cuenta/Bloqueado para evitar bucles infinitos.
+   * Validación de Tenant Activo: Si Activo == false, cierra la sesión del usuario y redirige a /Tenant/Desactivado.
+   * Validación de Bloqueo:
+       * Manual: Si Bloqueado == true, redirige a /Cuenta/Bloqueado.
+       * Automático: Calcula diasVencido. Si la diferencia entre hoy y FechaVencimiento es mayor a 5 días, redirige a
+         /Cuenta/Bloqueado.
+
+   1 // Fragmento de validación automática
+   2 var diasVencido = (DateTime.Now.Date - tenant.FechaVencimiento.Value.Date).Days;
+   3 if (diasVencido > 5) {
+   4     context.Response.Redirect("/Cuenta/Bloqueado");
+   5     return;
+   6 }
+
+  ---
+
+  5. Sistema de Notificaciones
+
+  Gestionado por NotificacionService.cs.
+   * Creación: Se disparan 7 días antes del vencimiento.
+   * Frecuencia: Utiliza un sistema de caché de 24 horas (notif_pago_{tenantId}) para evitar que el middleware cree
+     múltiples notificaciones idénticas en la base de datos durante una misma jornada.
+   * Almacenamiento: Persistente en la tabla Notificaciones.
+
+  ---
+
+  6. Sistema de Banners (_Layout.cshtml)
+
+  Implementado en el layout principal mediante Razor + JavaScript.
+   * Banner Naranja: diasRestantes > 0 && <= 5.
+   * Banner Rojo: diasRestantes <= 0 && >= -5.
+   * Botón Cerrar: Utiliza un botón btn-close-white.
+   * Persistencia (localStorage): Al cerrar, se guarda la clave bannerSuscripcionOculto_YYYY-MM-DD. Al cambiar la fecha
+     del sistema, el banner vuelve a aparecer automáticamente.
+
+  ---
+
+  7. Sistema de Bloqueo
+
+  Bloqueo Manual
+   * Activado por la propiedad tenant.Bloqueado.
+   * Gestionado por el AdminGlobalController.cs a través del método ToggleBloqueo.
+   * Impacto inmediato (limpia el caché del tenant).
+
+  Bloqueo Automático
+   * Lógica: (Hoy - FechaVencimiento) > 5 días.
+   * El período de gracia es de 5 días exactos. El bloqueo ocurre al inicio del 6to día de vencimiento.
+
+  ---
+
+  8. Pantalla de Bloqueado
+
+   * Controlador: CuentaController.cs con la acción Bloqueado().
+   * Seguridad: Marcada con [AllowAnonymous] y excluida del Middleware.
+   * Interfaz: Views/Cuenta/Bloqueado.cshtml.
+       * Layout = null: No carga estilos ni scripts del sistema.
+       * WhatsApp: Botón configurado dinámicamente con el número de soporte y un mensaje pre-armado.
+       * Logout: Única acción de navegación permitida dentro del sistema.
+
+  ---
+
+  9. Archivos Clave de la Implementación
+
+   1. MiniMercado/Models/Tenant.cs (Modelo de datos)
+   2. MiniMercado/Middleware/TenantValidationMiddleware.cs (Seguridad y lógica de redirección)
+   3. MiniMercado/Views/Shared/_Layout.cshtml (UI de Banners)
+   4. MiniMercado/Controllers/CuentaController.cs (Ruta de bloqueo)
+   5. MiniMercado/Views/Cuenta/Bloqueado.cshtml (Vista aislada de bloqueo)
+   6. MiniMercado/Services/SuscripcionService.cs (Cálculos de días y estados)
+
+  ---
+
+  10. Consultas SQL para Pruebas
+
+    1 -- 1. Próximo a vencer (Banner Naranja + Notificación)
+    2 UPDATE Tenants SET FechaVencimiento = DATEADD(DAY, 3, GETDATE()), Bloqueado = 0 WHERE Id = 1;
+    3
+    4 -- 2. Vencido en Gracia (Banner Rojo)
+    5 UPDATE Tenants SET FechaVencimiento = DATEADD(DAY, -2, GETDATE()), Bloqueado = 0 WHERE Id = 1;
+    6
+    7 -- 3. Bloqueado Automático (Pantalla de Bloqueo)
+    8 UPDATE Tenants SET FechaVencimiento = DATEADD(DAY, -6, GETDATE()), Bloqueado = 0 WHERE Id = 1;
+    9
+   10 -- 4. Bloqueado Manual (Pantalla de Bloqueo)
+   11 UPDATE Tenants SET Bloqueado = 1 WHERE Id = 1;
+
+  ---
+
+  11. Riesgos Conocidos
+
+   * Zona Horaria: El sistema utiliza DateTime.Now del servidor. Diferencias entre el servidor y el cliente podrían
+     causar que el banner aparezca o desaparezca unas horas antes/después.
+   * Caché: El middleware cachea el Tenant por 10-30 minutos. Un desbloqueo manual puede tardar ese tiempo en impactar
+     si no se limpia el caché explícitamente (solucionado en ToggleBloqueo pero pendiente en otros puntos).
+
+  ---
+
+  12. Próximos Pasos Recomendados
+
+   1. Integración Mercado Pago: Implementar un Webhook que automatice la ejecución de RegistrarPagoAsync en el
+      SuscripcionService.
+   2. Dashboard Global: Crear una vista para el AdminGlobal que liste todos los tenants próximos a vencer en los
+      próximos 10 días.
+   3. Logs de Bloqueo: Registrar en la tabla de auditoría cada vez que un tenant es bloqueado automáticamente.
+   4. Envío de Emails: Complementar las notificaciones internas con avisos por correo electrónico.

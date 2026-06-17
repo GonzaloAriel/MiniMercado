@@ -53,5 +53,10 @@ namespace MiniMercado.Controllers
 
             return View();
         }
+
+        public IActionResult Novedades()
+        {
+            return View();
+        }
     }
 }
