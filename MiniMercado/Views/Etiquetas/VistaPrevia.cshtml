@@ -1,0 +1,76 @@
+@model MiniMercado.Models.ImpresionEtiqueta
+@{
+    ViewData["Title"] = "Vista Previa de Etiqueta";
+}
+
+<style>
+    /* Estilos de la etiqueta */
+    .label-card {
+        width: 280px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        background-color: white;
+        color: black;
+        margin: 10px;
+        text-align: center;
+        font-family: 'Courier New', Courier, monospace;
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    .label-header { font-weight: bold; font-size: 1.1em; margin-bottom: 3px; }
+    .label-product { font-size: 1em; margin-bottom: 3px; }
+    .label-price { font-weight: bold; font-size: 1.3em; margin-bottom: 5px; }
+    .label-code { font-size: 0.8em; }
+
+    /* Ocultar elementos de UI al imprimir */
+    @@media print {
+        .no-print { display: none !important; }
+        .label-card { border: none; margin: 5px; page-break-inside: avoid; }
+        body { background-color: white !important; }
+        .container { max-width: 100%; margin: 0; padding: 0; }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="no-print">
+        <h3 class="fw-bold text-primary">👁 Vista Previa — @Model.Cantidad etiqueta(s)</h3>
+        <p class="text-secondary">Verificá el diseño y presioná imprimir.</p>
+    </div>
+
+    <!-- Contenedor de Etiquetas -->
+    <div class="d-flex flex-wrap">
+        @for(int i = 0; i < Model.Cantidad; i++)
+        {
+            <div class="label-card">
+                <div class="label-header">@Model.Tenant.NombreComercio 🥐</div>
+                <div class="label-product">@Model.Producto.Nombre</div>
+                @if (Model.IncluyePrecio)
+                {
+                    <div class="label-price">$ @Model.Producto.Precio.ToString("N2")</div>
+                }
+                <svg class="barcode-svg"></svg>
+                <div class="label-code">@Model.Producto.CodigoBarra</div>
+            </div>
+        }
+    </div>
+
+    <!-- Controles -->
+    <div class="mt-4 text-center no-print">
+        <a asp-action="Imprimir" class="btn btn-outline-secondary rounded-pill px-4">← Volver</a>
+        <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="window.print()">🖨 Imprimir Etiquetas</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        JsBarcode(".barcode-svg", "@Model.Producto.CodigoBarra", {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 1.5,
+            height: 30,
+            displayValue: false
+        });
+    </script>
+}

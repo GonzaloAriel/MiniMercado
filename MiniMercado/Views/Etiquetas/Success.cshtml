@@ -1,0 +1,69 @@
+@model MiniMercado.Models.Producto
+@{
+    ViewData["Title"] = "Producto Creado";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-5 text-center">
+                    @if (Model != null)
+                    {
+                        <div class="text-success mb-4">
+                            <i class="bi bi-check-circle-fill display-1"></i>
+                        </div>
+                        <h3 class="fw-bold mb-4">Producto creado correctamente</h3>
+                        
+                        <div class="p-3 bg-light rounded-3 mb-4 text-start">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">Nombre:</span>
+                                <span class="fw-bold text-primary">@Model.Nombre</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">Código interno:</span>
+                                <span class="fw-bold text-primary">@Model.CodigoBarra</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">Precio:</span>
+                                <span class="fw-bold text-primary">$ @Model.Precio.ToString("N2")</span>
+                            </div>
+                        </div>
+
+                        <svg id="barcode-success" class="mb-4"></svg>
+                    }
+                    else
+                    {
+                        <h3 class="text-danger">Error: No se pudo cargar el producto.</h3>
+                    }
+                    
+                    <p class="text-secondary small mb-4">
+                        <i class="bi bi-info-circle me-1"></i> Podés imprimir la etiqueta y escanearla inmediatamente para verificar su funcionamiento.
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <a asp-action="Imprimir" asp-route-productoId="@Model?.Id" class="btn btn-primary rounded-pill fw-bold">🖨 Imprimir etiquetas</a>
+                        <a asp-action="Create" class="btn btn-outline-primary rounded-pill fw-bold">➕ Crear otro producto</a>
+                        <a asp-action="Index" class="btn btn-link text-secondary">📦 Ir al Inventario</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model != null)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+        <script>
+            JsBarcode("#barcode-success", "@Model.CodigoBarra", {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 40,
+                displayValue: false
+            });
+        </script>
+    }
+}

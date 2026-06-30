@@ -409,12 +409,12 @@ namespace MiniMercado.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<bool>("Anulado")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Beneficiario")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("Anulado")
-                        .HasColumnType("bit");
 
                     b.Property<int?>("CajaId")
                         .HasColumnType("int");
@@ -456,6 +456,44 @@ namespace MiniMercado.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("EgresosCaja");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.ImpresionEtiqueta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaImpresion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IncluyePrecio")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TipoEtiqueta")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("ImpresionesEtiquetas");
                 });
 
             modelBuilder.Entity("MiniMercado.Models.LoteProducto", b =>
@@ -1142,6 +1180,17 @@ namespace MiniMercado.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("MiniMercado.Models.ImpresionEtiqueta", b =>
+                {
+                    b.HasOne("MiniMercado.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("MiniMercado.Models.LoteProducto", b =>

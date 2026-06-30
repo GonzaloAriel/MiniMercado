@@ -1,0 +1,466 @@
+📜 Contexto Maestro – Centro de Etiquetas y Productos Elaborados (MiniMercado SaaS)
+Objetivo
+
+Crear un módulo especializado que permita administrar de forma simple todo el ciclo de vida de los productos que no poseen un código de barras de fábrica, sin afectar el flujo actual de creación de productos industriales.
+
+Este módulo debe ser uno de los diferenciales de MiniMercado frente a otros sistemas POS, ofreciendo una experiencia intuitiva para comercios que venden productos elaborados, fraccionados o de fabricación propia.
+
+Filosofía del módulo
+
+El comerciante no piensa en:
+
+códigos internos
+códigos EAN
+nomenclaturas técnicas
+
+El comerciante piensa:
+
+"Necesito imprimir etiquetas."
+
+o
+
+"Necesito cargar las prepizzas."
+
+Por ese motivo el módulo debe estar pensado desde la necesidad del usuario y no desde la estructura técnica del sistema.
+
+El objetivo es que el usuario encuentre rápidamente la función que necesita sin tener conocimientos previos.
+
+Nombre del módulo
+🏷 Etiquetas
+
+No utilizar:
+
+Productos Sueltos
+Códigos internos
+Generador de códigos
+
+Porque son términos técnicos.
+
+"Etiquetas" engloba todo el proceso.
+
+Ubicación
+
+Home
+
+↓
+
+Inventario
+
+↓
+
+🏷 Etiquetas
+
+Debe ser un acceso independiente y visible.
+
+No debe estar escondido dentro del formulario Crear Producto.
+
+Tooltip del Home
+
+Al pasar el mouse sobre el acceso "Etiquetas" mostrar un mensaje amigable.
+
+Ejemplo:
+
+🏷 Etiquetas
+
+Todo lo necesario para administrar productos sin código de fábrica.
+
+• Crear productos elaborados
+
+• Generar códigos internos
+
+• Imprimir etiquetas
+
+• Reimprimir etiquetas
+
+• Historial de impresiones
+
+Ideal para panaderías, rotiserías, almacenes y producción propia.
+
+Pantalla inicial
+
+No abrir directamente un formulario.
+
+Abrir un pequeño Centro de Etiquetas.
+
+🏷 Centro de Etiquetas
+
+¿Qué querés hacer hoy?
+
+➕
+
+Crear producto sin código
+
+Ideal para productos elaborados.
+
+🖨
+
+Imprimir etiquetas
+
+Buscar cualquier producto e imprimir etiquetas.
+
+🔄
+
+Reimprimir
+
+Ver historial de etiquetas impresas.
+
+⭐
+
+Próximamente
+
+Etiquetas de oferta
+
+QR
+
+Impresión térmica
+
+Etiquetas de góndola
+
+Debe sentirse como una pantalla moderna tipo Ualá.
+
+Muy limpia.
+
+Muy simple.
+
+Mucho espacio.
+
+Pocas decisiones.
+
+Crear producto sin código
+
+Este NO reemplaza Crear Producto.
+
+Es un flujo especializado.
+
+Debe solicitar solamente:
+
+Nombre
+
+Categoría
+
+Precio
+
+Costo (opcional)
+
+Stock inicial
+
+Proveedor (opcional)
+
+Imagen (futuro)
+
+Luego:
+
+Generar Código Interno
+
+Guardar
+
+Imprimir Etiquetas
+
+Generación del código
+
+No generar códigos automáticamente durante el alta normal de productos.
+
+¿Por qué?
+
+Porque un producto industrial siempre debe conservar el código de fábrica.
+
+Ejemplo:
+
+Coca Cola
+
+Fanta
+
+Arroz
+
+Aceite
+
+Yerba
+
+No tendría sentido generar un código interno.
+
+Por eso la generación automática debe existir únicamente dentro del módulo Etiquetas.
+
+Tipos de productos
+
+MiniMercado deberá contemplar dos grandes grupos.
+
+Productos industriales
+
+Poseen código de fábrica.
+
+Se crean desde:
+
+Productos
+
+↓
+
+Crear Producto
+
+Utilizan:
+
+Scanner
+
+Catálogo Global
+
+Ingreso manual
+
+No imprimen etiquetas salvo que el usuario lo solicite.
+
+Productos elaborados
+
+No poseen código.
+
+Se crean desde:
+
+Etiquetas
+
+↓
+
+Crear producto
+
+El sistema genera automáticamente un código interno.
+
+Pensado para:
+
+Pan
+
+Facturas
+
+Empanadas
+
+Comidas
+
+Rotisería
+
+Tortas
+
+Pastas
+
+Productos fraccionados
+
+Producción propia
+
+Impresión de etiquetas
+
+Debe permitir buscar cualquier producto.
+
+No importa si fue creado desde:
+
+Catálogo
+
+Producto Industrial
+
+Producto Elaborado
+
+Todos pueden imprimir etiquetas.
+
+Opciones futuras
+
+Cantidad
+
+Tamaño
+
+Precio visible
+
+Sin precio
+
+Código
+
+QR
+
+Nombre
+
+Marca
+
+Logo
+
+Reimpresión
+
+Historial de etiquetas.
+
+Filtros:
+
+Hoy
+
+Semana
+
+Mes
+
+Producto
+
+Usuario
+
+Cantidad impresa
+
+Fecha
+
+Futuras mejoras
+Impresión térmica
+
+Compatible con impresoras de etiquetas.
+
+Etiquetas A4
+
+24 etiquetas
+
+30 etiquetas
+
+65 etiquetas
+
+Personalizables.
+
+Etiquetas promocionales
+
+OFERTA
+
+2x1
+
+Nuevo
+
+Promo
+
+Color personalizado.
+
+QR
+
+Impresión con QR.
+
+Etiquetas de góndola
+
+Nombre
+
+Precio
+
+Código
+
+QR
+
+Configuración
+
+Elegir:
+
+Modelo de hoja
+
+Margen
+
+Tamaño
+
+Tipografía
+
+Mostrar precio
+
+Mostrar logo
+
+Mostrar código
+
+Flujo ideal
+
+Home
+
+↓
+
+Inventario
+
+↓
+
+Etiquetas
+
+↓
+
+Centro de Etiquetas
+
+↓
+
+Crear producto
+
+↓
+
+Guardar
+
+↓
+
+Vista previa
+
+↓
+
+Imprimir
+
+↓
+
+Fin
+
+Relación con Productos
+
+Este módulo NO reemplaza Productos.
+
+Lo complementa.
+
+Productos seguirá siendo el módulo principal para:
+
+Productos industriales
+
+Catálogo Global
+
+Scanner
+
+Importación Excel
+
+Stock
+
+Mientras que Etiquetas será el módulo especializado para:
+
+Productos elaborados
+
+Productos propios
+
+Impresión
+
+Códigos internos
+
+Objetivo UX
+
+El usuario nunca debe preguntarse:
+
+"¿Dónde genero un código?"
+
+Debe pensar:
+
+"Necesito imprimir una etiqueta."
+
+Y encontrar exactamente ese botón.
+
+Objetivo Comercial
+
+Este módulo debe convertirse en uno de los grandes diferenciales de MiniMercado.
+
+Muchos sistemas POS permiten crear productos.
+
+Muy pocos ofrecen un flujo especializado para:
+
+• productos elaborados
+
+• producción propia
+
+• impresión profesional de etiquetas
+
+• generación automática de códigos internos
+
+Todo ello con una experiencia moderna, intuitiva y alineada con la estética SaaS/Fintech que caracteriza a MiniMercado.
+
+💡 Visión a largo plazo
+
+La visión es que Etiquetas evolucione hasta convertirse en un verdadero Centro de Etiquetas, un espacio donde el comerciante gestione todo lo relacionado con la identificación visual de sus productos, sin importar si son industriales o elaborados.
+
+En el futuro, este centro podrá integrar:
+
+Impresión en A4 y térmica.
+Múltiples diseños de etiquetas.
+Promociones y etiquetas de oferta.
+QR para información adicional.
+Historial de impresiones.
+Plantillas personalizadas por comercio.
+Configuración completa de formatos.
+
+La premisa es simple:
+
+Si un comerciante piensa "necesito una etiqueta", debe saber inmediatamente que todo lo relacionado con esa tarea está en un solo lugar: el Centro de Etiquetas de MiniMercado.

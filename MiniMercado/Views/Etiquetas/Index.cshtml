@@ -1,0 +1,133 @@
+@model IEnumerable<MiniMercado.Models.Producto>
+@{
+    ViewData["Title"] = "Centro de Etiquetas";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary mb-1">🏷 Centro de Etiquetas</h2>
+            <p class="text-secondary">Gestiona productos elaborados e impresión de códigos internos.</p>
+        </div>
+    </div>
+
+    <!-- Estilo Fintech Cards -->
+    <div class="row g-4">
+        <!-- Crear Producto Elaborado -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-primary-soft text-primary rounded-3 mb-3">
+                        <i class="bi bi-tag-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Crear producto elaborado</h5>
+                    <p class="text-secondary small flex-grow-1">Crea productos propios que no poseen código de barras de fábrica.</p>
+                    <a asp-action="Create" class="btn btn-primary rounded-pill mt-3 fw-bold w-100">
+                        Comenzar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Imprimir Etiquetas -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-success-soft text-success rounded-3 mb-3">
+                        <i class="bi bi-printer-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Imprimir etiquetas</h5>
+                    <p class="text-secondary small flex-grow-1">Busca cualquier producto del inventario y genera sus etiquetas.</p>
+                    <a asp-action="Imprimir" class="btn btn-success rounded-pill mt-3 fw-bold w-100 text-white">
+                        Imprimir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reimprimir / Historial -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-info-soft text-info rounded-3 mb-3">
+                        <i class="bi bi-arrow-clockwise fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Reimprimir</h5>
+                    <p class="text-secondary small flex-grow-1">Ver el historial de impresiones recientes para duplicar etiquetas.</p>
+                    <a asp-action="Historial" class="btn btn-info rounded-pill mt-3 fw-bold w-100 text-white">
+                        Historial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado de Productos -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 bg-card">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4">Productos Elaborados Recientes</h4>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="text-secondary small">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Código</th>
+                                    <th>Barcode</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.Nombre</td>
+                                        <td><span class="badge bg-primary-soft text-primary">@item.CodigoBarra</span></td>
+                                        <td>
+                                            <svg class="barcode-mini" data-code="@item.CodigoBarra"></svg>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-card-modern {
+        background: var(--bg-card);
+        transition: all 0.3s ease;
+        border: 1px solid var(--border) !important;
+    }
+    .bg-card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border-color: var(--uala-violet-soft) !important;
+    }
+    .icon-shape {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .bg-primary-soft { background: rgba(79,70,229,0.1); }
+    .bg-success-soft { background: rgba(16,185,129,0.1); }
+    .bg-info-soft { background: rgba(6,182,212,0.1); }
+    .bg-card { background: var(--bg-card); }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        document.querySelectorAll('.barcode-mini').forEach(el => {
+            JsBarcode(el, el.getAttribute('data-code'), {
+                format: "CODE128", width: 1, height: 20, displayValue: false
+            });
+        });
+    </script>
+}

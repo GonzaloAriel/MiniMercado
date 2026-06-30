@@ -38,6 +38,7 @@ namespace MiniMercado.Data
         public DbSet<EgresoCaja> EgresosCaja { get; set; }
         public DbSet<ProductoProveedor> ProductoProveedores { get; set; }
         public DbSet<Pago> Pagos { get; set; }
+        public DbSet<ImpresionEtiqueta> ImpresionesEtiquetas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

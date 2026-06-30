@@ -1,0 +1,59 @@
+@model IEnumerable<MiniMercado.Models.ImpresionEtiqueta>
+@{
+    ViewData["Title"] = "Historial de Etiquetas";
+}
+
+<div class="container-fluid py-4">
+    <!-- Título y Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary mb-1">📋 Historial de Etiquetas</h2>
+            <p class="text-secondary">Consultá y reimprimí cualquier etiqueta generada anteriormente.</p>
+        </div>
+    </div>
+
+    <!-- Filtros Rápidos (placeholder para lógica de filtro) -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex gap-2">
+            <a href="#" class="btn btn-outline-secondary rounded-pill btn-sm active">Todo</a>
+            <a href="#" class="btn btn-outline-secondary rounded-pill btn-sm">Hoy</a>
+            <a href="#" class="btn btn-outline-secondary rounded-pill btn-sm">Últimos 7 días</a>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Fecha</th>
+                            <th>Producto</th>
+                            <th>Código</th>
+                            <th>Cantidad</th>
+                            <th>Formato</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">@item.FechaImpresion.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.Producto.Nombre</td>
+                                <td>@item.Producto.CodigoBarra</td>
+                                <td>@item.Cantidad</td>
+                                <td>@item.TipoEtiqueta</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill">👁 Ver</button>
+                                    <a asp-action="Reimprimir" asp-route-id="@item.Id" class="btn btn-sm btn-primary rounded-pill">🖨 Reimprimir</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

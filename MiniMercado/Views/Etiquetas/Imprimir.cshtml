@@ -1,0 +1,73 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Imprimir Etiquetas";
+    var producto = ViewBag.Producto as MiniMercado.Models.Producto;
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm rounded-4 border-0 bg-card">
+        <div class="card-body p-5">
+            <h3 class="fw-bold text-primary mb-1">🖨 Imprimir Etiquetas</h3>
+            <p class="text-secondary mb-4">Configurá y enviá a imprimir tus etiquetas.</p>
+
+            <form asp-action="RegistrarImpresion" method="post" id="imprimirForm">
+                <input type="hidden" name="productoId" value="@(producto?.Id ?? 0)" />
+                <div class="row g-3">
+<div class="col-md-6">
+                        <label class="form-label">Buscar Producto</label>
+                        <input type="text" id="buscadorProducto" class="form-control rounded-pill" placeholder="Nombre o código..." oninput="buscarProductos(this.value)" />
+                        <div id="resultadosBusqueda" class="list-group position-absolute mt-1" style="z-index: 1000; width: 45%;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Producto seleccionado</label>
+                        <input type="text" id="nombreProducto" class="form-control rounded-pill" value="@(producto?.Nombre ?? "Seleccione producto")" readonly />
+                    </div>
+
+<script>
+    function buscarProductos(query) {
+        if (query.length < 2) { document.getElementById('resultadosBusqueda').innerHTML = ''; return; }
+        fetch('@Url.Action("Buscar", "Etiquetas")?q=' + query)
+            .then(res => res.json())
+            .then(data => {
+                let html = '';
+                data.forEach(p => {
+                    html += `<a href="#" class="list-group-item list-group-item-action" onclick="seleccionarProducto(${p.id}, '${p.nombre}')">${p.nombre} (${p.codigoBarra})</a>`;
+                });
+                document.getElementById('resultadosBusqueda').innerHTML = html;
+            });
+    }
+
+    function seleccionarProducto(id, nombre) {
+        document.querySelector('input[name="productoId"]').value = id;
+        document.getElementById('nombreProducto').value = nombre;
+        document.getElementById('resultadosBusqueda').innerHTML = '';
+        return false;
+    }
+</script>
+                    <div class="col-md-3">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" name="cantidad" class="form-control rounded-pill" value="@(ViewBag.Cantidad ?? 1)" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Formato</label>
+                        <select name="tipoEtiqueta" class="form-select rounded-pill">
+                            <option value="Chica" selected="@((ViewBag.TipoEtiqueta as string) == "Chica")">Chica</option>
+                            <option value="Mediana" selected="@((ViewBag.TipoEtiqueta as string) == "Mediana")">Mediana</option>
+                            <option value="Grande" selected="@((ViewBag.TipoEtiqueta as string) == "Grande")">Grande</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="incluyePrecio" id="incluyePrecio" value="true" checked="@(ViewBag.IncluyePrecio ?? true)">
+                            <label class="form-check-label" for="incluyePrecio">Incluir precio en la etiqueta</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Imprimir etiquetas</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Volver</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
