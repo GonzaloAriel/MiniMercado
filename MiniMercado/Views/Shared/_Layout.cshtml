@@ -363,10 +363,10 @@
                 <button type="button" class="btn-close-novedades" onclick="dismissNovedades()">✕</button>
                 <div class="novedades-bubble-body">
                     <div class="novedades-icon-top">💜 Novedades</div>
-                    <h5 class="novedades-bubble-title">✨ Nuevo módulo de Egresos</h5>
-                    <p class="novedades-bubble-text">Registrá gastos, operativos, administrativos y más.</p>
+                    <h5 class="novedades-bubble-title">🏷 Módulo de Etiquetas</h5>
+                    <p class="novedades-bubble-text">Creá productos elaborados e imprimí tus etiquetas.</p>
                     <hr class="novedades-divider">
-                    <h5 class="novedades-bubble-title">🎨 Hero Personalizado</h5>
+                    <h5 class="novedades-bubble-title">✨ Hero Personalizado</h5>
                     <p class="novedades-bubble-text">Tu negocio ahora tiene identidad propia en la portada.</p>
                     <a asp-controller="Home" asp-action="Novedades" class="btn-novedades-action" onclick="dismissNovedades()">Ver todas las novedades</a>
                 </div>
@@ -479,12 +479,12 @@
 
         <script>
             function dismissNovedades() {
-                localStorage.setItem("minimercado_novedades_v1", "true");
+                localStorage.setItem("minimercado_novedades_v2", "true");
                 document.getElementById("novedades-bubble").style.display = "none";
             }
 
             document.addEventListener("DOMContentLoaded", function() {
-                if (!localStorage.getItem("minimercado_novedades_v1")) {
+                if (!localStorage.getItem("minimercado_novedades_v2")) {
                     setTimeout(() => {
                         document.getElementById("novedades-bubble").style.display = "block";
                     }, 2000);
