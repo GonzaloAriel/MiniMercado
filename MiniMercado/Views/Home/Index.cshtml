@@ -925,6 +925,31 @@
             </div>
         </div>
 
+        <div class="section-card" id="card-analisis">
+            <div class="section-header" onclick="toggleSection('analisis')">
+                <div class="section-icon" style="background:rgba(79,70,229,0.12)">
+                    <i class="bi bi-graph-up-arrow fs-4" style="color:#4f46e5"></i>
+                </div>
+                <div class="section-info">
+                    <p class="section-name">Análisis Comercial</p>
+                    <p class="section-desc">Analizá ventas, productos, rubros y tendencias del negocio</p>
+                </div>
+                <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+            <div class="section-body" id="body-analisis">
+                <div class="section-body-inner">
+                    <a asp-controller="AnalisisComercial" asp-action="Index" class="action-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Consultá reportes comerciales, productos más vendidos, ventas por rubro, análisis de pagos, evolución de ventas, productos sin rotación y futuros indicadores para tomar mejores decisiones.">
+                        <div class="btn-icon" style="background:rgba(79,70,229,0.10)">
+                            <i class="bi bi-graph-up-arrow" style="color:#4f46e5; font-size: 16px;"></i>
+                        </div>
+                        <span class="btn-label">Análisis Comercial</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="section-card" id="card-admin">
             <div class="section-header" onclick="toggleSection('admin')">
                 <div class="section-icon" style="background:rgba(100,116,139,0.12)">

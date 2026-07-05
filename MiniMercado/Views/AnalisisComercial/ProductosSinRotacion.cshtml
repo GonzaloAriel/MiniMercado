@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Productos sin Rotación";
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm rounded-4 border-0 bg-card p-5 text-center">
+        <div class="card-body">
+            <div class="icon-shape bg-info-soft text-info rounded-3 mx-auto mb-4" style="width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-archive-fill fs-1"></i>
+            </div>
+            <h2 class="fw-bold text-primary mb-3">📦 Productos sin Rotación</h2>
+            <p class="text-secondary fs-5 mb-4">Próximamente</p>
+            <a asp-action="Index" class="btn btn-info rounded-pill px-5 fw-bold text-white">
+                Volver al Centro de Análisis
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-card { background: var(--bg-card); }
+    .bg-info-soft { background: rgba(6,182,212,0.1); }
+</style>

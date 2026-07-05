@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "Centro de Análisis Comercial";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary mb-1">📈 Centro de Análisis Comercial</h2>
+            <p class="text-secondary">Toda la información necesaria para conocer el rendimiento de tu negocio.</p>
+        </div>
+    </div>
+
+    <!-- Estilo Fintech Cards -->
+    <div class="row g-4">
+        <!-- Ventas por Rubro -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-primary-soft text-primary rounded-3 mb-3">
+                        <i class="bi bi-pie-chart-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Ventas por Rubro</h5>
+                    <p class="text-secondary small flex-grow-1">Analizá cuánto vendés por categoría.</p>
+                    <a asp-action="VentasPorRubro" class="btn btn-primary rounded-pill mt-3 fw-bold w-100">
+                        Ingresar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Más Vendidos -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-warning-soft text-warning rounded-3 mb-3">
+                        <i class="bi bi-trophy-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Productos Más Vendidos</h5>
+                    <p class="text-secondary small flex-grow-1">Descubrí cuáles son tus productos estrella.</p>
+                    <a asp-action="ProductosMasVendidos" class="btn btn-warning rounded-pill mt-3 fw-bold w-100 text-white">
+                        Ingresar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos sin Rotación -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-info-soft text-info rounded-3 mb-3">
+                        <i class="bi bi-archive-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Productos sin Rotación</h5>
+                    <p class="text-secondary small flex-grow-1">Encontrá mercadería que lleva meses sin venderse.</p>
+                    <a asp-action="ProductosSinRotacion" class="btn btn-info rounded-pill mt-3 fw-bold w-100 text-white">
+                        Ingresar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medios de Pago -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-danger-soft text-danger rounded-3 mb-3">
+                        <i class="bi bi-credit-card-2-front-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Medios de Pago</h5>
+                    <p class="text-secondary small flex-grow-1">Analizá efectivo, tarjetas y pagos digitales.</p>
+                    <a asp-action="Pagos" class="btn btn-danger rounded-pill mt-3 fw-bold w-100">
+                        Ingresar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evolución de Ventas -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-card-modern">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="icon-shape bg-success-soft text-success rounded-3 mb-3">
+                        <i class="bi bi-graph-up-arrow fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-primary">Evolución de Ventas</h5>
+                    <p class="text-secondary small flex-grow-1">Visualizá la evolución del negocio a lo largo del tiempo.</p>
+                    <a asp-action="EvolucionVentas" class="btn btn-success rounded-pill mt-3 fw-bold w-100 text-white">
+                        Ingresar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-card-modern {
+        background: var(--bg-card);
+        transition: all 0.3s ease;
+        border: 1px solid var(--border) !important;
+    }
+    .bg-card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border-color: var(--uala-violet-soft) !important;
+    }
+    .icon-shape {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .bg-primary-soft { background: rgba(79,70,229,0.1); }
+    .bg-success-soft { background: rgba(16,185,129,0.1); }
+    .bg-info-soft { background: rgba(6,182,212,0.1); }
+    .bg-warning-soft { background: rgba(245,158,11,0.1); }
+    .bg-danger-soft { background: rgba(239,68,68,0.1); }
+    .bg-card { background: var(--bg-card); }
+</style>

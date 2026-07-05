@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Medios de Pago";
+}
+
+<div class="container py-5">
+    <div class="card shadow-sm rounded-4 border-0 bg-card p-5 text-center">
+        <div class="card-body">
+            <div class="icon-shape bg-danger-soft text-danger rounded-3 mx-auto mb-4" style="width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-credit-card-2-front-fill fs-1"></i>
+            </div>
+            <h2 class="fw-bold text-primary mb-3">💳 Medios de Pago</h2>
+            <p class="text-secondary fs-5 mb-4">Próximamente</p>
+            <a asp-action="Index" class="btn btn-danger rounded-pill px-5 fw-bold">
+                Volver al Centro de Análisis
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-card { background: var(--bg-card); }
+    .bg-danger-soft { background: rgba(239,68,68,0.1); }
+</style>
