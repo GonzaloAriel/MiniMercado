@@ -142,19 +142,161 @@ namespace MiniMercado.Controllers
             return View(report);
         }
 
-        public IActionResult ProductosSinRotacion()
+        public IActionResult ProductosSinRotacion(string filtro = "Mes", DateTime? desde = null, DateTime? hasta = null, string busqueda = "", int pagina = 1)
         {
-            return View();
+            var tenantId = _tenantService.GetTenantId();
+            if (!tenantId.HasValue) return Unauthorized();
+
+            var (fechaDesde, fechaHasta) = GetDateRange(filtro, desde, hasta);
+
+            // Productos con stock > 0
+            var productos = _context.Productos
+                .Include(p => p.Rubro)
+                .Where(p => p.TenantId == tenantId.Value && p.Stock > 0)
+                .ToList();
+
+            // Ventas en el período (para exclusión)
+            var idsVendidosEnPeriodo = _context.VentaDetalles
+                .Where(vd => vd.TenantId == tenantId.Value && !vd.Venta.Activa && vd.Venta.Fecha >= fechaDesde && vd.Venta.Fecha < fechaHasta)
+                .Select(vd => vd.ProductoId)
+                .Distinct()
+                .ToList();
+
+            // Última venta de cada producto
+            var ultimasVentas = _context.VentaDetalles
+                .Where(vd => vd.TenantId == tenantId.Value && !vd.Venta.Activa && vd.ProductoId.HasValue)
+                .GroupBy(vd => vd.ProductoId.Value)
+                .Select(g => new { ProductoId = g.Key, LastSale = g.Max(x => x.Venta.Fecha) })
+                .ToDictionary(x => x.ProductoId, x => x.LastSale);
+
+            var query = productos
+                .Where(p => !idsVendidosEnPeriodo.Contains(p.Id))
+                .Select(p => {
+                    var ultimaVenta = ultimasVentas.ContainsKey(p.Id) ? (DateTime?)ultimasVentas[p.Id] : null;
+                    var diasSinVender = ultimaVenta.HasValue ? (DateTime.Today - ultimaVenta.Value).Days : 999999;
+                    return new ProductosSinRotacionViewModel
+                    {
+                        Nombre = p.Nombre,
+                        Rubro = p.Rubro?.Nombre ?? "Sin Rubro",
+                        Stock = p.Stock,
+                        UltimaVenta = ultimaVenta,
+                        DiasSinVender = diasSinVender,
+                        Costo = p.Precio, // Proxy de costo
+                        ValorStock = p.Stock * p.Precio
+                    };
+                })
+                .OrderByDescending(r => r.DiasSinVender)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                query = query.Where(r => r.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var totalRegistros = query.Count();
+            int pageSize = 15;
+            var report = query.Skip((pagina - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.Filtro = filtro;
+            ViewBag.Desde = fechaDesde.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = fechaHasta.AddDays(-1).ToString("yyyy-MM-dd");
+            ViewBag.Busqueda = busqueda;
+            ViewBag.Pagina = pagina;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            return View(report);
         }
 
-        public IActionResult Pagos()
+        public IActionResult Pagos(string filtro = "Mes", DateTime? desde = null, DateTime? hasta = null, string busqueda = "", int pagina = 1)
         {
-            return View();
+            var tenantId = _tenantService.GetTenantId();
+            if (!tenantId.HasValue) return Unauthorized();
+
+            var (fechaDesde, fechaHasta) = GetDateRange(filtro, desde, hasta);
+
+            // Filtrar pagos de ventas válidas
+            var pagos = _context.Pagos
+                .Include(p => p.Venta)
+                .Where(p => p.TenantId == tenantId.Value && 
+                            !p.Venta.Activa && 
+                            p.Venta.Fecha >= fechaDesde && 
+                            p.Venta.Fecha < fechaHasta)
+                .ToList();
+
+            var totalRecaudado = pagos.Sum(p => p.Monto);
+
+            var query = pagos.GroupBy(p => p.Metodo)
+                .Select(g => new PagosViewModel
+                {
+                    Metodo = g.Key,
+                    CantidadOperaciones = g.Count(),
+                    MontoTotal = g.Sum(p => p.Monto),
+                    TicketPromedio = g.Any() ? g.Sum(p => p.Monto) / g.Count() : 0,
+                    ParticipacionPorcentual = totalRecaudado > 0 ? (g.Sum(p => p.Monto) / totalRecaudado) * 100 : 0
+                })
+                .OrderByDescending(r => r.MontoTotal)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+            {
+                query = query.Where(r => r.Metodo.Contains(busqueda, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var totalRegistros = query.Count();
+            int pageSize = 15;
+            var report = query.Skip((pagina - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.Filtro = filtro;
+            ViewBag.Desde = fechaDesde.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = fechaHasta.AddDays(-1).ToString("yyyy-MM-dd");
+            ViewBag.Busqueda = busqueda;
+            ViewBag.Pagina = pagina;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+            return View(report);
         }
 
-        public IActionResult EvolucionVentas()
+        public IActionResult EvolucionVentas(string filtro = "Mes", DateTime? desde = null, DateTime? hasta = null)
         {
-            return View();
+            var tenantId = _tenantService.GetTenantId();
+            if (!tenantId.HasValue) return Unauthorized();
+
+            var (fechaDesde, fechaHasta) = GetDateRange(filtro, desde, hasta);
+
+            var ventas = _context.Ventas
+                .Where(v => v.TenantId == tenantId.Value && 
+                            !v.Activa && 
+                            v.Fecha >= fechaDesde && 
+                            v.Fecha < fechaHasta)
+                .ToList();
+
+            var report = ventas.GroupBy(v =>
+            {
+                switch (filtro)
+                {
+                    case "Hoy": return new { Val = v.Fecha.Hour, Date = v.Fecha.Date.AddHours(v.Fecha.Hour) };
+                    case "Año": return new { Val = v.Fecha.Month, Date = new DateTime(v.Fecha.Year, v.Fecha.Month, 1) };
+                    default: return new { Val = v.Fecha.DayOfYear, Date = v.Fecha.Date }; // Mes o Personalizado
+                }
+            })
+            .Select(g => new EvolucionVentasViewModel
+            {
+                Periodo = filtro == "Hoy" ? $"{g.Key.Val}:00" : 
+                          filtro == "Año" ? System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Val) : 
+                          g.Key.Date.ToString("dd/MM"),
+                Facturacion = g.Sum(v => v.Total),
+                CantidadVentas = g.Count(),
+                TicketPromedio = g.Average(v => v.Total),
+                FechaOrden = g.Key.Date
+            })
+            .OrderBy(r => r.FechaOrden)
+            .ToList();
+
+            ViewBag.Filtro = filtro;
+            ViewBag.Desde = fechaDesde.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = fechaHasta.AddDays(-1).ToString("yyyy-MM-dd");
+
+            return View(report);
         }
     }
 }

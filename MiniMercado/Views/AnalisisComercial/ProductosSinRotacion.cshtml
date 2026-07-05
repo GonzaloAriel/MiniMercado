@@ -1,23 +1,150 @@
+@model IEnumerable<MiniMercado.Models.ProductosSinRotacionViewModel>
 @{
     ViewData["Title"] = "Productos sin Rotación";
+    var totalValorInmovilizado = Model.Sum(x => x.ValorStock);
+    var totalStock = Model.Sum(x => x.Stock);
+    var productoMayorTiempo = Model.OrderByDescending(x => x.DiasSinVender).FirstOrDefault();
 }
 
-<div class="container py-5">
-    <div class="card shadow-sm rounded-4 border-0 bg-card p-5 text-center">
-        <div class="card-body">
-            <div class="icon-shape bg-info-soft text-info rounded-3 mx-auto mb-4" style="width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-archive-fill fs-1"></i>
+<div class="container py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="fw-bold text-primary mb-1">📦 Productos sin Rotación</h2>
+            <p class="text-secondary">Encontrá mercadería que lleva tiempo sin venderse.</p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Index" class="btn btn-outline-primary rounded-pill">Volver al Centro</a>
+        </div>
+    </div>
+
+    <!-- Formulario de Filtros y Búsqueda -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-end">
+                <input type="hidden" name="pagina" value="1" />
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small">Período</label>
+                    <select name="filtro" id="filtro" class="form-select rounded-pill" onchange="togglePersonalizado()">
+                        <option value="Hoy" selected="@(ViewBag.Filtro == "Hoy")">Hoy</option>
+                        <option value="Mes" selected="@(ViewBag.Filtro == "Mes")">Mes</option>
+                        <option value="Año" selected="@(ViewBag.Filtro == "Año")">Año</option>
+                        <option value="Personalizado" selected="@(ViewBag.Filtro == "Personalizado")">Personalizado</option>
+                    </select>
+                </div>
+                <div class="col-md-2" id="divDesde" style="display:none;">
+                    <label class="form-label fw-bold small">Fecha Desde</label>
+                    <input type="date" name="desde" value="@ViewBag.Desde" class="form-control rounded-pill" />
+                </div>
+                <div class="col-md-2" id="divHasta" style="display:none;">
+                    <label class="form-label fw-bold small">Fecha Hasta</label>
+                    <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control rounded-pill" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Buscar Producto</label>
+                    <input type="text" name="busqueda" value="@ViewBag.Busqueda" class="form-control rounded-pill" placeholder="Nombre del producto..." />
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Aplicar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <span class="text-muted small text-uppercase fw-bold">Sin Rotación</span>
+                <h3 class="fw-bold mt-2">@Model.Count()</h3>
             </div>
-            <h2 class="fw-bold text-primary mb-3">📦 Productos sin Rotación</h2>
-            <p class="text-secondary fs-5 mb-4">Próximamente</p>
-            <a asp-action="Index" class="btn btn-info rounded-pill px-5 fw-bold text-white">
-                Volver al Centro de Análisis
-            </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <span class="text-muted small text-uppercase fw-bold">Valor Inmovilizado</span>
+                <h3 class="fw-bold mt-2 text-danger">$@totalValorInmovilizado.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <span class="text-muted small text-uppercase fw-bold">Más tiempo sin vender</span>
+                <h3 class="fw-bold mt-2 text-truncate" title="@(productoMayorTiempo?.Nombre ?? "-")">@(productoMayorTiempo?.Nombre ?? "-")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <span class="text-muted small text-uppercase fw-bold">Stock Total Inmov.</span>
+                <h3 class="fw-bold mt-2 text-success">@totalStock.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="text-secondary small">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Rubro</th>
+                            <th>Stock</th>
+                            <th>Última venta</th>
+                            <th>Días sin vender</th>
+                            <th>Costo</th>
+                            <th>Valor stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@item.Nombre</td>
+                                <td>@item.Rubro</td>
+                                <td>@item.Stock.ToString("N0")</td>
+                                <td>@(item.UltimaVenta?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td>@(item.DiasSinVender >= 999999 ? "Nunca" : item.DiasSinVender.ToString())</td>
+                                <td>$@item.Costo.ToString("N0")</td>
+                                <td>$@item.ValorStock.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(ViewBag.Pagina == 1 ? "disabled" : "")">
+                        <a class="page-link rounded-pill" href="@Url.Action("ProductosSinRotacion", new { filtro = ViewBag.Filtro, desde = ViewBag.Desde, hasta = ViewBag.Hasta, busqueda = ViewBag.Busqueda, pagina = 1 })">Primera</a>
+                    </li>
+                    <li class="page-item @(ViewBag.Pagina == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("ProductosSinRotacion", new { filtro = ViewBag.Filtro, desde = ViewBag.Desde, hasta = ViewBag.Hasta, busqueda = ViewBag.Busqueda, pagina = ViewBag.Pagina - 1 })">Anterior</a>
+                    </li>
+                    <li class="page-item disabled"><span class="page-link">Página @ViewBag.Pagina de @ViewBag.TotalPaginas</span></li>
+                    <li class="page-item @(ViewBag.Pagina == ViewBag.TotalPaginas ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("ProductosSinRotacion", new { filtro = ViewBag.Filtro, desde = ViewBag.Desde, hasta = ViewBag.Hasta, busqueda = ViewBag.Busqueda, pagina = ViewBag.Pagina + 1 })">Siguiente</a>
+                    </li>
+                    <li class="page-item @(ViewBag.Pagina == ViewBag.TotalPaginas ? "disabled" : "")">
+                        <a class="page-link rounded-pill" href="@Url.Action("ProductosSinRotacion", new { filtro = ViewBag.Filtro, desde = ViewBag.Desde, hasta = ViewBag.Hasta, busqueda = ViewBag.Busqueda, pagina = ViewBag.TotalPaginas })">Última</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
 
-<style>
-    .bg-card { background: var(--bg-card); }
-    .bg-info-soft { background: rgba(6,182,212,0.1); }
-</style>
+<script>
+    function togglePersonalizado() {
+        const filtro = document.getElementById('filtro').value;
+        const divDesde = document.getElementById('divDesde');
+        const divHasta = document.getElementById('divHasta');
+        if (filtro === 'Personalizado') {
+            divDesde.style.display = 'block';
+            divHasta.style.display = 'block';
+        } else {
+            divDesde.style.display = 'none';
+            divHasta.style.display = 'none';
+        }
+    }
+    document.addEventListener("DOMContentLoaded", togglePersonalizado);
+</script>
