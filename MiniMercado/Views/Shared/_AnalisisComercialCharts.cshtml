@@ -1,0 +1,52 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function createBarChart(canvasId, labels, data, label) {
+        new Chart(document.getElementById(canvasId), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: '#4f46e5',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function createDoughnutChart(canvasId, labels, data) {
+        new Chart(document.getElementById(canvasId), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#6b7280']
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+
+    function createLineChart(canvasId, labels, data, label) {
+        new Chart(document.getElementById(canvasId), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    borderColor: '#4f46e5',
+                    tension: 0.1
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+</script>

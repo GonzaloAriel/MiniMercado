@@ -1,0 +1,11 @@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="VentasPorRubro" class="btn @(ViewBag.ModuloActivo == "VentasPorRubro" ? "btn-secondary" : "btn-outline-warning") rounded-pill px-4">Ventas por Rubro</a>
+            <a asp-action="ProductosMasVendidos" class="btn @(ViewBag.ModuloActivo == "ProductosMasVendidos" ? "btn-warning" : "btn-outline-warning") rounded-pill px-4">Productos Más Vendidos</a>
+            <a asp-action="ProductosSinRotacion" class="btn @(ViewBag.ModuloActivo == "ProductosSinRotacion" ? "btn-info" : "btn-outline-warning") rounded-pill px-4">Productos sin Rotación</a>
+            <a asp-action="Pagos" class="btn @(ViewBag.ModuloActivo == "Pagos" ? "btn-danger" : "btn-outline-warning") rounded-pill px-4">Medios de Pago</a>
+            <a asp-action="EvolucionVentas" class="btn @(ViewBag.ModuloActivo == "EvolucionVentas" ? "btn-success" : "btn-outline-warning") rounded-pill px-4">Evolución de Ventas</a>
+        </div>
+    </div>
+</div>

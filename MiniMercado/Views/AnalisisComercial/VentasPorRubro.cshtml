@@ -7,13 +7,12 @@
 <div class="container py-4">
     <div class="row mb-4 align-items-center">
         <div class="col">
-            <h2 class="fw-bold text-primary mb-1">📊 Ventas por Rubro</h2>
-            <p class="text-secondary">Análisis detallado de facturación y unidades vendidas por categoría.</p>
-        </div>
-        <div class="col-auto">
-            <a asp-action="Index" class="btn btn-outline-primary rounded-pill">Volver al Centro</a>
+            <h2 class="fw-bold text-white mb-1">📊 Ventas por Rubro</h2>
+            <p class="text-white-50">Análisis detallado de facturación y unidades vendidas por categoría.</p>
         </div>
     </div>
+    
+    <partial name="_AnalisisComercialNavigation" />
 
     <!-- Formulario de Filtros y Búsqueda -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -130,7 +129,24 @@
             </nav>
         </div>
     </div>
+
+    <!-- Gráfico -->
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-4">Top 10 Rubros por Facturación</h5>
+            <canvas id="chartVentasRubro"></canvas>
+        </div>
+    </div>
 </div>
+
+<partial name="_AnalisisComercialCharts" />
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const labels = @Html.Raw(Json.Serialize(Model.Take(10).Select(x => x.RubroNombre)));
+        const data = @Html.Raw(Json.Serialize(Model.Take(10).Select(x => x.FacturacionTotal)));
+        createBarChart('chartVentasRubro', labels, data, 'Facturación');
+    });
+</script>
 
 <script>
     function togglePersonalizado() {

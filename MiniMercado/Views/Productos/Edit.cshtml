@@ -1,107 +1,144 @@
 @model MiniMercado.Models.Producto
 
-<h2>Editar Producto</h2>
+<h2 class="text-white mb-4">Editar Producto</h2>
 
-<form asp-action="Edit" method="post">
-
+<form asp-action="Edit" method="post" class="needs-validation" novalidate>
     <input asp-for="Id" type="hidden" />
 
-    <div class="mb-3">
-        <label asp-for="CodigoBarra" class="form-label"></label>
-        <input asp-for="CodigoBarra" class="form-control" />
-        <span asp-validation-for="CodigoBarra" class="text-danger"></span>
+    <div class="row">
+        <!-- Código de Barra -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="CodigoBarra" class="form-label text-white fw-semibold">
+                <i class="bi bi-upc-scan me-1"></i>Código de Barra
+            </label>
+            <input asp-for="CodigoBarra" class="form-control form-control-lg border-secondary" placeholder="Ingrese el código de barras" />
+            <span asp-validation-for="CodigoBarra" class="text-danger small"></span>
+        </div>
+
+        <!-- Nombre -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="Nombre" class="form-label text-white fw-semibold">
+                <i class="bi bi-tag me-1"></i>Nombre
+            </label>
+            <input asp-for="Nombre" class="form-control form-control-lg border-secondary" placeholder="Nombre del producto" />
+            <span asp-validation-for="Nombre" class="text-danger small"></span>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Nombre"></label>
-        <input asp-for="Nombre" class="form-control" />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
+    <div class="row">
+        <!-- Precio -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="Precio" class="form-label text-white fw-semibold">
+                <i class="bi bi-currency-dollar me-1"></i>Precio
+            </label>
+            <div class="input-group">
+                <span class="input-group-text border-secondary">$</span>
+                <input asp-for="Precio" class="form-control form-control-lg border-secondary" placeholder="0.00" step="0.01" />
+            </div>
+            <span asp-validation-for="Precio" class="text-danger small"></span>
+        </div>
+
+        <!-- Rubro -->
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-white fw-semibold">
+                <i class="bi bi-folder me-1"></i>Rubro
+            </label>
+            <div class="input-group">
+                <select asp-for="RubroId" class="form-select form-select-lg border-secondary">
+                    <option value="">-- Sin rubro --</option>
+                    @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
+                    {
+                        <option value="@r.Id">@r.Nombre</option>
+                    }
+                </select>
+                <button type="button" class="btn btn-success border-secondary" data-bs-toggle="modal" data-bs-target="#modalRubro" title="Agregar nuevo rubro">
+                    <i class="bi bi-plus-circle">Nuevo Rubro</i>
+                </button>
+            </div>
+            <span asp-validation-for="RubroId" class="text-danger small"></span>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Precio"></label>
-        <input asp-for="Precio" class="form-control" />
-        <span asp-validation-for="Precio" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label fw-bold">Rubro</label>
-        <div class="input-group">
-            <select asp-for="RubroId" class="form-select">
-                <option value="">-- Sin rubro --</option>
-                @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
-                {
-                    <option value="@r.Id">@r.Nombre</option>
-                }
+    <div class="row">
+        <!-- Proveedor -->
+        <div class="col-md-12 mb-3">
+            <label asp-for="ProveedorId" class="form-label text-white fw-semibold">
+                <i class="bi bi-building me-1"></i>Proveedor Principal
+            </label>
+            <select asp-for="ProveedorId" class="form-select form-select-lg border-secondary" asp-items="@(new SelectList(ViewBag.Proveedores, "Id", "Nombre"))">
+                <option value="">-- Sin proveedor --</option>
             </select>
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalRubro">
-                Nuevo Rubro
-            </button>
-        </div>
-        <span asp-validation-for="RubroId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ProveedorId" class="form-label fw-bold">Proveedor Principal</label>
-        <select asp-for="ProveedorId" class="form-select" asp-items="@(new SelectList(ViewBag.Proveedores, "Id", "Nombre"))">
-            <option value="">-- Sin proveedor --</option>
-        </select>
-        <span asp-validation-for="ProveedorId" class="text-danger"></span>
-    </div>
-
-    <div class="form-check mb-2">
-        <input asp-for="EsPorPeso" class="form-check-input" />
-        <label asp-for="EsPorPeso" class="form-check-label">
-            Se vende por peso
-        </label>
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="PrecioEditable" class="form-check-input" />
-        <label asp-for="PrecioEditable" class="form-check-label">
-            Precio editable en venta
-        </label>
-    </div>
-
-
-    <div class="mb-3">
-        <div class="form-check">
-            <input asp-for="Activo" class="form-check-input" />
-            <label asp-for="Activo" class="form-check-label">Activo</label>
+            <span asp-validation-for="ProveedorId" class="text-danger small"></span>
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">
-        Guardar cambios
-    </button>
+    <!-- Opciones del producto -->
+    <div class="row g-3 mb-4 p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary mt-4">
+        <div class="col-md-4">
+            <div class="form-check form-switch">
+                <input asp-for="EsPorPeso" class="form-check-input" id="esPorPeso" />
+                <label asp-for="EsPorPeso" class="form-check-label text-white" for="esPorPeso">
+                    <i class="bi bi-weight-scale me-1"></i>Se vende por peso
+                </label>
+            </div>
+        </div>
 
-    <a asp-action="Index" class="btn btn-secondary">
-        Cancelar
-    </a>
+        <div class="col-md-4">
+            <div class="form-check form-switch">
+                <input asp-for="PrecioEditable" class="form-check-input" id="precioEditable" />
+                <label asp-for="PrecioEditable" class="form-check-label text-white" for="precioEditable">
+                    <i class="bi bi-pencil-square me-1"></i>Precio editable en venta
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-check form-switch">
+                <input asp-for="Activo" class="form-check-input" id="activo" />
+                <label asp-for="Activo" class="form-check-label text-white" for="activo">
+                    <i class="bi bi-check-circle me-1"></i>Activo
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="d-flex gap-2 flex-wrap">
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="bi bi-save me-2"></i>Guardar cambios
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-5">
+            <i class="bi bi-x-circle me-2"></i>Cancelar
+        </a>
+    </div>
 </form>
 
-<!-- Modal Nuevo Rubro -->
-<div class="modal fade text-black rounded" id="modalRubro" tabindex="-1">
-    <div class="modal-dialog rounded">
-        <div class="modal-content rounded">
-
-            <div class="modal-header bg-success rounded">
-                <h5 class="modal-title">Nuevo Rubro</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal Nuevo Rubro Mejorado -->
+<div class="modal fade" id="modalRubro" tabindex="-1" aria-labelledby="modalRubroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-success" id="modalRubroLabel">
+                    <i class="bi bi-folder-plus me-2"></i>Nuevo Rubro
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Nombre del rubro</label>
-                    <input type="text" id="nuevoRubroNombre" class="form-control" placeholder="Ej: Bebidas, Lácteos..." />
+                <div class="mb-3">
+                    <label for="nuevoRubroNombre" class="form-label fw-semibold text-success">Nombre del rubro</label>
+                    <input type="text" id="nuevoRubroNombre" class="form-control form-control-lg bg-secondary text-white border-secondary"
+                           placeholder="Ej: Bebidas, Lácteos, Panadería..." autofocus />
+                    <small class="text-muted">Ingrese un nombre único para el nuevo rubro</small>
                 </div>
             </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" onclick="crearRubro()">Guardar</button>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" onclick="crearRubro()">
+                    <i class="bi bi-check2 me-1"></i>Guardar
+                </button>
             </div>
-
         </div>
     </div>
 </div>
@@ -112,13 +149,21 @@
     }
 
     <script>
+        // Función mejorada para crear rubro con validación
         function crearRubro() {
-            var nombre = document.getElementById("nuevoRubroNombre").value;
+            var nombreInput = document.getElementById("nuevoRubroNombre");
+            var nombre = nombreInput.value.trim();
 
             if (!nombre) {
-                alert("Por favor, ingrese un nombre para el rubro.");
+                alert("⚠️ Por favor, ingrese un nombre para el rubro.");
+                nombreInput.focus();
                 return;
             }
+
+            // Deshabilitar botón para evitar doble envío
+            var btnGuardar = document.querySelector('#modalRubro .btn-success');
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Guardando...';
 
             fetch('/Rubro/CrearDesdeModal', {
                 method: 'POST',
@@ -136,18 +181,72 @@
             .then(data => {
                 var select = document.querySelector("select[name='RubroId']");
 
-                var option = new Option(data.nombre, data.id, true, true);
-                select.add(option);
+                // Verificar si el rubro ya existe en el select
+                var existe = false;
+                for (var i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value == data.id) {
+                        existe = true;
+                        break;
+                    }
+                }
+
+                if (!existe) {
+                    var option = new Option(data.nombre, data.id, true, true);
+                    select.add(option);
+                } else {
+                    // Seleccionar el rubro existente
+                    select.value = data.id;
+                }
+
+                // Disparar evento change para validaciones
+                var event = new Event('change');
+                select.dispatchEvent(event);
 
                 // Limpiar y cerrar modal
-                document.getElementById("nuevoRubroNombre").value = "";
+                nombreInput.value = "";
                 var modalElement = document.getElementById('modalRubro');
                 var modal = bootstrap.Modal.getInstance(modalElement);
                 modal.hide();
+
+                // Mostrar mensaje de éxito
+                var toast = document.createElement('div');
+                toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>
+                    Rubro "${data.nombre}" creado exitosamente
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
             })
             .catch(err => {
-                alert(err.message);
+                alert('❌ Error al crear el rubro: ' + err.message);
+            })
+            .finally(() => {
+                // Restaurar botón
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = '<i class="bi bi-check2 me-1"></i>Guardar';
             });
         }
+
+        // Enter para crear rubro en el modal
+        document.addEventListener('DOMContentLoaded', function() {
+            var input = document.getElementById('nuevoRubroNombre');
+            if (input) {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        crearRubro();
+                    }
+                });
+            }
+
+            // Limpiar input al cerrar el modal
+            var modalElement = document.getElementById('modalRubro');
+            modalElement.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('nuevoRubroNombre').value = '';
+            });
+        });
     </script>
 }

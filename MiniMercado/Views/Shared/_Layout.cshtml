@@ -149,6 +149,12 @@
                                 </a>
                             </li>
 
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="AnalisisComercial" asp-action="Index">
+                                    <i class="bi bi-graph-up-arrow me-1"></i> Análisis Comercial
+                                </a>
+                            </li>
+
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarFinanzas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-bank me-1"></i> Finanzas
@@ -363,11 +369,11 @@
                 <button type="button" class="btn-close-novedades" onclick="dismissNovedades()">✕</button>
                 <div class="novedades-bubble-body">
                     <div class="novedades-icon-top">💜 Novedades</div>
-                    <h5 class="novedades-bubble-title">🏷 Módulo de Etiquetas</h5>
-                    <p class="novedades-bubble-text">Creá productos elaborados e imprimí tus etiquetas.</p>
+                    <h5 class="novedades-bubble-title">📈 Analisis Comercial</h5>
+                    <p class="novedades-bubble-text">Analizá tu negocio con nuevos reportes avanzados.</p>
                     <hr class="novedades-divider">
-                    <h5 class="novedades-bubble-title">✨ Hero Personalizado</h5>
-                    <p class="novedades-bubble-text">Tu negocio ahora tiene identidad propia en la portada.</p>
+                    <h5 class="novedades-bubble-title">🏷 Módulo de Etiquetas</h5>
+                    <p class="novedades-bubble-text">Creá y gestioná etiquetas para tus productos.</p>
                     <a asp-controller="Home" asp-action="Novedades" class="btn-novedades-action" onclick="dismissNovedades()">Ver todas las novedades</a>
                 </div>
             </div>
@@ -479,12 +485,12 @@
 
         <script>
             function dismissNovedades() {
-                localStorage.setItem("minimercado_novedades_v2", "true");
+                localStorage.setItem("minimercado_novedades_v3", "true");
                 document.getElementById("novedades-bubble").style.display = "none";
             }
 
             document.addEventListener("DOMContentLoaded", function() {
-                if (!localStorage.getItem("minimercado_novedades_v2")) {
+                if (!localStorage.getItem("minimercado_novedades_v3")) {
                     setTimeout(() => {
                         document.getElementById("novedades-bubble").style.display = "block";
                     }, 2000);

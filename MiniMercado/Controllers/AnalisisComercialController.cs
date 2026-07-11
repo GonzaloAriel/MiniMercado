@@ -86,6 +86,7 @@ namespace MiniMercado.Controllers
             ViewBag.Busqueda = busqueda;
             ViewBag.Pagina = pagina;
             ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+            ViewBag.ModuloActivo = "VentasPorRubro";
 
             return View(report);
         }
@@ -138,6 +139,7 @@ namespace MiniMercado.Controllers
             ViewBag.Busqueda = busqueda;
             ViewBag.Pagina = pagina;
             ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+            ViewBag.ModuloActivo = "ProductosMasVendidos";
 
             return View(report);
         }
@@ -203,6 +205,7 @@ namespace MiniMercado.Controllers
             ViewBag.Busqueda = busqueda;
             ViewBag.Pagina = pagina;
             ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+            ViewBag.ModuloActivo = "ProductosSinRotacion";
 
             return View(report);
         }
@@ -252,6 +255,7 @@ namespace MiniMercado.Controllers
             ViewBag.Busqueda = busqueda;
             ViewBag.Pagina = pagina;
             ViewBag.TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+            ViewBag.ModuloActivo = "Pagos";
 
             return View(report);
         }
@@ -295,6 +299,7 @@ namespace MiniMercado.Controllers
             ViewBag.Filtro = filtro;
             ViewBag.Desde = fechaDesde.ToString("yyyy-MM-dd");
             ViewBag.Hasta = fechaHasta.AddDays(-1).ToString("yyyy-MM-dd");
+            ViewBag.ModuloActivo = "EvolucionVentas";
 
             return View(report);
         }
