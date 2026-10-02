@@ -115,6 +115,21 @@ migración crea, `migrations add` no genera nada para ellas porque el snapshot
 las contiene. Hay que sacarlas del snapshot **antes** de generar la migración
 (P-002). El snapshot describe el modelo, no el historial.
 
+**5. Verificar que migraciones y modelo no divergan (P-025):**
+
+```
+cd MiniMercado   # proyecto
+~/.dotnet/dotnet build tools/SchemaCheck/SchemaCheck.csproj
+ConnectionStrings__MiniMercadoDB='...' ~/.dotnet/dotnet run --project tools/SchemaCheck
+```
+
+Compara una base creada con migraciones contra una creada desde el modelo
+(salida 1 = hay deriva). **Siempre reconstruir la herramienta antes de correrla**
+(sin `--no-build`): su carpeta de salida tiene su propia copia de la app y con
+`--no-build` corre contra un binario viejo que puede no tener la migración más
+nueva. Descarta las bases al terminar. Es herramienta de desarrollo: no va en la
+imagen Docker.
+
 ## Objetivo actual
 
 **Ciclo 2026-10-02: la app YA ARRANCA en local.** Objetivo cumplido: correr y

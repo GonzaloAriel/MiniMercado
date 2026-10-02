@@ -135,15 +135,15 @@ ConnectionStrings__MiniMercadoDB='Server=127.0.0.1,1433;Database=MiniMercadoDB;U
 
 **Base local de desarrollo (fuera del repo):** contenedor Docker `minimercado-sql`
 (`mcr.microsoft.com/mssql/server:2022-latest`) con el puerto atado a `127.0.0.1:1433`, base
-`MiniMercadoDB` creada y las 58 migraciones aplicadas. Es **descartable**: no hay datos que
+`MiniMercadoDB` creada y las 59 migraciones aplicadas. Es **descartable**: no hay datos que
 valgan. El detalle de cómo levantarlo está en `00_MEMORIA.md` §"Entorno local".
 
 **Lo que sigue sin decidir:** dónde vive la base en el entorno definitivo (D-008 / D-010).
 
 ### 4.2 Migraciones
 
-- **58 migraciones** + snapshot. Última:
-  `20261002143249_AddSuscripcionColumnsToTenant`.
+- **59 migraciones** + snapshot. Última:
+  `20261002163400_AgregaAnuladoA_EgresosCaja`.
 - `Program.cs` ejecuta `db.Database.Migrate()` en **cada arranque** → las migraciones
   pendientes se aplican solas al iniciar.
 
@@ -445,7 +445,7 @@ Para no romper cosas al ordenar el código:
 - **`EtiquetasController` tiene el patrón correcto** de manejo de `TenantId` nulo:
   sirve de referencia para arreglar el resto.
 - **`ProveedorService` está bien separado**: sirve de modelo para los otros services.
-- **Las 58 migraciones** dan una base sólida. Las 7 columnas de suscripción ya no son el
+- **Las 59 migraciones** dan una base sólida. Las 7 columnas de suscripción ya no son el
   problema: las crea `20261002143249_AddSuscripcionColumnsToTenant` y el parche T-SQL desapareció.
 - **El importador Excel** con ClosedXML y control de duplicados funciona.
 - **La UI oscura** está definida y es consistente.
@@ -462,3 +462,4 @@ Para no romper cosas al ordenar el código:
 | 2026-10-02 | **Objetivo cumplido: la app arranca y se ve en el navegador.** Base local creada (SQL Server 2022 en Docker) + runtime 6 en `~/.dotnet`. Corregidos y **verificados en ejecución** los 3 casos URGENTE (1, 2, 3) → CONSOLIDADO. Corregido el orden `Migrate()`/parche T-SQL, que mataba el primer arranque en bases nuevas. `appsettings.json` quedó válido y sin credenciales. **No se resolvió ninguna decisión pendiente (D-008 a D-012 siguen abiertas).** |
 | 2026-10-02 | **P-002, P-003 y P-012 cerrados; aparecieron P-022, P-023 y P-024.** `dotnet-ef` arreglado (6.0.36 + SDK 6.0.428) y migración real `20261002143249_AddSuscripcionColumnsToTenant` generada; **el parche T-SQL de `Program.cs` se eliminó**. Verificado **borrando la base y reconstruyéndola solo con migraciones**: 58 migraciones, 28 tablas, app sana. Al hacerlo aparecieron **3 problemas nuevos**: el **monto cobrado nunca se guardaba** (`CobroTenant.Monto` usaba `PrecioMensual * meses` en vez del monto real → todos los cobros en 0 y el KPI "Recaudación Total" en $0, P-022), una **segunda divergencia modelo/migraciones** en `ImpresionEtiqueta` (faltaban el índice y el FK a `Tenants`, P-023) y `PrecioSugerido` aceptando input del cliente (P-024, cerrado con `[BindNever]`). Los tres corregidos y verificados: cobro de 45000 guardado como 45000.00 y recaudación mostrando $45,000. **D-008 a D-012 siguen abiertas.** |
 | 2026-10-02 | **Revisión de arquitectura previa a Dockerizar: P-025 a P-028.** Se documentó la deuda que va a doler a futuro y que **no** era visible en desarrollo: nada detecta la deriva modelo↔migraciones (P-025, máximo prioriod porque produjo P-002 y P-023), `Database.Migrate()` en cada arranque no escala a más de una instancia porque EF Core 6 no tiene lock de migraciones (P-026, resolver antes del Dockerfile), framework EOL desde nov-2024 (P-027) y ausencia de health checks (P-028). Además se reforzaron cuatro problemas ya existentes en vez de duplicarlos: P-006/P-007 (autorización: la solución es structurally falla cerrada, no parchear 86 `.Value`), P-016 (sin tests: los flujos de dinero no tienen red de seguridad, P-022 lo prueba), P-011 (logging) y P-001/D-011 (historial público: rotar no alcanza, el commit `a5d20ba` sigue ahí). **Sin cambios en código.** |
+| 2026-10-02 | **P-025 arranca y encuentra dos bugs vivos: P-029 cerrado, P-030 abierto.** Se construyó `tools/SchemaCheck` (herramienta de desarrollo, fuera de la app y de la imagen Docker): levanta dos bases de descarte, una **solo con migraciones** y otra **desde el modelo**, y compara columnas con su nulabilidad, índices y FKs con su acción de borrado. Devuelve código de salida 1 si hay deriva. **Primera ejecución:** encontró que `EgresosCaja.Anulado` estaba en el modelo y en el snapshot pero **en ninguna migración**, y como se usa en un filtro global, `GET /Egresos` daba **500** en todos los entornos → cerrado con `20261002163400_AgregaAnuladoA_EgresosCaja` y verificado en **200** (P-029). También encontró que **borrar un rubro con productos falla**: el FK es `SET_NULL` sobre una columna que el propio modelo declara obligatoria (P-030, abierto, requiere decisión de negocio). Dos trampas que la herramienta tuvo que esquivar: `migrations add` no detecta esta clase de problema cuando el snapshot está adelantado, y en EF Core 6 `EnsureCreated()` aplica las migraciones en vez de usar el modelo. **59 migraciones.** |

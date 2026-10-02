@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Herramienta de desarrollo. NO forma parte de la app ni de la imagen Docker.
+    Verifica que una base creada SOLO con migraciones tenga el mismo esquema
+    que el modelo de EF (P-025 en AI/03_PROBLEMAS.md).
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SchemaCheck</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../MiniMercado/MiniMercado.csproj" />
+  </ItemGroup>
+
+</Project>

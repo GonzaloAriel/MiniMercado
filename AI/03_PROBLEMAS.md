@@ -201,6 +201,50 @@ MEDIA = deuda o riesgo acotado.
   `Microsoft.EntityFrameworkCore.Sqlite 6.0.35` esta en el csproj pero la app usa
   SQL Server. Se puede desinstalar.
 
+- **P-029 (ALTA, RESUELTO 2026-10-02) — `EgresosCaja.Anulado` no existia en la
+  base: el modulo Egresos daba 500 en todos los entornos.** Cuarta instancia de
+  la misma clase que P-002 y P-023. El modelo declara
+  `EgresoCaja.Anulado` (`bool`, default `false`), el snapshot tambien, pero
+  **ninguna migracion creaba la columna**. Como ademas se usa en el filtro
+  global de `EgresosCaja` (`MiniMercadoContext.cs:64`) y en
+  `EgresosController` y `Views/Egresos/Index.cshtml`, toda consulta a esa tabla
+  reventaba.
+  **Verificado en ejecucion:** `GET /Egresos` devolvia **500** con
+  *"Invalid column name 'Anulado'"*, con el error originado en el pipeline de
+  consultas de EF al aplicar el filtro global.
+  **Solucion:** migracion `20261002163400_AgregaAnuladoA_EgresosCaja`
+  (`bit NOT NULL DEFAULT 0`). Verificado: `GET /Egresos` paso a **200** y el log
+  quedo sin errores de columna. Suma **59 migraciones**.
+  Como se detecto: por la herramienta `tools/SchemaCheck` (ver P-025), en su
+  primera ejecucion. Nadie lo habia visto en meses.
+
+- **P-030 (ALTA, ABIERTO 2026-10-02) — Borrar un rubro con productos falla.**
+  `Producto.RubroId` es `int?` en C# pero EF lo modela como **obligatorio**
+  (`b.Property<int?>("RubroId").IsRequired()` en el snapshot), y a la vez el FK
+  esta configurado `OnDelete(DeleteBehavior.SetNull)`
+  (`MiniMercadoContext.cs:197-201`). Eso es una contradiccion: la columna es
+  NOT NULL y no puede quedar en NULL al borrar el rubro.
+  SQL Server **acepta** crear ese FK y solo falla en el momento del DELETE.
+  **Verificado:** con un producto usando un rubro, `DELETE FROM Rubros` falla con
+  *"Cannot insert the value NULL into column 'RubroId'"* y la fila sobrevive.
+  Es decir, `RubroController.Delete` (que ademas es un GET que muta, ver P-009)
+  revienta con 500 cuando el rubro tiene productos.
+  **Ademas hace que el modelo entero sea inimplementable:** el DDL que produce
+  el modelo no se puede crear en SQL Server, asi que no se puede tirar una base
+  nueva desde el modelo.
+  **Requiere una decision de negocio** (no es un bug puramente tecnico): ver la
+  nota de decision asociada. Alternativas: (a) borrar el rubro solo si no tiene
+  productos y bloquear con un mensaje claro; (b) poner `NoAction`/`Restrict` y
+  que el borrado falle siempre; (c) hacer `RubroId` realmente nullable y dejar
+  que `SetNull` funcione, dejando productos sin rubro.
+
+- **Refuerzo a P-006 / P-007 (filtros globales y relaciones).** EF 6 avisa al
+  generar migraciones: *"Entity 'Producto' has a global query filter defined and
+  is the required end of a relationship with the entity 'ProductoProveedor'"*.
+  Un filtro global combinado con una relacion obligatoria hace que los datos
+  puedan desaparecer segun como se navegue. Vale revisarlo junto con la
+  solucion de fondo de P-006/P-007.
+
 ## Deuda que va a doler (2026-10-02)
 
 Hallazgos de una revision de arquitectura previa a Dockerizar. Varios ya estan
@@ -223,6 +267,30 @@ cual es la solucion de fondo, no el parche puntual.
   3. Regla de equipo: un cambio de esquema nunca se pushea sin su migracion en el
      mismo commit.
   **Prioridad maxima:** es lo primero que hay que construir.
+
+  **Avance 2026-10-02 (paso 1 hecho).** Se creo `tools/SchemaCheck`, que
+  levanta dos bases de descarte y las compara:
+  - A) creada con `Database.Migrate()` (o sea, solo con migraciones);
+  - B) creada con `Database.GenerateCreateScript()` (o sea, desde el modelo).
+  Compara columnas (con tipo y nulabilidad), indices y claves foraneas
+  incluyendo su accion de borrado, y devuelve codigo de salida 1 si hay deriva.
+  ```
+  ConnectionStrings__MiniMercadoDB='...' dotnet run --project tools/SchemaCheck
+  ```
+  **Dos trampas que tuvo que esquivar (patrones a no repetir):**
+  - El chequeo barato no sirve. `dotnet ef migrations add` **no** detecta este
+    problema: si el snapshot ya esta adelantado respecto de las migraciones, EF
+    no genera nada y cree que todo esta bien. Hay que contrastar contra la base
+    real.
+  - En EF Core 6, `Database.EnsureCreated()` **aplica las migraciones** si el
+    contexto las tiene, asi que no sirve para obtener el esquema del modelo: hay
+    que usar `GenerateCreateScript()`.
+  **Resultado en la primera corrida:** encontro P-029 (columna `Anulado`
+    inexistente, modulo Egresos con 500) y P-030. Es decir, la barrera que se
+    pidio encontrar dos bugs vivos en minutos.
+  **Lo que falta:** conectarla a CI (hoy se corre a mano) y resolver P-030, que
+  ademas hoy hace que la comparacion sea parcial porque el modelo no se puede
+  crear entero.
 
 - **P-026 (ALTA) — `Database.Migrate()` en cada arranque no escala a mas de una
   instancia.** `Program.cs:53` aplica migraciones en cada boot. Con una sola
