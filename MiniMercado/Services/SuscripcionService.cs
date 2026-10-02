@@ -6,7 +6,7 @@ namespace MiniMercado.Services
 {
     public interface ISuscripcionService
     {
-        Task RegistrarPagoAsync(int tenantId, int meses, string plan, string? observacion = null);
+        Task RegistrarPagoAsync(int tenantId, int meses, string plan, decimal monto, string? observacion = null);
         Task<Tenant?> GetSuscripcionActualAsync(int tenantId);
         EstadoSuscripcion CalcularEstado(Tenant tenant);
         int CalcularDiasRestantes(Tenant tenant);
@@ -21,7 +21,7 @@ namespace MiniMercado.Services
             _context = context;
         }
 
-        public async Task RegistrarPagoAsync(int tenantId, int meses, string plan, string? observacion = null)
+        public async Task RegistrarPagoAsync(int tenantId, int meses, string plan, decimal monto, string? observacion = null)
         {
             var tenant = await _context.Tenants.FindAsync(tenantId);
             if (tenant == null) return;
@@ -51,10 +51,13 @@ namespace MiniMercado.Services
             tenant.FechaVencimiento = tenant.FechaProximoPago;
 
             // 3. Registrar en Historial (CobroTenant)
+            // Se guarda el monto REAL cobrado (monto), no el precio teorico del plan:
+            // el precio mensual es solo una sugerencia y no refleja descuentos ni
+            // montos negociados, por lo que usarlo aqui dejaba los cobros en 0.
             var cobro = new CobroTenant
             {
                 TenantId = tenantId,
-                Monto = tenant.PrecioMensual * meses,
+                Monto = monto,
                 FechaPago = hoy,
                 FechaVencimiento = tenant.FechaProximoPago.Value,
                 Observacion = observacion ?? $"Pago de {meses} meses - Plan {plan}"

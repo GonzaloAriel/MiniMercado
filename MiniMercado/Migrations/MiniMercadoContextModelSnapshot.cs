@@ -493,6 +493,8 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("ProductoId");
 
+                    b.HasIndex("TenantId");
+
                     b.ToTable("ImpresionesEtiquetas");
                 });
 
@@ -1190,7 +1192,15 @@ namespace MiniMercado.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MiniMercado.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Producto");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("MiniMercado.Models.LoteProducto", b =>

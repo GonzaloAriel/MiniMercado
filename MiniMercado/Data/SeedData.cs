@@ -5,10 +5,19 @@ using MiniMercado.Models;
 
 public static class SeedData
 {
+    // Rutas de configuración que se reemplazan por variables de entorno.
+    // No hay defaults en appsettings.json a propósito: si falta la variable,
+    // el usuario no se crea (ver CrearUsuarioSiFalta).
+    private const string ClaveAdminGlobal = "Seed:PasswordAdminGlobal";
+    private const string ClaveAdminDemo = "Seed:PasswordAdminDemo";
+    private const string ClaveCajaDemo = "Seed:PasswordCajaDemo";
+
     public static async Task Inicializar(IServiceProvider serviceProvider)
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(SeedData).FullName!);
         var db = serviceProvider.GetRequiredService<MiniMercadoContext>();
 
         // 🔹 1. Crear Roles
@@ -41,63 +50,21 @@ public static class SeedData
 
         // 🔹 3. Crear AdminGlobal
         var globalEmail = "global@admin.com";
-        var globalUser = await userManager.FindByEmailAsync(globalEmail);
 
-        if (globalUser == null)
-        {
-            globalUser = new ApplicationUser
-            {
-                UserName = globalEmail,
-                Email = globalEmail,
-                EmailConfirmed = true,
-                TenantId = null // AdminGlobal no pertenece a tenant
-            };
-
-            var result = await userManager.CreateAsync(globalUser, "Zubzero123!!!");
-
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(globalUser, "AdminGlobal");
-        }
+        await CrearUsuarioSiFalta(userManager, configuration, logger,
+            globalEmail, "AdminGlobal", null, ClaveAdminGlobal);
 
         // 🔹 4. Crear Admin del Tenant Demo
         var adminEmail = "admin@demo.com";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
-        if (adminUser == null)
-        {
-            adminUser = new ApplicationUser
-            {
-                UserName = adminEmail,
-                Email = adminEmail,
-                EmailConfirmed = true,
-                TenantId = tenantDemo.Id
-            };
-
-            var result = await userManager.CreateAsync(adminUser, "Admin123!");
-
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
+        await CrearUsuarioSiFalta(userManager, configuration, logger,
+            adminEmail, "Admin", tenantDemo.Id, ClaveAdminDemo);
 
         // 🔹 5. Crear Usuario Caja Demo
         var cajaEmail = "caja@demo.com";
-        var cajaUser = await userManager.FindByEmailAsync(cajaEmail);
 
-        if (cajaUser == null)
-        {
-            cajaUser = new ApplicationUser
-            {
-                UserName = cajaEmail,
-                Email = cajaEmail,
-                EmailConfirmed = true,
-                TenantId = tenantDemo.Id
-            };
-
-            var result = await userManager.CreateAsync(cajaUser, "Caja123!");
-
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(cajaUser, "Caja");
-        }
+        await CrearUsuarioSiFalta(userManager, configuration, logger,
+            cajaEmail, "Caja", tenantDemo.Id, ClaveCajaDemo);
 
         // 🔹 6. Catálogo Global (ProductoBase) de prueba
         if (!db.ProductosBase.Any())
@@ -116,5 +83,49 @@ public static class SeedData
             );
             await db.SaveChangesAsync();
         }
+    }
+
+    private static async Task CrearUsuarioSiFalta(
+        UserManager<ApplicationUser> userManager,
+        IConfiguration configuration,
+        ILogger logger,
+        string email,
+        string rol,
+        int? tenantId,
+        string claveConfig)
+    {
+        if (await userManager.FindByEmailAsync(email) != null)
+            return;
+
+        var password = configuration[claveConfig];
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            logger.LogWarning(
+                "Seed: no se creó el usuario {Email} ({Rol}) porque no está definida la configuración {ClaveConfig}. " +
+                "Defínela como variable de entorno para poder crear el usuario.",
+                email, rol, claveConfig);
+            return;
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            TenantId = tenantId
+        };
+
+        var result = await userManager.CreateAsync(user, password);
+
+        if (!result.Succeeded)
+        {
+            logger.LogError(
+                "Seed: no se pudo crear el usuario {Email} ({Rol}): {Errores}",
+                email, rol, string.Join(" | ", result.Errors.Select(e => e.Description)));
+            return;
+        }
+
+        await userManager.AddToRoleAsync(user, rol);
     }
 }

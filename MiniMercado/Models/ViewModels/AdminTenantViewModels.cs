@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace MiniMercado.Models.ViewModels
 {
@@ -41,8 +42,10 @@ namespace MiniMercado.Models.ViewModels
 
         [Display(Name = "Fecha de Vencimiento (Opcional)")]
         [DataType(DataType.Date)]
+        [BindNever]
         public DateTime? FechaVencimiento { get; set; }
 
+        [BindNever]
         public decimal PrecioSugerido { get; set; }
     }
 

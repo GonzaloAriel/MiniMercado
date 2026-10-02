@@ -125,9 +125,13 @@ namespace MiniMercado.Controllers
 
         public IActionResult Reimprimir(int id)
         {
+            var tenantIdNullable = _tenantService.GetTenantId();
+            if (!tenantIdNullable.HasValue) return Unauthorized();
+            var tenantId = tenantIdNullable.Value;
+
             var impresion = _context.ImpresionesEtiquetas
                 .Include(i => i.Producto)
-                .FirstOrDefault(i => i.Id == id);
+                .FirstOrDefault(i => i.Id == id && i.TenantId == tenantId);
 
             if (impresion == null) return NotFound();
 

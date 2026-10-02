@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniMercado.Data;
 using MiniMercado.ViewModels;
@@ -6,6 +7,7 @@ using MiniMercado.Models;
 
 namespace MiniMercado.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class DashboardController : Controller
     {
         private readonly MiniMercadoContext _context;
@@ -23,7 +25,9 @@ namespace MiniMercado.Controllers
             if (pageVentas < 1) pageVentas = 1;
             if (pageAuditoria < 1) pageAuditoria = 1;
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            var tenantIdNullable = _tenantService.GetTenantId();
+            if (!tenantIdNullable.HasValue) return Forbid();
+            var tenantId = tenantIdNullable.Value;
             int pageSize = 10;
 
             var fechaDesde = desde ?? DateTime.Today;

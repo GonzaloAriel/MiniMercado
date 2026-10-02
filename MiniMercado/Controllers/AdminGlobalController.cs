@@ -143,6 +143,7 @@ namespace MiniMercado.Controllers
                 model.TenantId, 
                 model.Meses ?? 1, 
                 model.Plan ?? "Mensual", 
+                model.Monto,
                 model.Observacion);
 
             // 🎯 Invalidar cache para que el middleware refleje el cambio
