@@ -190,6 +190,19 @@ decisiones bloqueantes en §6.4.
 Prioridad acordada: seguir con los arreglos que **no dependen de ninguna decision
 de infraestructura** antes de escribir el Dockerfile o el compose.
 
+**Estado del entorno al cerrar la sesion (2026-10-02, fin del dia):**
+
+- Contenedor `minimercado-sql` (SQL Server 2022) **levantado** en `127.0.0.1:1433`.
+- La app **esta parada**: se levanta con el comando de la seccion 3.
+- `MiniMercadoDB` tiene **59 migraciones** aplicadas, incluida
+  `20261002163400_AgregaAnuladoA_EgresosCaja`.
+- `SchemaCheck` da **"Sin deriva"** pero sale con codigo 1: la deriva esta
+  resuelta, y lo que queda es la contradiccion del modelo de P-030, que hoy
+  vuelve **parcial** la comparacion.
+- No hay cliente `sqlcmd` en la maquina ni en el contenedor, ni `pyodbc` en
+  Python. Para tocar la base a mano, usar `SchemaCheck` o escribir SQL desde un
+  controller; no instalar tooling nuevo sin necesidad.
+
 ## Fuentes de verdad
 
 `Contexto Minimercado/` contiene la documentación funcional y de producto que ya
