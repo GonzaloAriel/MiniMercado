@@ -433,6 +433,7 @@ Estas decisiones cambian el resto del plan. **No se avanza sin resolverlas.**
 | D-3 | **¿Dónde vive la app?** | Solo local por ahora · VPS propio (como LiteState) · Nube | Define si hace falta reverse proxy y HTTPS desde el inicio. |
 | D-4 | **Sobre las contraseñas ya expuestas** | ¿Rotar solo en la base? ¿También limpiar el historial de git? | Limpiar el historial reescribe commits. Es decisión del TEAM LEAD. |
 | D-5 | **Alcance del arreglo de arquitectura** | ¿Mover lógica a services ahora o dejarlo? | Los 20 controllers con DbContext directo no bloquean Docker. Es deuda, no urgencia. |
+| D-6 | **Qué pasa al borrar un rubro con productos** (P-030 / D-013) | (a) bloquear con mensaje "tiene N productos" · (b) `Restrict`, el borrado falla siempre · (c) `RubroId` nullable de verdad | Los tres cambian comportamiento visible. (a) es el patrón que ya usa el resto del sistema (desactivar en vez de borrar). Es la única decisión que bloquea el cierre de P-025. |
 
 ---
 

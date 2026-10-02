@@ -32,9 +32,19 @@ Cuando se registra una decision, indicar el numero siguiente libre
 | D-010 | Dónde vive la app (VPS / solo local / nube) | — | **PENDIENTE DEL TEAM LEAD** |
 | D-011 | Tratamiento del historial git que expone contraseñas | — | **PENDIENTE DEL TEAM LEAD** |
 | D-012 | Alcance del refactor de arquitectura (mover lógica a services) | — | **PENDIENTE DEL TEAM LEAD** |
+| D-013 | Qué pasa al borrar un rubro que tiene productos (P-030) | — | **PENDIENTE DEL TEAM LEAD** |
 
 D-008 a D-012 están bloqueadas y framed en `01_ESTADO.md` §6.4. No registrar
 ninguna ficha hasta que el TEAM LEAD elija.
+
+D-013 (P-030) es una decision de comportamiento de producto, no de
+infraestructura, y es la unica que bloquea el cierre de P-025. Opciones sin
+elegir: (a) bloquear el borrado con un mensaje claro ("tiene N productos"), igual
+al patron de desactivacion que ya usan `ClienteController.Desactivar` y
+`ProveedoresController`; (b) `Restrict` y que el borrado falle siempre; (c) hacer
+`Producto.RubroId` nullable de verdad y dejar que `SetNull` funcione, lo que
+obliga a definir que muestran las ventas y las etiquetas de un producto sin
+rubro. No decidir por el usuario.
 
 ## Detalle
 
@@ -140,9 +150,11 @@ Decision: `Tenant` modela el estado de suscripcion como parte de la entidad:
 
 Motivo: bloqueo por vencimiento controlado por codigo antes de cada request.
 
-Consecuencias: estas 7 columnas existen en el modelo pero **no estan en ninguna
-migracion** (ver P-002). Hay que agregar la migracion antes de tocar otra cosa de
-este modulo.
+Consecuencias: estas 7 columnas las crea la migracion
+`20261002143249_AddSuscripcionColumnsToTenant` desde 2026-10-02 (antes era el
+patch T-SQL en `Program.cs` y P-002). Al agregar o cambiar una de estas columnas
+hay que agregar la migracion en el mismo commit y correr `SchemaCheck` (§5 de
+`00_MEMORIA.md`).
 
 Reemplaza a: ninguna
 

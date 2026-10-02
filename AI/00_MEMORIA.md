@@ -132,34 +132,63 @@ imagen Docker.
 
 ## Objetivo actual
 
-**Ciclo 2026-10-02: la app YA ARRANCA en local.** Objetivo cumplido: correr y
-verse en el navegador. Sigue pendiente llevarla a un despliegue con Docker
-Compose.
+**Ciclo 2026-10-02: la app arranca en local y el esquema es confiable.**
 
-Lo que falta para eso: no hay `Dockerfile`, no hay `compose.yaml`, no hay
-`.env`, no hay `appsettings.Production.json` y no hay healthchecks.
+Dos objetivos ya cumplidos:
+
+1. **La app corre y se ve en el navegador** (base local SQL Server 2022 en Docker
+   + runtime 6 en `~/.dotnet`).
+2. **La base se construye sola y existe una barrera que lo verifica.** Hay 59
+   migraciones, el parche T-SQL de `Program.cs` se elimino, y la herramienta
+   `tools/SchemaCheck` detecta cualquier divergencia entre el modelo y las
+   migraciones.
+
+Sigue pendiente llevarla a un despliegue con Docker Compose. Lo que falta para
+eso: no hay `Dockerfile`, no hay `compose.yaml`, no hay `.env`, no hay
+`appsettings.Production.json` y no hay healthchecks.
 
 Pendiente de decisión del TEAM LEAD (no resuelto, no inventado): motor de base de
-datos, framework destino, y dónde vive la app.
+datos, framework destino, dónde vive la app, historial de git, alcance del
+refactor, y la semantica del borrado de rubros (P-030, ver `02_DECISIONES.md`).
 
 ## Plan activo
 
-Ciclo en curso (2026-10-02). Ver el camino propuesto en `01_ESTADO.md` §6.2 (10
-pasos) y las decisiones bloqueantes en §6.4.
+Ciclo 2026-10-02. Ver el camino propuesto en `01_ESTADO.md` §6.2 (10 pasos) y las
+decisiones bloqueantes en §6.4.
 
-**Pasos 1 y 2 del §6.2 hechos** (los tres casos URGENTE, CONSOLIDADOS y
-verificados en ejecución). El paso 3 (connection string) está hecho **a medias**:
-funciona por variable de entorno, pero la infrastructure definitiva sigue sin
-decidir.
+**Hecho y verificado en ejecucion:**
 
-Siguiente paso posible: P-002/P-003 (convertir el parche T-SQL de suscripción en
-una migración real), que primero exige arreglar `dotnet-ef` (P-012).
+- Los tres casos URGENTE de `01_ESTADO.md` §5 (P-001, P-004, P-005).
+- P-002 y P-003: las 7 columnas de suscripcion ahora las crea la migracion
+  `20261002143249_AddSuscripcionColumnsToTenant` y el parche T-SQL **se elimino**.
+  Verificado borrando la base y reconstruyendola solo con migraciones.
+- P-012: `dotnet-ef` arreglado (6.0.36 + SDK 6.0.428).
+- P-022, P-023 y P-024, aparecidos al hacer lo anterior.
+- P-029: faltaba la columna `EgresosCaja.Anulado` y el modulo Egresos daba 500 en
+  todos los entornos. Cerrado con `20261002163400_AgregaAnuladoA_EgresosCaja`.
+- P-025 (parte 1): creada `tools/SchemaCheck`.
 
-Prioridad acordada: arrancar por los arreglos de seguridad que **no dependen de
-ninguna decisión de infraestructura** (los tres URGENTE de `01_ESTADO.md` §5),
-antes de escribir Dockerfile o compose.
+**Pendiente, en este orden:**
 
-Siguiente paso: los 3 arreglos URGENTE, cuando el TEAM LEAD dé la orden.
+1. **P-030 — requiere decision del TEAM LEAD.** Borrar un rubro con productos
+   falla: el FK es `SET_NULL` sobre `Producto.RubroId`, que el modelo declara
+   obligatorio. Verificado en ejecucion. Son tres caminos (bloquear con mensaje,
+   `Restrict`, o hacer `RubroId` nullable) y todos cambian comportamiento visible.
+   Ademas, mientras no se resuelva, el DDL del modelo no se puede crear entero y
+   la comparacion de `SchemaCheck` queda **parcial**.
+2. **P-026.** Sacar `Database.Migrate()` del arranque. **Tiene que resolverse
+   antes de escribir el `Dockerfile`**, porque con varias replicas EF Core 6 no
+   tiene lock de migraciones y dos pods arrancando juntos se pelean por la misma
+   migracion. Hoy es un cambio de una linea.
+3. **P-025 (parte 2).** Conectar `SchemaCheck` a CI (hoy se corre a mano).
+4. **P-028.** Health checks.
+5. **P-016.** Tests de humo sobre los flujos de dinero (venta, cobro de
+   suscripcion, cierre de caja). Subieron de prioridad porque P-022 y P-029
+  demostraron que no hay red de seguridad.
+6. **P-027.** Framework EOL desde nov-2024: depende de D-009.
+
+Prioridad acordada: seguir con los arreglos que **no dependen de ninguna decision
+de infraestructura** antes de escribir el Dockerfile o el compose.
 
 ## Fuentes de verdad
 
@@ -200,8 +229,9 @@ Toda tarea: leer este archivo y 01_ESTADO.md.
   del modulo.
 - Tarea de producto o UX: consultar `Contexto Minimercado/`, en particular
   `Prompt de diseño dark.txt`.
-- Tarea de datos/migraciones: `01_ESTADO.md` §4 (divergencia de las 7 columnas de
-  suscripción) y 03_PROBLEMAS.md.
+- Tarea de datos/migraciones: leer `03_PROBLEMAS.md` P-025 a P-030, y la seccion
+  5 de este archivo (verificar el esquema con `SchemaCheck`). El caso P-002 ya
+  esta cerrado y su trampa ya esta documentada en la seccion 4.
 
 ## Reglas de la memoria
 

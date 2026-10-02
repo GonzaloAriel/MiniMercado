@@ -26,8 +26,11 @@ CONTEXTO QUE NO ESTA EN LOS ARCHIVOS
 - El proyecto NO tiene hosting. Se acaba de dejar Azure App Service y Azure SQL.
   No busques ni esperes configuracion de Azure: no hay connection string de
   produccion en el repo.
-- El proyecto compila en Linux (verificado) pero **no corre**: falta el runtime
-  .NET 6 en la maquina. Ver P-013.
+- El proyecto compila en Linux (verificado) y **corre**: el runtime .NET 6 esta
+  instalado en `~/.dotnet` y la base local corre en Docker (SQL Server 2022,
+  `127.0.0.1:1433`). P-013 cerrado.
+- No hay tests ni CI. Es la razon por la que los bugs P-022 y P-029 pudieron
+  vivir meses (P-016, P-025).
 - La documentacion funcional del producto esta en `Contexto Minimercado/`, no en
   `DOCS/` (esa carpeta no existe).
 
@@ -45,7 +48,8 @@ Despues del arranque, lee segun corresponda:
     Contexto Minimercado/Prompt de diseño dark.txt
 
 - MODELO DE DATOS / ENTIDADES / MIGRACIONES:
-    AI/03_PROBLEMAS.md           (P-002, P-003, P-012, P-016)
+    AI/00_MEMORIA.md             (seccion 5: correr SchemaCheck)
+    AI/03_PROBLEMAS.md           (P-025, P-026, P-029, P-030)
     AI/02_DECISIONES.md          (D-001, D-002, D-004, D-006)
     Contexto Minimercado/Contexto MiniMercado.txt
 
@@ -60,7 +64,7 @@ Despues del arranque, lee segun corresponda:
 
 - DEPLOY / INFRAESTRUCTURA:
     AI/01_ESTADO.md    (§4 base de datos, §6 Docker)
-    AI/03_PROBLEMAS.md (P-002, P-003, P-010, P-013)
+    AI/03_PROBLEMAS.md (P-010, P-025, P-026, P-027, P-028)
 
 =====================================================
 REGLAS OBLIGATORIAS (aplicar siempre)
@@ -77,8 +81,8 @@ REGLAS OBLIGATORIAS (aplicar siempre)
    activas y EgresosCaja no anulados.
 5. AUDITORIA: todo cambio critico pasa por AuditoriaService.Registrar.
 6. Sin T-SQL fuera de migraciones: no agregues ExecuteSqlRaw con sys.columns u
-   OBJECT_ID (ver P-003). Las columnas de suscripcion necesitan una migracion
-   real, no un parche (P-002).
+   OBJECT_ID (ver P-003). Ningun cambio de esquema va sin su migracion, y si
+   tocás el modelo corré `SchemaCheck` (regla 14).
 7. UI: tema oscuro, tarjetas oscuras, botones con iconos de Bootstrap Icons.
 8. UI/UX y controllers: la arquitectura declarada dice Services = logica de
    negocio, pero hoy hay logica en los controllers (P-015). No asexuala mas ni
@@ -93,12 +97,16 @@ REGLAS OBLIGATORIAS (aplicar siempre)
 12. Al terminar una tarea: verificar compilacion (dotnet build) y actualizar la
     memoria.
 13. Commit solo bajo pedido explicito del TEAM LEAD.
+14. Si tocaste el modelo o el snapshot, corré `SchemaCheck` (§5 de 00_MEMORIA.md)
+    y pegá su salida. Detecta la deriva que `migrations add` no ve (P-025), que ya
+    produjo dos bugs de produccion: P-002 y P-029.
 
 =====================================================
 DECISIONES PENDIENTES DEL TEAM LEAD (no decidir solo)
 =====================================================
 D-008 motor de base de datos · D-009 framework destino · D-010 donde vive la app
 D-011 historial git con contraseñas expuestas · D-012 alcance del refactor
+D-013 qué pasa al borrar un rubro con productos (P-030)
 
 Estan frameadas con opciones en AI/01_ESTADO.md §6.4. Si la tarea depende de
 alguna, detener y preguntar antes de escribir codigo.
