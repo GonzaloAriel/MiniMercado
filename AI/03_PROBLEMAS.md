@@ -105,7 +105,7 @@ MEDIA = deuda o riesgo acotado.
   la connection string por variable de entorno, igual que la app:
   `ConnectionStrings__MiniMercadoDB=... ~/.dotnet/dotnet ef migrations add ...`.
 
-- **P-014 (ALTA, NUEVO 2026-10-02) — El monto cobrado nunca se guardaba.**
+- **P-022 (ALTA, NUEVO 2026-10-02) — El monto cobrado nunca se guardaba.**
   `SuscripcionService.RegistrarPagoAsync` recibia `tenantId, meses, plan,
   observacion` y guardaba en `CobroTenant.Monto` el valor
   `tenant.PrecioMensual * meses`. El `Monto` que el administrador escribia en
@@ -120,7 +120,7 @@ MEDIA = deuda o riesgo acotado.
   Patron a no repetir: el ViewModel y la firma del servicio tienen que coincidir;
   agregar un campo al formulario y no pasarlo es un bug silencioso.
 
-- **P-015 (MEDIA, NUEVO 2026-10-02) — Segunda divergencia modelo/migraciones en
+- **P-023 (MEDIA, NUEVO 2026-10-02) — Segunda divergencia modelo/migraciones en
   `ImpresionEtiqueta`.** Al generar la migracion de suscripcion aparecieron de
   paso cambios que no tenian nada que ver: `IX_ImpresionesEtiquetas_TenantId` y
   `FK_ImpresionesEtiquetas_Tenants_TenantId`. El modelo declara la navegacion
@@ -131,7 +131,7 @@ MEDIA = deuda o riesgo acotado.
   **Solucion:** quedaron incluidas en la misma migracion y verificadas en base
   nueva. Patron a no repetir: el mismo que P-002.
 
-- **P-016 (MEDIA, NUEVO 2026-10-02) — `PrecioSugerido` acepta input del
+- **P-024 (MEDIA, NUEVO 2026-10-02) — `PrecioSugerido` acepta input del
   cliente.** En `RegistrarPagoViewModel` era una propiedad publica sin
   restringir, aunque su unico uso legitimo es prellenar el formulario. No era
   explotable (el POST no la leia) pero era una bomba de tiempo: si alguien la
@@ -200,6 +200,72 @@ MEDIA = deuda o riesgo acotado.
 - **P-021 (BAJA) — Paquete instalado y sin usar.**
   `Microsoft.EntityFrameworkCore.Sqlite 6.0.35` esta en el csproj pero la app usa
   SQL Server. Se puede desinstalar.
+
+## Deuda que va a doler (2026-10-02)
+
+Hallazgos de una revision de arquitectura previa a Dockerizar. Varios ya estan
+cubiertos por problemas de mas arriba; aca se dejan **priorizados** y se aclara
+cual es la solucion de fondo, no el parche puntual.
+
+- **P-025 (ALTA) — Nada detecta la deriva entre el modelo y las migraciones.**
+  Esto **no es un bug, es el proceso que produjo dos bugs**: P-002 (las 7
+  columnas) y P-023 (el indice y el FK de `ImpresionEtiqueta`). Los dos estaban
+  en el modelo y en el snapshot pero ninguna migracion los creaba.
+  Lo que lo hace peligroso: el parche T-SQL de `Program.cs` **enmascaraba** la
+  falla en desarrollo. En la maquina del autor todo andaba perfecto y la app se
+  rompia en cualquier otro entorno. Es el peor modo de falla posible: un bug
+  que el flujo de trabajo local no puede detectar.
+  **Solucion de fondo (CI, no disciplina):**
+  1. Levantar una base vacia desde cero con las migraciones y compararla contra
+     el modelo.
+  2. Fallar el build si `dotnet ef migrations add` genera un archivo que no esta
+     commiteado.
+  3. Regla de equipo: un cambio de esquema nunca se pushea sin su migracion en el
+     mismo commit.
+  **Prioridad maxima:** es lo primero que hay que construir.
+
+- **P-026 (ALTA) — `Database.Migrate()` en cada arranque no escala a mas de una
+  instancia.** `Program.cs:53` aplica migraciones en cada boot. Con una sola
+  instancia es inocuo, pero el dia que haya dos replicas arrancando juntas ambas
+  intentan aplicar la misma migracion y **EF Core 6 no tiene lock de migraciones**
+  (eso llego en EF Core 9): una se queda trabada o falla. El escenario grave es
+  desplegar una migracion nueva mientras hay trafico: dos pods, misma migracion.
+  **Solucion:** sacar las migraciones del arranque y correrlas como paso aparte en
+  el deploy. hoy es un cambio de una linea; dentro de un mes, con Docker ya
+  armado, es reorganizar el arranque.
+  **Prioridad:** resolverla **antes** de escribir el `Dockerfile`.
+
+- **P-027 (MEDIA) — Framework fuera de soporte (.NET 6 y EF Core 6, EOL desde
+  nov-2024).** En una maquina de desarrollo da igual. Se vuelve deuda el dia que
+  se publique: se hereda una imagen base sin parches de seguridad y sin soporte.
+  **Relacionado:** D-009 (framework destino) y P-013 (el workaround con
+  `~/.dotnet`). No hace falta hacerlo ya, pero la decision no se puede seguir
+  postergando indefinidamente: cada mes que pasa encarece el salto.
+
+- **P-028 (MEDIA) — Sin health checks ni verificacion de dependencias.** Si la
+  base no esta disponible, `Database.Migrate()` revienta y la app muere. En
+  Docker eso se ve como un contenedor en crash loop sin diagnostico. Deberia
+  haber un endpoint de salud que reporte si la base responde, y distinguish en el
+  log entre "no pude arrancar" y "arranque correcto".
+  **Relacionado:** P-011 (sin logging).
+
+- **Refuerzo a P-006 y P-007 (autorizacion).** Son el limite de seguridad del
+  producto, no solo deuda: aca esta la diferencia entre un bug y una fuga entre
+  tenants. Pero **no conviene parchear 86 `.Value` a mano**: la solucion de fondo
+  es resolver el tenant una sola vez en el middleware, guardarlo en el contexto, y
+  que los controllers deriven de una base que **falla cerrada** (por omision
+  deniega). Hoy la autorizacion es opt-in, y lo que no se marca queda abierto.
+
+- **Refuerzo a P-016 (sin tests).** Subir de prioridad: los flujos de **dinero**
+  (venta, cobro de suscripcion, cierre de caja) no tienen ninguna proteccion
+  contra regresiones. P-022 es la prueba: el monto cobrado nunca se guardaba y
+  nadie lo noto porque no hay ningun test que lo cubra. Hoy todo se verifico a
+  mano con `curl` contra la app corriendo.
+
+- **Refuerzo a P-001 / D-011 (historial publico).** Rotar las claves no alcanza:
+  el commit `a5d20ba` sigue disponible para cualquiera que clone el repo. Es una
+  liability permanente; hay que decidir antes de que el repo crezca y la
+  reescritura de historial sea mas costosa.
 
 ## RESUELTOS
 
