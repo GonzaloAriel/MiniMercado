@@ -11,7 +11,7 @@ using static System.Net.WebRequestMethods;
 namespace MiniMercado.Controllers
 {
 
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     public class VentaController : Controller
     {
         private readonly MiniMercadoContext _context;
@@ -176,8 +176,27 @@ namespace MiniMercado.Controllers
                         TotalVentas = 0
                     };
                     _context.Cajas.Add(caja);
+
+                    // Se guarda antes de armar la venta para que la caja tenga Id. Si se
+                    // dejaba pendiente, la primera venta del dia quedaba con CajaId null
+                    // (porque caja.Id era 0 al asignarlo), y esa venta aparecia despues
+                    // como "fuera de caja" en el resumen de cierre aunque si se hubiera
+                    // cobrado en el cajon.
+                    await _context.SaveChangesAsync();
                 }
             }
+
+            // A partir de aca se tocan stock, lotes, movimientos, la venta, el pago y la
+            // auditoria. Todo eso va en una sola transaccion. Antes se guardaba la venta
+            // con un SaveChanges, el pago con otro y la auditoria con un tercero, sin
+            // transaccion en ningun punto: si fallaba el paso del medio (corte de
+            // conexion, un veto de la base) la venta quedaba registrada sin su pago, con
+            // el stock ya descontado y la caja acreditada. El cajon receiptia la plata y el
+            // sistema no la ve, sin forma de saber que paso.
+            //
+            // Con await using, si el codigo sale por una excepcion o por uno de los
+            // return View() de validacion, DisposeAsync revierte lo que se haya hecho.
+            await using var transaccion = await _context.Database.BeginTransactionAsync();
 
             decimal total = 0;
 
@@ -199,7 +218,32 @@ namespace MiniMercado.Controllers
      .Include(p => p.ProductoBase)
      .FirstOrDefault(p => p.Id == item.ProductoId && p.TenantId == tenantId);
 
-                if (producto != null && producto.ProductoBase != null)
+                // El chequeo de arriba solo cubre ProductoId nulo. El formulario tambien
+                // puede mandar 0, y un ProductoId de otro tenant no existe para este
+                // local: en los dos casos producto llega null y desreferenciarlo (linea de
+                // precio) devolvia un 500 al cajero en mitad de la venta.
+                if (producto == null)
+                {
+                    ModelState.AddModelError("",
+                        "Hay un producto que no existe o no pertenece a este local. Por favor, revise la venta.");
+
+                    return View(detalles);
+                }
+
+                // Se valida antes de tocar stock, lotes ni total. Antes se filtraban las
+                // lineas invalidas recien despues de sumar (Cantidad negativa restaba del
+                // total pero la linea se perdia del detalle, con lo cual venta.Total
+                // dejaba de coincidir con la suma de sus renglones y el stock se
+                // descontaba al reves).
+                if (item.Cantidad <= 0)
+                {
+                    ModelState.AddModelError("",
+                        "Las cantidades deben ser mayores a cero. Por favor, revise la venta.");
+
+                    return View(detalles);
+                }
+
+                if (producto.ProductoBase != null)
                 {
                     producto.EsPorPeso = true;
                 }
@@ -284,13 +328,16 @@ namespace MiniMercado.Controllers
             if (caja != null)
             {
                 caja.TotalVentas += venta.Total;
-                if (caja.Id == 0) _context.Cajas.Add(caja); // Si era nueva (AUTOMATICA)
+
+                // La caja ya viene persistida: la AUTOMATICA se guardo al crearla y la
+                // ABIERTA existia de antes. Agregarla de nuevo con Id 0 ya no puede
+                // ocurrir, asi que no hace falta un Add extra.
             }
 
-            //Guardamos los cambios en la base de datos
+            //Guardamos los cambios en la base de datos (dentro de la transaccion)
             await _context.SaveChangesAsync();
 
-            // REGISTRO DE PAGO (DESACOPLADO)
+            // REGISTRO DE PAGO (ya no desacoplado: va en la misma transaccion que la venta)
             if (!EsFiado)
             {
                 var pago = new Pago
@@ -313,12 +360,18 @@ namespace MiniMercado.Controllers
             }
 
             //Auditoria
+            // Su SaveChanges entra en la misma transaccion: AuditoriaService es scoped y
+            // comparte el MiniMercadoContext del request.
             _auditoria.Registrar(
                         "Crear",
                         "Ventas",
                         venta.Id,
                         "Se registró una nueva venta"
              );
+
+            // Solo ahora se confirma. Si algo fallo antes, no se guardo ni la venta ni el
+            // pago ni el stock.
+            await transaccion.CommitAsync();
 
             TempData["Mensaje"] = "✅ Venta registrada correctamente";
 
