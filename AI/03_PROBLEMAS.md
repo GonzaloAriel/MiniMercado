@@ -56,16 +56,32 @@ MEDIA = deuda o riesgo acotado.
   verificado 3 veces sobre base creada desde cero: 0 parches, 0 fallos.
   El limite de portabilidad que queda es el proveedor SQL Server del modelo.
 
-- **P-006 (ALTA) — Autorizacion demasiado permisiva.** Sin roles en
-  `CajaController`, `EgresosController`, `FinanzasController`,
-  `AlertasController`, `VentaController`, `AyudaController`, `CuentaController`,
-  `NotificacionesController`, `ProductosApiController`, `AdminTempController`.
-  Efecto: `AdminGlobal` opera el POS y abre/cierra caja; el rol `Caja` ve el
-  dashboard financiero y las alertas; `VentaAdminController` con
-  `Roles = "Admin,Caja"` permite **anular ventas** a un cajero.
-  Afecta a: autorizacion en 10 controllers.
+- **P-006 (ALTA, RESUELTO 2026-10-05) — Autorizacion demasiado permisiva.**
+  Cerrado con **D-014**. Los 7 controllers de tenant que tenian `[Authorize]`
+  pelado ahora llevan `Roles = "Admin,Caja"`: `VentaController`, `CajaController`,
+  `EgresosController`, `FinanzasController`, `AlertasController`,
+  `NotificacionesController` y `ProductosApiController`.
+  **El navbar tambien se alineo**, porque era la otra mitad de la contradiccion:
+  `_Layout.cshtml` le mostraba POS, Egresos y Finanzas a `AdminGlobal`, mientras
+  `Index.cshtml:684` ya lo excluia. Ahora el menu muestra exactamente lo que el
+  servidor autoriza.
+  **`ProductosController` era un caso aparte**, no un `[Authorize]` pelado mas:
+  tenia `AdminGlobal` en 21 atributos de metodo, pero **el codigo nunca usa el
+  rol** y solo 2 de esas acciones no tocan `TenantId`. Las demas (15) llaman
+  `GetTenantId().Value`, o sea que para `AdminGlobal` **daban 500**. Decision
+  (D-014): `AdminGlobal` conserva solo `BuscarProductoBase` y `GetProductoBase`
+  (consulta del catalogo global), y pierde las otras 20.
+  **Tambien se borro `AdminTempController.cs`**, que P-006 listaba como uno de
+  los 10 controllers sin roles pero estaba **vacio y ni siquiera heredaba de
+  `Controller`**: no ruteaba nada. Era codigo muerto.
+  **Verificado en ejecucion**, 3 roles x 15 endpoints, base nueva: la matriz
+  queda exacta y **no queda ningun 500**. Detalle en D-014.
+  **Lo que quedo abierto:** el rol `Caja` sigue pudiendo anular ventas, por
+  decision explicita del TEAM LEAD. Y las denegaciones devuelven **302** (el
+  scheme de Identity re-lanza al login) en vez de **403**; el acceso esta
+  denegado igual, pero un `403` seria lo correcto para un usuario ya autenticado.
 
-- **P-007 (ALTA) — `GetTenantId().Value` sin verificar.** 86 ocurrencias en 15
+- **P-007 (ALTA, ABIERTO) — `GetTenantId().Value` sin verificar.** 86 ocurrencias en 15
   archivos desenvuelven el claim con `.Value` sin comprobar que exista.
   Lanza excepcion para anonimos y para `AdminGlobal`, que por diseño no tiene
   `TenantId`. Combinado con P-006, un `AdminGlobal` que entra a esas pantallas
@@ -73,6 +89,20 @@ MEDIA = deuda o riesgo acotado.
   El patron correcto ya existe en `EtiquetasController`
   (`if (!tenantIdNullable.HasValue) return Unauthorized();`) y sirve de referencia.
   Afecta a: 15 archivos.
+  **Actualizacion 2026-10-05: el sintoma ya no es alcanzable.** Cerrar P-006
+  dejo los **85 `.Value` restantes** (14 archivos) todos dentro de controllers
+  que solo alcanzan `Admin` y `Caja`, y esos dos roles **siempre tienen
+  `TenantId`**. Se verifico ademas que `AuditoriaService.Registrar` (el unico
+  `.Value` en un service) lo invocan solo controllers `Admin`/`Caja`, asi que no
+  queda un solo camino desde `AdminGlobal` a un `.Value`.
+  **El problema pasa a ser defensa en profundidad, no un bug vivo**, asi que se
+  baja de ALTA a MEDIA. Sigue sin cerrarse: si manana se le agrega `AdminGlobal`
+  a uno de esos controllers, o se crea un usuario sin el claim `TenantId`, el 500
+  vuelve. La calidad de la correccion es "imposible llegar", no "el `.Value`
+  disappeared".
+  **Como cerrarlo de verdad:** helper unico que falle cerrado. El error mas caro
+  de esta lista es que **son 85 cambios mecanicos en 14 archivos sin una sola red
+  de tests** (P-017), asi que conviene hacer los tests primero.
 
 - **P-008 (MEDIA) — Falta antiforgery en POST.** Sin
   `[ValidateAntiForgeryToken]`: `UsuariosController` (3 POST, crear/editar/borrar
@@ -177,9 +207,20 @@ MEDIA = deuda o riesgo acotado.
   fragile. Si se migra a PostgreSQL hay que reescribirlas.
   Afecta a: ventas, portabilidad.
 
-- **P-017 (MEDIA) — Sin tests.** Ningun proyecto de tests. Un refactor de stock o
-  del calculo de caja no tiene red de seguridad. `FAQ_EGRESOS.md` sugiere que ya
-  hubo problemas con el calculo de egresos.
+- **P-017 (MEDIA) — Sin tests. -> EN PROGRESO, red inicial el 2026-10-05.**
+  Ya existe `tests/MiniMercado.Tests` con **88 tests verdes** sobre SQL Server real
+  (ver D-015). Cubren los tres flujos de dinero: cobro de suscripcion (18), cierre de
+  caja (12) y venta del POS (24), mas la infraestructura de la fixture.
+  Al escribirlos aparecieron 5 bugs reales, todos corregidos y cubiertos:
+  NRE en `VentaController.Create` con producto inexistente o ajeno; venta con total
+  descuadrado por linea de cantidad negativa; primera venta del dia sin `CajaId` en modo
+  automatico; suscripcion vencida por horas (comparaba instantes y no dias calendario);
+  y la regresion de P-022 (monto cobrado que no se guardaba) protegida.
+  Siendo ese flag inverso aparecio un sexto bug, fuera del alcance original de P-017:
+  `FinanzasController.Dashboard` usaba `v.Activa` para "ventas del día y del mes", o sea que
+  sumaba las ventas **anuladas** como ingresos, con lo que el balance del día salia al reves.
+  Corregido y cubierto con 5 tests mas.
+  Sigue sin cubrir: las vistas de caja y el resto de controllers.
   Afecta a: todos los modulos con calculo.
 
 - **P-018 (MEDIA) — Notificaciones y alertas oportunistas.** `AlertasService` y las
@@ -218,25 +259,104 @@ MEDIA = deuda o riesgo acotado.
   Como se detecto: por la herramienta `tools/SchemaCheck` (ver P-025), en su
   primera ejecucion. Nadie lo habia visto en meses.
 
-- **P-030 (ALTA, ABIERTO 2026-10-02) — Borrar un rubro con productos falla.**
-  `Producto.RubroId` es `int?` en C# pero EF lo modela como **obligatorio**
-  (`b.Property<int?>("RubroId").IsRequired()` en el snapshot), y a la vez el FK
-  esta configurado `OnDelete(DeleteBehavior.SetNull)`
-  (`MiniMercadoContext.cs:197-201`). Eso es una contradiccion: la columna es
-  NOT NULL y no puede quedar en NULL al borrar el rubro.
-  SQL Server **acepta** crear ese FK y solo falla en el momento del DELETE.
-  **Verificado:** con un producto usando un rubro, `DELETE FROM Rubros` falla con
-  *"Cannot insert the value NULL into column 'RubroId'"* y la fila sobrevive.
-  Es decir, `RubroController.Delete` (que ademas es un GET que muta, ver P-009)
-  revienta con 500 cuando el rubro tiene productos.
-  **Ademas hace que el modelo entero sea inimplementable:** el DDL que produce
-  el modelo no se puede crear en SQL Server, asi que no se puede tirar una base
-  nueva desde el modelo.
-  **Requiere una decision de negocio** (no es un bug puramente tecnico): ver la
-  nota de decision asociada. Alternativas: (a) borrar el rubro solo si no tiene
-  productos y bloquear con un mensaje claro; (b) poner `NoAction`/`Restrict` y
-  que el borrado falle siempre; (c) hacer `RubroId` realmente nullable y dejar
-  que `SetNull` funcione, dejando productos sin rubro.
+- **P-030 (RESUELTO 2026-10-05) — `Producto.RubroId` era NOT NULL en el modelo
+  con un FK `SetNull`: DDL imposible y bug de validacion.** Cerrado con **D-013**
+  (rubro opcional). El diagnostico original de este problema estaba **equivocado
+  en su causa**; ac va lo que se verifico de verdad.
+  **Causa real:** `Producto.cs` declaraba `[Required]` sobre `int? RubroId` y la
+  navegacion `public Rubro Rubro` (no-nullable). El `[Required]` es lo que hacia
+  que EF marcara la columna NOT NULL: `ProveedorId` y `ProductoBaseId`, tambien
+  `int?`, salen **opcionales** en el snapshot precisamente porque no llevan
+  `[Required]` y su navegacion es `?`. No era el `DeleteBehavior.SetNull`.
+  **La contradiccion estaba en el historial de migraciones, no solo en el
+  modelo:** `20260321231347_FixRubroIdNullable` (2026-03-21) hizo la columna
+  nullable, y **9 dias despues `20260322122848_AddActivoEnRubro` la revirto a
+  `NOT NULL` sin tocar el FK**. Desde entonces migrations y modelo estaban
+  ambos mal, pero de forma distinta.
+  **Bug de validacion que nobody habia registrado:** `Views/Productos/Edit.cshtml`
+  ofrecia la opcion "-- Sin rubro --" y el `[Required]` la rechazaba, asi que no
+  se podia guardar un producto sin rubro aunque la base lo aceptara y todas las
+  vistas ya lo trataran como opcional (`producto.Rubro?.Nombre ?? "-"`,
+  `v.Producto.Rubro != null ? ... : "Sin Rubro"`).
+  **Lo que P-030 afirmaba y era falso:** que `RubroController.Delete` reventaba
+  con 500 al borrar un rubro con productos. **`RubroController` nunca borra en
+  hard:** `Delete` (GET) solo muestra la confirmacion, y `DeleteConfirmed` y
+  `DesactivarAjax` hacen `Activo = false`. No hay ningun `.Remove()` ni
+  `DELETE FROM Rubros` en todo el proyecto. El 500 solo existia a nivel de SQL
+  crudo. (Nota: `DeleteConfirmed` no tiene antiforgery, eso si es P-008.)
+  **Solucion:** quitar el `[Required]`, pasar la navegacion a `Rubro?`, corregir
+  el asterisco mentiroso de `Create.cshtml` y generar la migracion
+  `20261005101937_RubroIdOpcional` (`AlterColumn` a nullable).
+  **Verificado en ejecucion** (base de descarte `MiniMercadoDB_p030`, dropeada al
+  terminar): 60 migraciones aplicadas desde cero; `SchemaCheck` **exit 0** por
+  primera vez (sin deriva **y** sin el aviso de comparacion parcial, que era lo
+  que P-030 bloqueaba); alta de rubro, alta de producto con rubro, edicion
+  dejandolo "Sin rubro" -> **302** y persistido como NULL (`Detalle` muestra
+  "Sin Clasificar"), y round-trip de vuelta a un rubro -> "Bebidas".
+  `/Productos`, `/Productos/Detalle/1`, `/AnalisisComercial/ProductosMasVendidos`,
+  `/AnalisisComercial/ProductosSinRotacion` y `/Rubro`: **200**, sin errores en el
+  log.
+  Patron a no repetir: **un `[Required]` sobre un `int?` cambia el DDL sin que
+  nadie lo note**, y una vista puede ofrecer una opcion que el modelo prohibe.
+  Antes de tocar una FK o una nulabilidad, correr `SchemaCheck`.
+
+- **P-031 (NUEVO 2026-10-05) — El snapshot puede quedar desfasado respecto del
+  modelo y `migrations add` genera una migracion VACIA.** Se documento en
+  `00_MEMORIA.md` §4 como trampa de P-002 y se topo en vivo otra vez al cerrar
+  P-030. Al corregir el modelo, **sincronizar el snapshot a mano** (quitar el
+  `.IsRequired()` de `RubroId`) produce que EF no tenga nada que diffear contra
+  el historial y genere `Up()` vacio: `SchemaCheck` seguia reportando la deriva
+  y la migracion no arreglaba nada.
+  **El orden correcto es el inverso:** dejar el snapshot como esta en las
+  migraciones (con `NOT NULL`), y dejar que `migrations add` genere el
+  `AlterColumn` y **EF reescriba el snapshot solo**. Si el snapshot va adelantado,
+  la migracion sale vacia; y una migracion vacia applied no arregla nada.
+  Corolario: **siempre mirar el `Up()` generado antes de dar por buena una
+  migracion.** Un `Up()` vacio significa snapshot adelantado.
+
+- **P-026 (RESUELTO 2026-10-05) — `Database.Migrate()` en cada arranque no escala a
+  mas de una instancia.** Cerrado con banderas explicitas en `Program.cs`.
+  **El problema era mas grande de lo que documentaba.** `Program.cs` no tenia una
+  cosa que tocar en el arranque sino **dos**: `db.Database.Migrate()` y
+  `SeedData.Inicializar(...)`. Quitar solo `Migrate()` **no cerraba P-026**: el
+  seed sigue corriendo en cada boot de cada replica y tiene tres guardas
+  `Any()` / `RoleExistsAsync()` que son **TOCTOU**:
+  | Guarda | Carrera | Como falla |
+  |---|---|---|
+  | `RoleExistsAsync` → `CreateAsync` | dos replicas ven "no existe" | las dos insertan en `AspNetRoles` → `DbUpdateException`, una muere |
+  | `db.Tenants.Any()` | dos crean el tenant demo | dos tenants demo |
+  | `db.ProductosBase.Any()` | dos insertan el catalogo | `IX_ProductoBase_CodigoBarras` es **UNIQUE** → duplicate key, una muere |
+  Ademas ninguna de las dos estaba en `try/catch`: si la base no respondia, la
+  app moria sin registro (P-011).
+  **Solucion:** `Bootstrap:ApplyMigrations` y `Bootstrap:Seed`. Default:
+  **activas en Development** (el flujo local "levantá y anda" no cambia) e
+  **inactivas en cualquier otro entorno**, donde pasan a ser un paso del deploy
+  (`.env` / variable de entorno: `Bootstrap__ApplyMigrations=true`). Ambos pasos
+  van con `try/catch` + `LogCritical` y re-lanzan: si se piden explicitamente, si
+  fallan no tiene sentido seguir.
+  **Extra que quedo:** cuando las migraciones estan desactivadas se consulta
+  `GetPendingMigrationsAsync()` y se avisa por log **cuantas faltan y cuales son
+  las 3 primeras**. Sin eso, un deploy que se olvida de migrar se ve como "la app
+  levanta y despues da 500". Trampa: **si la base no existe, EF no tira
+  excepcion**, responde con todas las migraciones pendientes (las 60), asi que
+  el detalle se recorta a proposito.
+  **Verificado en ejecucion** (4 escenarios, bases de descarte dropeadas al
+  terminar):
+  - Development, base inexistente, sin banderas → crea la base, aplica las **60**
+    migraciones, siembra, login `admin@demo.com` funciona, `/Productos` **200**.
+  - Production, base atrasada 1 migracion, sin banderas → **no migra**, seed
+    apagado, warning `La base esta atrasada: 1 migracion(es)... 20261005101937_RubroIdOpcional`.
+  - Production, banderas `true` → aplica `RubroIdOpcional`, siembra, login y
+    `/Productos` **200**.
+  - **Dos replicas en paralelo** (`:5276` y `:5277`, Production, banderas
+    apagadas, base al dia) → las dos levantan, 0 excepciones, ambas sirven
+    (`GET /` 200). Ese es el escenario que P-026 describe, ya sin la carrera.
+  Patron a no repetir: **`Database.Migrate()` en el arranque es un supuesto de
+  una sola instancia.** Y ojo con el seed: es tan parte del arranque como las
+  migraciones, y es el que tiene el indice unico que explota antes.
+  Follow-up: cuando exista CI (P-025 parte 2), agregar que corra `SchemaCheck`
+  y las migraciones; y P-028 (health checks) es lo que va a detectar una base
+  atrasada en runtime, que hoy solo aparece en el log de arranque.
 
 - **Refuerzo a P-006 / P-007 (filtros globales y relaciones).** EF 6 avisa al
   generar migraciones: *"Entity 'Producto' has a global query filter defined and
@@ -251,7 +371,10 @@ Hallazgos de una revision de arquitectura previa a Dockerizar. Varios ya estan
 cubiertos por problemas de mas arriba; aca se dejan **priorizados** y se aclara
 cual es la solucion de fondo, no el parche puntual.
 
-- **P-025 (ALTA) — Nada detecta la deriva entre el modelo y las migraciones.**
+- **P-025 (ALTA, PARCIAL) — Nada detecta la deriva entre el modelo y las migraciones.**
+  Los pasos 1 y 2 estan cerrados (`tools/SchemaCheck` y `tools/verificar-esquema.sh`, este ultimo con
+  salida 4 explicita cuando encuentra migraciones sin commitear). **No esta 100% cerrado**: falta el
+  paso 3 y que la barrera corra sola en CI; hoy se verifica a mano.
   Esto **no es un bug, es el proceso que produjo dos bugs**: P-002 (las 7
   columnas) y P-023 (el indice y el FK de `ImpresionEtiqueta`). Los dos estaban
   en el modelo y en el snapshot pero ninguna migracion los creaba.
@@ -285,23 +408,51 @@ cual es la solucion de fondo, no el parche puntual.
   - En EF Core 6, `Database.EnsureCreated()` **aplica las migraciones** si el
     contexto las tiene, asi que no sirve para obtener el esquema del modelo: hay
     que usar `GenerateCreateScript()`.
-  **Resultado en la primera corrida:** encontro P-029 (columna `Anulado`
+**Resultado en la primera corrida:** encontro P-029 (columna `Anulado`
     inexistente, modulo Egresos con 500) y P-030. Es decir, la barrera que se
     pidio encontrar dos bugs vivos en minutos.
-  **Lo que falta:** conectarla a CI (hoy se corre a mano) y resolver P-030, que
-  ademas hoy hace que la comparacion sea parcial porque el modelo no se puede
-  crear entero.
+  **Actualizacion 2026-10-05: la barrera es por primera vez completa.** Al cerrar
+    P-030 (D-013) el modelo se volvio implementable en SQL Server y `SchemaCheck`
+    salio con **exit 0: sin deriva y sin el aviso de comparacion parcial**. La
+    parcialidad la causaba P-030, asi que **P-025 ya no tiene excusas para
+    quedar incompleta en su parte util**.
+  **Avance 2026-10-05 (paso 2 hecho).** Se creo `tools/verificar-esquema.sh`,
+    que corre los tres chequeos de la solucion de fondo y sale con un codigo
+    distinto por fallo:
+    - **A)** deriva modelo/migraciones (`SchemaCheck`). Es el unico que ve el
+      snapshot adelantado a las migraciones, que es la trampa documentada mas
+      arriba. Necesita SQL Server.
+    - **B)** el modelo esta adelantado al snapshot: genera una migracion de
+      prueba y mira si tiene algo dentro. **No necesita base de datos**, asi que
+      es barato y sirve como pre-commit.
+    - **C)** hay migraciones sin commitear: cierra el "genere la migracion y me
+      olvide del `git add`".
+    ```
+    ConnectionStrings__MiniMercadoDB='...' tools/verificar-esquema.sh
+    ```
+    **Por que los tres y no uno:** A y B se complementan en las dos direcciones.
+    A no ve el error humano si el snapshot ya tiene el cambio; B no ve la deriva
+    real si el snapshot va adelantado (genera un `Up()` vacio y pasa). C no ve el
+    modelo, solo el working tree.
+    **Verificado con los tres fallos inyectados a mano:** una columna al modelo
+    sin migracion la reportan A (con el detalle exacto de la columna) y B (2
+    operaciones); el estado real del repo lo reporto C, porque la migracion de
+    P-030 todavia no esta commiteada. La migracion de prueba que genera B se
+    revierte siempre, incluso si el script se corta a la mitad.
+  **Lo que sigue:** el paso 3 (regla de equipo: un cambio de esquema nunca se
+    pushea sin su migracion en el mismo commit) sigue siendo solo una regla
+    escrita; y **el script hoy se corre a mano**. Conectarlo a una plataforma de
+    CI es una decision de infraestructura todavia no tomada (el repo no tiene
+    ninguna: no hay `.github/`, ni GitLab, ni Azure Pipelines). El script es
+    **agnostico de plataforma** justamente para que ese dia sea solo pegarlo en
+    un workflow.
 
-- **P-026 (ALTA) — `Database.Migrate()` en cada arranque no escala a mas de una
-  instancia.** `Program.cs:53` aplica migraciones en cada boot. Con una sola
-  instancia es inocuo, pero el dia que haya dos replicas arrancando juntas ambas
-  intentan aplicar la misma migracion y **EF Core 6 no tiene lock de migraciones**
-  (eso llego en EF Core 9): una se queda trabada o falla. El escenario grave es
-  desplegar una migracion nueva mientras hay trafico: dos pods, misma migracion.
-  **Solucion:** sacar las migraciones del arranque y correrlas como paso aparte en
-  el deploy. hoy es un cambio de una linea; dentro de un mes, con Docker ya
-  armado, es reorganizar el arranque.
-  **Prioridad:** resolverla **antes** de escribir el `Dockerfile`.
+- **P-026 — RESUELTO 2026-10-05.** Ver la ficha en la seccion de Problemas.
+  Dos correcciones a lo que se creia saber: **no era un cambio de una linea**
+  (habia que sacar tambien el seed del arranque, que tiene su propia carrera), y
+  **el aviso de EF sobre `Producto` + `ProductoProveedor` que aparecia al
+  compilar es preexistente y sigue sin corregir** (ver el refuerzo a P-006/P-007
+  mas abajo, no es un efecto de este cambio).
 
 - **P-027 (MEDIA) — Framework fuera de soporte (.NET 6 y EF Core 6, EOL desde
   nov-2024).** En una maquina de desarrollo da igual. Se vuelve deuda el dia que
@@ -334,6 +485,49 @@ cual es la solucion de fondo, no el parche puntual.
   el commit `a5d20ba` sigue disponible para cualquiera que clone el repo. Es una
   liability permanente; hay que decidir antes de que el repo crezca y la
   reescritura de historial sea mas costosa.
+
+
+### Hallazgos de P-017: como quedaron
+
+- **~~P-032 (MEDIA) — La formula del saldo esperado de caja esta triplicada.~~ -> RESUELTO 2026-10-05.**
+  `MontoInicial + TotalVentas - TotalEgresos` estaba escrita en `CajaController.cs:96`,
+  `Views/Caja/CerrarCaja.cshtml:34` y `Views/Caja/ResumenCierre.cshtml:37`. El controller
+  hacia bien las cuentas, pero las vistas tenian su propia copia: si una se actualizaba y
+  las otras no, el usuario veia un "Esperado" distinto del `Diferencia` que quedo guardado
+  y no habia forma de saber cual de los dos numeros era el correcto.
+  Ahora hay una sola definicion, `Caja.CalcularSaldoEsperado(totalEgresos)`, y el controller
+  y las dos vistas la usan. Los egresos se siguen pasando por parametro porque viven en otra
+  tabla.
+  Cubierto por 11 tests: la aritmetica (incluidos centavos y saldo negativo), un test que
+  ata la `Diferencia` persistida con la formula que las vistas muestran, y un guardia que
+  falla si la formula vuelve a aparecer escrita a mano en una vista —probado revirtiendo el
+  arreglo, que lo pone rojo.
+  Afecta a: arqueo de caja, confianza del usuario en el sistema.
+
+- **~~P-033 (ALTA) — Venta y pago no son atomicos.~~ -> RESUELTO 2026-10-05.**
+  `VentaController.Create` guardaba en tres `SaveChanges` sin transaccion: la venta, el
+  pago y la auditoria. Entre la primera y la segunda no habia nada que las atara, asi que
+  un corte de conexion o un veto de la base dejaba la venta registrada con el stock ya
+  descontado y el total ya acreditado a la caja, pero **sin su pago**: el cajon
+  receiptiaba la plata y el sistema no la veia, sin forma de saber que habia pasado.
+  Ahora todo el POST (lotes, stock, movimientos, venta, pago y auditoria) va dentro de una
+  transaccion explicita que se confirma solo al final; los caminos de validacion que
+  hacen `return View()` tambien revierten.
+  Cubierto por 7 tests nuevos en `AtomicidadVentaTests`, que inyectan el fallo con un
+  `SaveChangesInterceptor`. Al desactivar la transaccion, tres de ellos se ponen rojos.
+  Afecta a: ventas, conciliacion de caja.
+
+- **~~P-034 (BAJA) — No hay IVA ni descuento en el modelo.~~ -> DESCARTADO POR DECISION 2026-10-05.**
+  `Venta`, `VentaDetalle` y `Producto` no tienen ningun campo de impuesto ni de descuento, y el
+  formulario del POS no los pide. El total es `Precio x Cantidad` y `Precio` es el precio final.
+  El usuario decidio **no sumar IVA ni descuentos al alcance** (D-017), asi que esto no es
+  trabajo pendiente sino una decision consciente. No hizo falta tocar codigo: el comportamiento
+  pedido ya era el que habia.
+  Queda anotado en D-017 que, si algun dia se agrega, el punto mas delicado no es la formula sino
+  el **cierre de caja**: hoy compara `Total` contra `MontoReal`, y si el total incluye impuesto el
+  arqueo tiene que distinguir la plata que entra de la que lo incluye.
+  Afecta a: facturacion.
+
 
 ## RESUELTOS
 

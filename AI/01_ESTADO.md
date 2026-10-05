@@ -1,5 +1,5 @@
 FORMATO: 1.0
-FECHA: 2026-10-02
+FECHA: 2026-10-05
 PROPOSITO: Estado real del sistema + camino hacia el stack Docker
 
 ---
@@ -38,8 +38,24 @@ comparten infraestructura y base de datos, con aislamiento por `TenantId`.
 - **Rama:** `main`, sincronizada con `origin/main`
 - **Último commit:** `9e8fcf0` — 2026-07-11 — "Ajustes de vistas y textos en Analisis
   comercial y Edicion de productos"
-- **Working tree:** limpio
+- **Working tree:** **con cambios sin commitear** (a 2026-10-05)
 - **Commits sin pushear:** ninguno
+
+> ⚠️ **Desde 2026-10-05 el working tree tiene trabajo sin commitear**, cerrado y verificado
+> pero sin commit: P-025 (paso 2), P-026, P-030, P-031, **P-006 (autorización, D-014)** y
+> **P-017 (tests de humo)**, **P-033 (atomicidad de venta)** y **P-032 (formula de
+> caja)**. Son **26 entradas** de `git status` (22 modificadas / borradas, 4 sin trackear: las
+> 2 de la migración P-030, `tools/verificar-esquema.sh` y el proyecto `tests/`). Es el primer
+> rato que el árbol no está limpio, y el motivo es que esos cambios se hicieron y probaron
+> sin commitear.
+
+> ⚠️ **Los encabezados de `03_PROBLEMAS.md` no son confiables al 100%.** Varios problemas se
+> resolvieron a lo largo del trabajo y se documento el "qué se hizo" en su propia sección, pero
+> el encabezado del listado quedó diciendo `P-0XX (ALTA)` sin marcar. Al retomar, **verificar el
+> estado real de cada problema antes de trabajar sobre él**, no confiar en el encabezado. Casos
+> conocidos: P-006, P-021, P-022, P-025 (PARCIAL: pasos 1 y 2 hechos, falta CI y paso 3), P-026.
+> No se corrigió de forma masiva a propósito: los marcadores de los cuerpos son ambiguos y
+> actualizarlos a ciegas sería peor que dejarlos señalizados.
 
 ### 1.1 Contexto de infraestructura (cambió)
 
@@ -73,8 +89,9 @@ comparten infraestructura y base de datos, con aislamiento por `TenantId`.
 - `ClosedXML 0.105.0` — importador Excel
 - `Microsoft.EntityFrameworkCore.Sqlite 6.0.35` — **instalado y no usado** (la app usa SQL
   Server). Se puede desinstalar.
-- `dotnet-tools.json` pide **`dotnet-ef 10.0.5`** con `rollForward: false`, contra EF Core
-  6.0.36. **Incompatible**: cualquier `dotnet ef` falla.
+- `dotnet-tools.json` pide **`dotnet-ef 6.0.36`** (`rollForward: false`). **Consolidado
+  2026-10-02**; antes pedía `10.0.5`, incompatible con EF Core 6, y `dotnet ef` fallaba
+  siempre. Ver §4.2.
 
 ---
 
@@ -113,6 +130,7 @@ comparten infraestructura y base de datos, con aislamiento por `TenantId`.
 | Tests automatizados | **No existe** ningún proyecto de tests |
 | `global.json` (pin de SDK) | **No existe** |
 | CI/CD | **No existe** |
+| Verificación modelo↔migraciones | **Existe** — `tools/SchemaCheck` + `tools/verificar-esquema.sh`. Herramientas de desarrollo (fuera de la app y de la imagen Docker), **se corren a mano**, no hay workflow que las dispare (P-025) |
 
 ---
 
@@ -135,17 +153,20 @@ ConnectionStrings__MiniMercadoDB='Server=127.0.0.1,1433;Database=MiniMercadoDB;U
 
 **Base local de desarrollo (fuera del repo):** contenedor Docker `minimercado-sql`
 (`mcr.microsoft.com/mssql/server:2022-latest`) con el puerto atado a `127.0.0.1:1433`, base
-`MiniMercadoDB` creada y las 59 migraciones aplicadas. Es **descartable**: no hay datos que
+`MiniMercadoDB` creada y las **60** migraciones aplicadas. Es **descartable**: no hay datos que
 valgan. El detalle de cómo levantarlo está en `00_MEMORIA.md` §"Entorno local".
 
 **Lo que sigue sin decidir:** dónde vive la base en el entorno definitivo (D-008 / D-010).
 
 ### 4.2 Migraciones
 
-- **59 migraciones** + snapshot. Última:
-  `20261002163400_AgregaAnuladoA_EgresosCaja`.
-- `Program.cs` ejecuta `db.Database.Migrate()` en **cada arranque** → las migraciones
-  pendientes se aplican solas al iniciar.
+- **60 migraciones** + snapshot. Última: `20261005101937_RubroIdOpcional`.
+- `Program.cs` **ya no** aplica migraciones en cada arranque a ciegas. **Consolidado
+  2026-10-05 (P-026).** Ahora `Migrate()` y el seed están detrás de las banderas
+  `Bootstrap:ApplyMigrations` y `Bootstrap:Seed`, **activas por defecto solo en
+  Development** e inactivas en cualquier otro entorno. En un entorno no-Development sin
+  banderas la app **arranca sin migrar** y deja en el log cuántas migraciones faltan y
+  cuáles son las 3 primeras. El detalle está en `00_MEMORIA.md` §4.
 
 **✅ Divergencia RESUELTA 2026-10-02 (P-002 + P-003).** Las 7 columnas de `Tenant`
 (`Plan`, `FechaInicioSuscripcion`, `FechaProximoPago`, `EstadoSuscripcion`, `MesesPagados`,
@@ -176,6 +197,37 @@ sin un solo error.
 **Tabla huérfana:** la migración `20260315212409_AgregaMLToken` crea `MercadoLibreTokens`,
 pero no hay entidad ni DbSet → resto de una integración de MercadoLibre abandonada.
 
+### 4.3 Verificación de que el modelo y las migraciones no divergen
+
+**CONSOLIDADO 2026-10-05 (P-025).** Es la pieza que hoy impide que un cambio de esquema
+llegue a la base sin su migración. Se corre a mano:
+
+```
+ConnectionStrings__MiniMercadoDB='...' tools/verificar-esquema.sh
+```
+
+Tres chequeos, y cada uno cubre un agujero distinto:
+
+| | Chequeo | Detecta | Necesita base |
+|---|---|---|---|
+| A | `tools/SchemaCheck` compara una base creada con migraciones contra una creada desde el modelo | Deriva real (columnas, índices, FKs) | sí |
+| B | Genera una migración de prueba y mira si tiene contenido | "Cambié el modelo y no generé migración" | no |
+| C | `git status` sobre `Migrations/` | "Generé la migración y olvidé el `git add`" | no |
+
+**Estado actual: sale con exit 0** (o sea, modelo y migraciones coinciden). A y B se
+complementan: A no ve el error humano si el snapshot ya tiene el cambio, y B no ve la
+deriva real si el snapshot va adelantado (genera un `Up()` vacío y pasa). Por eso están
+los dos.
+
+**Lo que falta:** que corra **solo**. El repo no tiene ninguna CI (ni `.github/`, ni GitLab,
+ni Azure Pipelines) y elegir plataforma es una decisión de infraestructura pendiente. El
+script es **agnóstico a propósito** para que ese día sea solo pegarlo en un workflow. El
+paso 3 de P-025 (regla de equipo: un cambio de esquema nunca se pushea sin su migración en
+el mismo commit) sigue siendo **solo una regla escrita**.
+
+**Un aviso sobre el estado actual:** el script hoy sale con **exit 4** en este working tree,
+porque la migración de P-030 todavía **no está commiteada**. No es un defecto del esquema.
+
 ---
 
 ## 5. Casos urgentes a corregir
@@ -186,6 +238,15 @@ Ordenados por gravedad.
 > **CONSOLIDADOS**: corregidos **y verificados en ejecución** contra SQL Server
 > 2022. Ver el detalle de la verificación al final de cada caso. Los casos
 > ALTA/MEDIA (4 a 11) siguen open.
+
+> **Nota 2026-10-05 (P-025).** Este bloque §5 grew antes que `03_PROBLEMAS.md` y quedó
+> desfasado respecto de ahí. Desde 2026-10-05 `03_PROBLEMAS.md` es la lista vigente de
+> problemas abiertos (P-025 a P-031), y §5 se conserva como registro histórico de la
+> auditoría inicial. En concreto: el caso **MEDIA 10 (sin tests)** sigue abierto y es el
+> siguiente prioritized (P-016), pero **el riesgo que este bloque describe —"un bug que el
+> flujo local no puede detectar"— ya no es cierto**: la deriva de esquema hoy la atrapa
+> `tools/verificar-esquema.sh` (§4.3). Lo que sigue sin red son los **flujos de dinero**
+> (venta, cobro, cierre de caja), que ningún chequeo automático cubre.
 
 ### ✅ CONSOLIDADO — Contraseñas de administrador en el repositorio público
 
@@ -352,16 +413,72 @@ Todas parametrizadas (`{0}`) → **no hay inyección SQL**. Pero:
 - El raw SQL **omite el filtro global** de tenant; la mayoría lo repone con
   `WHERE TenantId = {0}`, pero es fragile: depende de que cada consulta se acuerde.
 
-### 🟡 MEDIA 10 — Sin tests
+### 🟡 MEDIA 10 — Tests de humo (P-017, en progreso)
 
-Ningún proyecto de tests. Un refactor de stock o de cálculo de caja no tiene red de
-seguridad. `FAQ_EGRESOS.md` sugiere que hubo problemas con el cálculo de egresos antes.
+**Resuelto en lo esencial el 2026-10-05.** Existe `tests/MiniMercado.Tests` con **88 tests
+verdes** que cubren los tres flujos de dinero: cobro de suscripción, cierre de caja y venta
+del POS.
+
+Cada test crea su propia base descartable en el SQL Server (`MiniMercadoDB_test_<guid>`), la
+construye solo con `Database.Migrate()` —el mismo camino que la app— y la dropea al terminar.
+Los tests corren contra SQL Server real y no en memoria: ver la decisión en
+`02_DECISIONES.md` (D-015).
+
+Lo que los tests ya encontraron y se corrigió:
+
+- **NRE en `VentaController.Create`** (`producto.PrecioEditable`): un `ProductoId` en 0 o
+  perteneciente a otro tenant devolvía un 500 al cajero en mitad de una venta.
+- **Venta con total descuadrado**: una línea con cantidad negativa restaba del total pero se
+  perdía del detalle, así que `venta.Total` (0) no coincidía con la suma de sus renglones
+  (1000) y la venta quedaba registrada como gratis.
+- **Primera venta del día sin `CajaId`** en modo automático: la caja `AUTOMATICA` se creaba
+  sin guardar, con `Id = 0`, así que esa venta quedaba huérfana y el resumen de cierre la
+  contaba como "fuera de caja" aunque sí estuviera en el cajón.
+- **Suscripción vencida por horas**: `CalcularEstado` y `CalcularDiasRestantes` comparaban
+  instantes, no fechas. Un tenant que pagaba el día 5 a las 14:30 figuraba vencido a las
+  15:30 del mismo día 5 y con un día menos de margen. Ahora se cuenta por días calendario.
+- **Dashboard financiero al revés**: `FinanzasController.Dashboard` filtraba por `v.Activa`
+  para "ventas del día" y del mes, pero con la convención invertida de `Venta.Activa` eso
+  son las ventas **anuladas**. El panel mostraba como ingresos la suma de las canceladas, y
+  un día con ventas reales y sin anulaciones aparecía en cero.
+- **Regresión de P-022 protegida**: el monto realmente cobrado se persiste (antes se usaba
+  el precio teórico del plan y los cobros quedaban en 0).
+
+- **Venta y pago sin transacción (P-033, resuelto):** el POST de venta guardaba en tres
+  `SaveChanges` independientes, así que un fallo al guardar el pago dejaba la venta
+  registrada con el stock descontado y la caja acreditada, pero sin pago. Ahora todo el
+  POST va en una transacción explícita que se confirma al final.
+
+- **Fórmula del saldo de caja triplicada (P-032, resuelto):** el "Esperado" del arqueo estaba
+  escrito en el controller y en las dos vistas de caja. Ahora vive en
+  `Caja.CalcularSaldoEsperado()` y los tres la usan, así que el número que ve el usuario y el
+  que queda en `Diferencia` no pueden separarse. Hay un test que falla si la fórmula reaparece
+  escrita a mano en una vista.
+
+**P-034 queda descartado por decisión** (D-017): no se suman IVA ni descuentos al alcance. No
+había nada que corregir — `Precio` ya es el precio final y el total es `Precio × Cantidad`. Si
+algún día se agrega, el punto delicado es el cierre de caja, no la fórmula.
+
+Con esto quedan **cerrados los tres flujos de dinero que P-017 dejó abiertos**: venta (P-033),
+cobro, cierre de caja (P-032) y dashboard financiero.
+
+Sigue pendiente de testear: las vistas de caja (la fórmula del saldo esperado está escrita en
+`CajaController.cs`, `CerrarCaja.cshtml` y `ResumenCierre.cshtml`) y el resto de controllers.
+
+`FAQ_EGRESOS.md` sugiere que hubo problemas con el cálculo de egresos antes: el flujo de
+cierre ya tiene 12 tests que cubren egresos anulados y egresos de otra caja.
 
 ### 🟡 MEDIA 11 — Sin logging
 
-`ILogger<T>` no está inyectado en **ningún** archivo. Cuando algo falla en producción, no hay
-traza. `Program.cs` ejecuta el parche SQL sin `try/catch`: si falla, la app muere sin
-registro.
+`ILogger<T>` no está inyectado en **ningún** archivo de controllers o services. Cuando algo
+falla en producción, no hay traza.
+
+> **Parcialmente cerrado 2026-10-05 (P-026).** `Program.cs` ahora **sí** loguea: las
+> migraciones y el seed reportan lo que hacen, avisan cuántas migraciones pendientes hay
+> cuando están desactivadas, y loguean `Critical` y re-lanzan si fueron solicitadas y
+> fallan. Sigue faltando `ILogger<T>` en controllers y services: un error de negocio dentro
+> de una acción no deja registro. El `catch` que este caso le atribuía al "parche SQL sin
+> `try/catch`" ya no aplica: ese parche fue eliminado en 2026-10-02.
 
 ---
 
@@ -408,19 +525,27 @@ Cada paso es verificable por separado y **no depende del siguiente** hasta que s
 > connection string, y el framework determina el Dockerfile. Cambiar los tres juntos
 > multiplica las variables. Por eso conviene decidir el motor **antes** de escribir código.
 
+> **Actualización 2026-10-05: P-026 ya no bloquea al paso 6.** El paso 6 (Dockerfile) venía
+> depending de que se sacaran las migraciones del arranque, y eso está hecho (§4.2). Así que
+> el paso 6 **solo** depende ahora del motor (D-1) y el framework (D-2). En una imagen con
+> varias réplicas, la bandera `Bootstrap:ApplyMigrations` se activa en **una sola** (§6.3).
+
 ### 6.3 Restricciones que impone el código actual
 
 Estas no son preferencias: son cosas que **no funcionan** en Linux/contenedor tal como están.
+**Actualizado 2026-10-05:** las tres primeras ya están resueltas, quedaban listadas como
+vigentes y era falso.
 
 | Restricción | Ubicación | Por qué |
 |---|---|---|
-| **T-SQL en el parche de arranque** | `Program.cs:54-66` | Usa `sys.columns` y `OBJECT_ID`. No es portable. Hay que convertirlo en migración real. |
-| **Autenticación Windows** | `appsettings.json` | `Trusted_Connection=True` no existe en Linux. Necesita SQL auth. |
-| **`dotnet-ef 10.0.5`** | `dotnet-tools.json` | Incompatible con EF 6 y con `rollForward:false`. `dotnet ef` falla hoy. |
+| ~~**T-SQL en el parche de arranque**~~ | `Program.cs` | ✅ **Resuelto 2026-10-02** (P-002/P-003): era T-SQL de SQL Server, no de Windows, y el parche **se eliminó por completo**, ahora son migraciones reales. |
+| ~~**Autenticación Windows**~~ | `appsettings.json` | ✅ **Resuelto 2026-10-02**: no queda connection string en el repo, se pasa por variable de entorno. |
+| ~~**`dotnet-ef 10.0.5`**~~ | `dotnet-tools.json` | ✅ **Resuelto 2026-10-02**: ahora `6.0.36`, y `dotnet ef` funciona. |
 | **`\` en rutas** | `.csproj` (`<Folder Include="wwwroot\Images\" />`) | Backslash de Windows. No rompe Linux, pero denota residuo. |
 | **`FromSqlRaw` con T-SQL** | 19 lugares | Si se migra a PostgreSQL, hay que reescribirlos. |
 | **Sin `global.json`** | raíz | El SDK no está pinneado: cada build puede usar una versión distinta. |
 | **Ejecución como root** | no configurado | La imagen debe correr como usuario no root, como en LiteState. |
+| **Migraciones en el arranque sin candado** | `Program.cs` | ✅ **Mitigado 2026-10-05 (P-026)**: ahora depende de `Bootstrap:ApplyMigrations`. **Sigue siendo de un solo escritor**: si se corre en varias réplicas, hay que activar la bandera en **una sola**. |
 
 ### 6.4 Lo que hay que decidir (bloqueante)
 
@@ -433,7 +558,7 @@ Estas decisiones cambian el resto del plan. **No se avanza sin resolverlas.**
 | D-3 | **¿Dónde vive la app?** | Solo local por ahora · VPS propio (como LiteState) · Nube | Define si hace falta reverse proxy y HTTPS desde el inicio. |
 | D-4 | **Sobre las contraseñas ya expuestas** | ¿Rotar solo en la base? ¿También limpiar el historial de git? | Limpiar el historial reescribe commits. Es decisión del TEAM LEAD. |
 | D-5 | **Alcance del arreglo de arquitectura** | ¿Mover lógica a services ahora o dejarlo? | Los 20 controllers con DbContext directo no bloquean Docker. Es deuda, no urgencia. |
-| D-6 | **Qué pasa al borrar un rubro con productos** (P-030 / D-013) | (a) bloquear con mensaje "tiene N productos" · (b) `Restrict`, el borrado falla siempre · (c) `RubroId` nullable de verdad | Los tres cambian comportamiento visible. (a) es el patrón que ya usa el resto del sistema (desactivar en vez de borrar). Es la única decisión que bloquea el cierre de P-025. |
+| D-6 | **Qué pasa al borrar un rubro con productos** (P-030) | ✅ **RESUELTA 2026-10-05** → **D-013**: opción (c), `RubroId` nullable de verdad. Era la única que bloqueaba el cierre de P-025, y P-025 ya está cerrado. | El modelo ya no puede declarar obligatoria una relación cuyo FK es `SET_NULL`, así que la opción (a) —bloquear con mensaje— era la incompatible con el modelo actual. |
 
 ---
 
@@ -446,11 +571,13 @@ Para no romper cosas al ordenar el código:
 - **`EtiquetasController` tiene el patrón correcto** de manejo de `TenantId` nulo:
   sirve de referencia para arreglar el resto.
 - **`ProveedorService` está bien separado**: sirve de modelo para los otros services.
-- **Las 59 migraciones** dan una base sólida. Las 7 columnas de suscripción ya no son el
+- **Las 60 migraciones** dan una base sólida. Las 7 columnas de suscripción ya no son el
   problema: las crea `20261002143249_AddSuscripcionColumnsToTenant` y el parche T-SQL desapareció.
 - **El importador Excel** con ClosedXML y control de duplicados funciona.
 - **La UI oscura** está definida y es consistente.
-- **Git limpio**: sin commits pendientes.
+- **Existe una barrera que detecta la deriva modelo↔migraciones** (`tools/SchemaCheck` +
+  `tools/verificar-esquema.sh`, §4.3). Antes dependía de que nadie se acordara de correrla; ahora
+  es un script de un comando con código de salida por tipo de fallo.
 
 ---
 
@@ -464,3 +591,7 @@ Para no romper cosas al ordenar el código:
 | 2026-10-02 | **P-002, P-003 y P-012 cerrados; aparecieron P-022, P-023 y P-024.** `dotnet-ef` arreglado (6.0.36 + SDK 6.0.428) y migración real `20261002143249_AddSuscripcionColumnsToTenant` generada; **el parche T-SQL de `Program.cs` se eliminó**. Verificado **borrando la base y reconstruyéndola solo con migraciones**: 58 migraciones, 28 tablas, app sana. Al hacerlo aparecieron **3 problemas nuevos**: el **monto cobrado nunca se guardaba** (`CobroTenant.Monto` usaba `PrecioMensual * meses` en vez del monto real → todos los cobros en 0 y el KPI "Recaudación Total" en $0, P-022), una **segunda divergencia modelo/migraciones** en `ImpresionEtiqueta` (faltaban el índice y el FK a `Tenants`, P-023) y `PrecioSugerido` aceptando input del cliente (P-024, cerrado con `[BindNever]`). Los tres corregidos y verificados: cobro de 45000 guardado como 45000.00 y recaudación mostrando $45,000. **D-008 a D-012 siguen abiertas.** |
 | 2026-10-02 | **Revisión de arquitectura previa a Dockerizar: P-025 a P-028.** Se documentó la deuda que va a doler a futuro y que **no** era visible en desarrollo: nada detecta la deriva modelo↔migraciones (P-025, máximo prioriod porque produjo P-002 y P-023), `Database.Migrate()` en cada arranque no escala a más de una instancia porque EF Core 6 no tiene lock de migraciones (P-026, resolver antes del Dockerfile), framework EOL desde nov-2024 (P-027) y ausencia de health checks (P-028). Además se reforzaron cuatro problemas ya existentes en vez de duplicarlos: P-006/P-007 (autorización: la solución es structurally falla cerrada, no parchear 86 `.Value`), P-016 (sin tests: los flujos de dinero no tienen red de seguridad, P-022 lo prueba), P-011 (logging) y P-001/D-011 (historial público: rotar no alcanza, el commit `a5d20ba` sigue ahí). **Sin cambios en código.** |
 | 2026-10-02 | **P-025 arranca y encuentra dos bugs vivos: P-029 cerrado, P-030 abierto.** Se construyó `tools/SchemaCheck` (herramienta de desarrollo, fuera de la app y de la imagen Docker): levanta dos bases de descarte, una **solo con migraciones** y otra **desde el modelo**, y compara columnas con su nulabilidad, índices y FKs con su acción de borrado. Devuelve código de salida 1 si hay deriva. **Primera ejecución:** encontró que `EgresosCaja.Anulado` estaba en el modelo y en el snapshot pero **en ninguna migración**, y como se usa en un filtro global, `GET /Egresos` daba **500** en todos los entornos → cerrado con `20261002163400_AgregaAnuladoA_EgresosCaja` y verificado en **200** (P-029). También encontró que **borrar un rubro con productos falla**: el FK es `SET_NULL` sobre una columna que el propio modelo declara obligatoria (P-030, abierto, requiere decisión de negocio). Dos trampas que la herramienta tuvo que esquivar: `migrations add` no detecta esta clase de problema cuando el snapshot está adelantado, y en EF Core 6 `EnsureCreated()` aplica las migraciones en vez de usar el modelo. **59 migraciones.** |
+| 2026-10-05 | **P-030 cerrado por decisión del TEAM LEAD (D-013): el rubro es opcional.** El diagnóstico original de P-030 era **erróneo**: la causa no era el `DeleteBehavior` sino el `[Required]` de `Producto.RubroId` combinado con la navegación no-nullable `Rubro`, y `RubroController` nunca hace hard-delete (solo soft). Cerrado con `20261005101937_RubroIdOpcional`: `RubroId` y `Rubro` nullable, y el formulario de alta/edición ofrece "sin rubro". Verificado en ejecución: producto sin rubro persiste NULL y las páginas relacionadas dan 200. Al hacerlo apareció **P-031**: el snapshot estaba adelantado, así que la migración generada salió con un `Up()` **vacío**. **60 migraciones**, `SchemaCheck` **exit 0**. |
+| 2026-10-05 | **P-026 cerrado: las migraciones y el seed salen del arranque por defecto.** `Program.cs` tenía **dos** escrituras por arranque, no una: `Migrate()` **y** `SeedData.Inicializar()`. Quitar solo `Migrate()` no cerraba nada, porque el seed seguía corriendo en cada boot y tenía su propia carrera —con un índice único en `ProductoBase.CodigoBarras` que hace fallar a la segunda réplica con duplicate key. Ahora ambas están detrás de banderas independientes (`Bootstrap:ApplyMigrations` / `Bootstrap:Seed`), **activas solo en Development** e inactivas en cualquier otro entorno, con `try/catch` + `LogCritical` que re-lanza. Extra: con migraciones desactivadas se avisa cuántas pendientes hay y cuáles son las 3 primeras. **Verificado en ejecución en 4 escenarios**, incluido **dos réplicas en paralelo levantando a la vez, ambas sanas y sirviendo tráfico**. |
+| 2026-10-05 | **P-025 cerrado (paso 2): la barrera corre sola, con un comando.** Se creó `tools/verificar-esquema.sh`, que corre los **tres** chequeos de la solución de fondo y sale con código distinto por fallo: **A** deriva modelo/migraciones (`SchemaCheck`), **B** modelo adelantado al snapshot (genera una migración de prueba y mira si tiene contenido) y **C** migraciones sin commitear. Se agregó C porque A y B miden el modelo y ninguno miraba el working tree. **Los tres fallos se probaron inyectándolos a mano**: una columna al modelo sin migración la reportan A y B; el estado real del repo lo reporta C. La migración de prueba de B se revierte siempre, incluso si el script se corta. Es **agnóstico de plataforma** a propósito: el repo no tiene CI y elegir una es decisión de infraestructura pendiente. **P-025 no está 100% cerrado: falta que corra sola (CI) y el paso 3, que sigue siendo regla escrita.** |
+| 2026-10-05 | **Este documento pasa a fecha 2026-10-05.** Se sincronizó con lo realmente hecho: **60** migraciones (decía 59), §4.2 reescrito (ya no dice que `Migrate()` corre en cada arranque), **§4.3 nuevo** con la barrera de verificación, `dotnet-ef` corregido en §2, filas nuevas en §3.2, **§6.3 saneada** (listaba como vigentes el parche T-SQL, la autenticación Windows y `dotnet-ef 10.0.5`, los tres ya resueltos desde 2026-10-02), **D-6 resuelta** y §6.2 anotando que P-026 ya no bloquea al Dockerfile. §5 se marca como **registro histórico**: la lista vigente de problemas abiertos está en `03_PROBLEMAS.md`. **Sin commit: el working tree tiene estos 11 archivos sin commitear.** |
