@@ -11,7 +11,7 @@ using System.IO;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize(Roles = "AdminGlobal,Admin,Caja")]
+    [Authorize(Roles = "Admin,Caja,AdminGlobal")]
     public class ProductosController : Controller
     {
         private readonly MiniMercadoContext _context;
@@ -56,7 +56,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "AdminGlobal, Admin")]
+        [Authorize(Roles = "AdminGlobal,Admin")]
         public IActionResult GetProductoBase(int id)
         {
             var pb = _context.ProductosBase.AsNoTracking().FirstOrDefault(x => x.Id == id);
@@ -97,7 +97,7 @@ namespace MiniMercado.Controllers
 
         // GET products by Rubro (filtered by current tenant)
         [HttpGet]
-        [Authorize(Roles = "Caja,Admin,AdminGlobal")]
+        [Authorize(Roles = "Caja,Admin")]
         public IActionResult GetByRubro(int rubroId)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -120,7 +120,7 @@ namespace MiniMercado.Controllers
         }
 
         // LISTAR
-        [Authorize(Roles = "AdminGlobal, Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Index(int? rubroId, string? filtro, int page = 1)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -180,7 +180,7 @@ namespace MiniMercado.Controllers
         }
 
         // CREATE GET
-        [Authorize(Roles = "AdminGlobal, Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -198,7 +198,7 @@ namespace MiniMercado.Controllers
 
         // CREATE POST
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Create(Producto producto)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -254,7 +254,7 @@ namespace MiniMercado.Controllers
         }
 
         // EDIT GET
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Edit(int id)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -278,7 +278,7 @@ namespace MiniMercado.Controllers
 
         // EDIT POST
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Edit(Producto producto)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -327,7 +327,7 @@ namespace MiniMercado.Controllers
         }
 
         // DELETE GET
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Delete(int id)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -343,7 +343,7 @@ namespace MiniMercado.Controllers
 
         // DELETE AJAX
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult DesactivarAjax(int id)
         {
@@ -362,7 +362,7 @@ namespace MiniMercado.Controllers
 
         // DELETE POST
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult DeleteConfirmed(int id)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -391,7 +391,7 @@ namespace MiniMercado.Controllers
         }
 
         //INACTIVOS
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Inactivos(string filtro)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -412,7 +412,7 @@ namespace MiniMercado.Controllers
         }
 
         //REACTIVAR
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Reactivar(int id)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -430,7 +430,7 @@ namespace MiniMercado.Controllers
         }
 
         // DETALLE DE PRODUCTO CON LOTES
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Detalle(int id)
         {
             var tenantId = _tenantService.GetTenantId().Value;
@@ -520,14 +520,14 @@ namespace MiniMercado.Controllers
             }
         }
 
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult Importar()
         {
             return View();
         }
 
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Importar(IFormFile archivo, [FromServices] ProductoImportService importService)
         {
             if (archivo == null || archivo.Length == 0)
@@ -551,7 +551,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ConfirmarImportacion(List<ImportItemPreviewViewModel> items)
         {
             if (items == null || !items.Any())
@@ -741,7 +741,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult DescargarPlantillaImportacion()
         {
             using (var workbook = new XLWorkbook())
@@ -792,7 +792,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RepararStockImportado()
         {
             var productosAReparar = await _context.Productos
@@ -806,7 +806,7 @@ namespace MiniMercado.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "AdminGlobal,Admin")]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EjecutarReparacion()
         {

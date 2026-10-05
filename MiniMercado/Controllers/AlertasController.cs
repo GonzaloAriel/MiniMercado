@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     public class AlertasController : Controller
     {
         private readonly ITenantService _tenantService;

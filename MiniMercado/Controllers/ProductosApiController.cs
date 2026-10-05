@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductosApiController : ControllerBase

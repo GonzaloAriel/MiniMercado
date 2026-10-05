@@ -137,41 +137,54 @@
 
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Venta" asp-action="Create">
-                                    <i class="bi bi-cart-plus me-1"></i> Vender
-                                </a>
-                            </li>
+                            @* Vender y Ventas: VentaController es [Authorize(Roles = "Admin,Caja")].
+                               AdminGlobal es back-office (D-014): no entra al POS. *@
+                            @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Venta" asp-action="Create">
+                                        <i class="bi bi-cart-plus me-1"></i> Vender
+                                    </a>
+                                </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Venta" asp-action="Index">
-                                    <i class="bi bi-receipt me-1"></i> Ventas
-                                </a>
-                            </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Venta" asp-action="Index">
+                                        <i class="bi bi-receipt me-1"></i> Ventas
+                                    </a>
+                                </li>
+                            }
 
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="AnalisisComercial" asp-action="Index">
-                                    <i class="bi bi-graph-up-arrow me-1"></i> Análisis Comercial
-                                </a>
-                            </li>
+                            @* Análisis Comercial: AnalisisComercialController es solo [Authorize(Roles = "Admin")]. *@
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="AnalisisComercial" asp-action="Index">
+                                        <i class="bi bi-graph-up-arrow me-1"></i> Análisis Comercial
+                                    </a>
+                                </li>
+                            }
 
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarFinanzas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-bank me-1"></i> Finanzas
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-dark border-0 shadow animated fadeIn" aria-labelledby="navbarFinanzas">
-                                    <li>
-                                        <a class="dropdown-item py-2" asp-controller="Egresos" asp-action="Index">
-                                            <i class="bi bi-cash-coin me-2"></i>Egresos
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item py-2" asp-controller="Finanzas" asp-action="Dashboard">
-                                            <i class="bi bi-graph-up-arrow me-2"></i>Dashboard Financiero
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
+                            @* Finanzas: EgresosController y FinanzasController son [Authorize(Roles = "Admin,Caja")]. *@
+                            @if (User.IsInRole("Admin") || User.IsInRole("Caja"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarFinanzas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-bank me-1"></i> Finanzas
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-dark border-0 shadow animated fadeIn" aria-labelledby="navbarFinanzas">
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-controller="Egresos" asp-action="Index">
+                                                <i class="bi bi-cash-coin me-2"></i>Egresos
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-controller="Finanzas" asp-action="Dashboard">
+                                                <i class="bi bi-graph-up-arrow me-2"></i>Dashboard Financiero
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
 
                             @if (User.IsInRole("Admin"))
                             {

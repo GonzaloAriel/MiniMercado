@@ -5,7 +5,7 @@ using MiniMercado.Services;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     public class NotificacionesController : Controller
     {
         private readonly INotificacionService _notificacionService;

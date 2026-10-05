@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     public class EgresosController : Controller
     {
         private readonly MiniMercadoContext _context;

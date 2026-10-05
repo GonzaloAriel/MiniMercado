@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     public class FinanzasController : Controller
     {
         private readonly MiniMercadoContext _context;
