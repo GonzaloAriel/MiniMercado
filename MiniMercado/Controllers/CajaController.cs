@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace MiniMercado.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Caja")]
     public class CajaController : Controller
     {
         private readonly MiniMercadoContext _context;
@@ -93,7 +93,9 @@ namespace MiniMercado.Controllers
                 .Where(e => e.CajaId == id && e.TenantId == tenantId)
                 .SumAsync(e => (decimal?)e.Monto) ?? 0;
 
-            decimal saldoEsperado = caja.MontoInicial + caja.TotalVentas - totalEgresos;
+            // La formula vive en Caja.CalcularSaldoEsperado (P-032): antes estaba copiada
+            // aca y en las dos vistas de caja.
+            decimal saldoEsperado = caja.CalcularSaldoEsperado(totalEgresos);
 
             caja.MontoReal = montoReal;
             caja.Diferencia = montoReal - saldoEsperado;

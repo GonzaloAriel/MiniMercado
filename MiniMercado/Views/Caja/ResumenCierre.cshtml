@@ -34,7 +34,7 @@
                     <div class="col-md-3 mt-4">
                         <div class="p-3 bg-light rounded shadow-sm border">
                             <small class="text-muted d-block fw-bold text-uppercase">Esperado</small>
-                            <span class="h4 fw-bold text-primary">$ @((Model.MontoInicial + Model.TotalVentas - (decimal)(ViewBag.TotalEgresos ?? 0m)).ToString("N2"))</span>
+                            <span class="h4 fw-bold text-primary">$ @(Model.CalcularSaldoEsperado((decimal)(ViewBag.TotalEgresos ?? 0m)).ToString("N2"))</span>
                         </div>
                     </div>
                 </div>

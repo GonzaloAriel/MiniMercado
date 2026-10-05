@@ -23,5 +23,21 @@ namespace MiniMercado.Models
 
         [MaxLength(20)]
         public string Estado { get; set; } = "ABIERTA"; // ABIERTA / CERRADA / AUTOMATICA
+
+        /// <summary>
+        /// Saldo que deberia haber en el cajon al cerrar: lo que se abrio, mas lo que se
+        /// vendio, menos lo que salio por egresos.
+        ///
+        /// Esta es la UNICA definicion de la formula (P-032). Antes estaba escrita en tres
+        /// lugares —este mismo calculo en <c>CajaController.CerrarCaja</c>, y en
+        /// <c>Views/Caja/CerrarCaja.cshtml</c> y <c>Views/Caja/ResumenCierre.cshtml</c>— y las
+        /// tres tenian que coincidir a mano. Si el controller cambiaba y las vistas no, el
+        /// usuario veia un "Esperado" distinto del <see cref="Diferencia"/> que quedo
+        /// guardado, y ningun test que no renderizara el HTML lo detectaba.
+        ///
+        /// Los egresos entran como parametro porque viven en otra tabla y se suman por
+        /// consulta; el resto ya esta en la caja.
+        /// </summary>
+        public decimal CalcularSaldoEsperado(decimal totalEgresos) => MontoInicial + TotalVentas - totalEgresos;
     }
 }

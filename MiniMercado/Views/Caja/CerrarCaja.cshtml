@@ -31,7 +31,7 @@
 
                 <div class="alert alert-info text-center">
                     <h5>Esperado en Caja:</h5>
-                    <span class="h3">$ @((Model.MontoInicial + Model.TotalVentas - (decimal)(ViewBag.TotalEgresos ?? 0m)).ToString("N2"))</span>
+                    <span class="h3">$ @(Model.CalcularSaldoEsperado((decimal)(ViewBag.TotalEgresos ?? 0m)).ToString("N2"))</span>
                 </div>
 
                 <hr />
