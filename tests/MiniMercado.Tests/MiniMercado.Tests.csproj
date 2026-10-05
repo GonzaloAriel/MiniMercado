@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MiniMercado\MiniMercado.csproj" />
+  </ItemGroup>
+
+  <!--
+    Copia el codigo fuente que los guardias de P-032 necesitan leer a la salida de la
+    compilacion. Se hace aqui en vez de buscar rutas en tiempo de ejecucion porque el
+    proyecto web es un hermano de esta carpeta de tests, no un ancestro: no se puede
+    llegar a el subiendo directorios. Asi el test solo lee AppContext.BaseDirectory.
+  -->
+  <ItemGroup>
+    <None Include="..\..\MiniMercado\Controllers\CajaController.cs"
+          Link="fuente\CajaController.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\MiniMercado\Models\Caja.cs"
+          Link="fuente\Caja.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\MiniMercado\Views\Caja\*.cshtml"
+          Link="fuente\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

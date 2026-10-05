@@ -5,6 +5,10 @@ VisualStudioVersion = 17.14.36811.4 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniMercado", "MiniMercado\MiniMercado.csproj", "{639749F2-A9E8-47A7-BBBD-D52F9786D06F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{30F1316D-E54D-42DB-BCAA-A8A0CD9C49E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniMercado.Tests", "tests\MiniMercado.Tests\MiniMercado.Tests.csproj", "{66053A96-82E3-4DC6-ABEA-01E9D585F941}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,11 +19,18 @@ Global
 		{639749F2-A9E8-47A7-BBBD-D52F9786D06F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{639749F2-A9E8-47A7-BBBD-D52F9786D06F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{639749F2-A9E8-47A7-BBBD-D52F9786D06F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66053A96-82E3-4DC6-ABEA-01E9D585F941}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66053A96-82E3-4DC6-ABEA-01E9D585F941}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66053A96-82E3-4DC6-ABEA-01E9D585F941}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66053A96-82E3-4DC6-ABEA-01E9D585F941}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {47FF813B-EC1E-4F42-ACBA-2F1254C63729}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{66053A96-82E3-4DC6-ABEA-01E9D585F941} = {30F1316D-E54D-42DB-BCAA-A8A0CD9C49E6}
 	EndGlobalSection
 EndGlobal
