@@ -46,18 +46,95 @@ builder.Services.AddScoped<ProductoImportService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<MiniMercadoContext>();
+// ============================================================================
+// Arranque de la base: migraciones y seed.
+//
+// Son pasos de un solo escritor, no parte del arranque. EF Core 6 no tiene lock
+// de migraciones (eso llego en EF Core 9): si dos replicas levantan a la vez,
+// ambas intentan aplicar la misma migracion y una se traba o muere. El seed
+// tiene el mismo problema, con guardas Any() / RoleExistsAsync() que son
+// TOCTOU: dos réplicas pueden insertar los mismos roles o el mismo catalogo
+// global, que tiene indice unico en CodigoBarras.
+//
+// Por eso en Development se mantienen activas (levantas y anda) y en cualquier
+// otro entorno hay que pedirlas explicitamente. Ver P-026.
+//
+//   Bootstrap__ApplyMigrations=true   aplica las migraciones pendientes
+//   Bootstrap__Seed=true              crea roles, tenant demo y catalogo
+//
+// Sin banderas, el comportamiento por defecto es: activas en Development,
+// inactivas en los demas entornos.
+// ============================================================================
 
-    db.Database.Migrate();
-}
+var aplicarMigraciones = BanderaDeBootstrap(builder.Configuration, builder.Environment, "Bootstrap:ApplyMigrations");
+var aplicarSeed = BanderaDeBootstrap(builder.Configuration, builder.Environment, "Bootstrap:Seed");
 
-// 🔹 Seed automático (Roles + Tenant Demo + AdminGlobal)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await SeedData.Inicializar(services);
+    var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Bootstrap");
+    var db = services.GetRequiredService<MiniMercadoContext>();
+
+    if (aplicarMigraciones)
+    {
+        try
+        {
+            db.Database.Migrate();
+            logger.LogInformation("Arranque de la base: migraciones aplicadas.");
+        }
+        catch (Exception ex)
+        {
+            // Se pide explicitamente, asi que si falla no tiene sentido seguir.
+            logger.LogCritical(ex, "No se pudieron aplicar las migraciones. La base puede no existir, no ser alcanzable, o estar en un estado incompatible.");
+            throw;
+        }
+    }
+    else
+    {
+        // No se aplican, pero avisar si la base esta atrasada. Sin esto, un
+        // deploy que se olvida de migrar se ve como "la app levanta y despues
+        // da 500", que es el peor modo de falla.
+        logger.LogInformation("Arranque de la base: migraciones desactivadas (Bootstrap:ApplyMigrations).");
+        try
+        {
+            // Ojo: si la base no existe todavia, EF no tira excepcion, responde
+            // con TODAS las migraciones pendientes. Sin recortar, el log es un
+            // muro de texto ilegible en el caso mas comun.
+            var pendientes = (await db.Database.GetPendingMigrationsAsync()).ToList();
+            if (pendientes.Count > 0)
+            {
+                const int maxDetalle = 3;
+                var detalle = string.Join(", ", pendientes.Take(maxDetalle));
+                var resto = pendientes.Count - Math.Min(maxDetalle, pendientes.Count);
+                logger.LogWarning(
+                    "La base esta atrasada: {Cantidad} migracion(es) sin aplicar, y no se van a aplicar porque Bootstrap:ApplyMigrations esta desactivado. Primera: {Detalle}{Resto}. Las consultas que las usen van a fallar.",
+                    pendientes.Count, detalle,
+                    resto > 0 ? $" (y {resto} mas)" : "");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "No se pudieron consultar las migraciones pendientes: la base puede no ser alcanzable.");
+        }
+    }
+
+    if (aplicarSeed)
+    {
+        try
+        {
+            // Roles + Tenant Demo + AdminGlobal + catalogo global de prueba.
+            await SeedData.Inicializar(services);
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, "Fallo el seed de datos iniciales.");
+            throw;
+        }
+    }
+    else
+    {
+        logger.LogInformation("Arranque de la base: seed desactivado (Bootstrap:Seed).");
+    }
 }
 
 // Pipeline
@@ -88,3 +165,14 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+// Una bandera de arranque no definida usa el comportamiento por defecto del
+// entorno: activo en Development para no romper el flujo local, inactivo en los
+// demas, donde las migraciones tienen que ser un paso del deploy.
+bool BanderaDeBootstrap(IConfiguration configuration, IWebHostEnvironment environment, string clave)
+{
+    if (bool.TryParse(configuration[clave], out var valor))
+        return valor;
+
+    return environment.IsDevelopment();
+}
