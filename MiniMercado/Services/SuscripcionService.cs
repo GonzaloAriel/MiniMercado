@@ -80,7 +80,12 @@ namespace MiniMercado.Services
             if (tenant.Bloqueado) return EstadoSuscripcion.Suspendida;
             if (!tenant.FechaProximoPago.HasValue) return EstadoSuscripcion.PendientePago;
 
-            if (DateTime.Now > tenant.FechaProximoPago.Value)
+            // Se compara por DIA, no por instante. RegistrarPagoAsync guarda
+            // FechaProximoPago con la hora en que se cobro (DateTime.Now.AddMonths(n)),
+            // y comparar con DateTime.Now hacia que un tenant que pago el dia 5 a las
+            // 14:30 quedara VENCIDO a las 15:30 del mismo dia 5. Una suscripcion pagada
+            // hasta el dia 5 sigue vigente durante todo ese dia.
+            if (DateTime.Today > tenant.FechaProximoPago.Value.Date)
             {
                 return EstadoSuscripcion.Vencida;
             }
@@ -91,8 +96,11 @@ namespace MiniMercado.Services
         public int CalcularDiasRestantes(Tenant tenant)
         {
             if (!tenant.FechaProximoPago.HasValue) return 0;
-            
-            var diff = tenant.FechaProximoPago.Value - DateTime.Now;
+
+            // Dias calendario completos, no fraccion de dia. Comparar instantes
+            // devolvia un dia menos que el nominal en cuanto habia transcurrido un
+            // poco de hora.
+            var diff = tenant.FechaProximoPago.Value.Date - DateTime.Today;
             return diff.Days > 0 ? diff.Days : 0;
         }
     }

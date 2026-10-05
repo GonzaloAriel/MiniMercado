@@ -33,10 +33,14 @@ namespace MiniMercado.Controllers
 
             var vm = new DashboardFinancieroViewModel();
 
-            // Ventas del día (Solo activas)
+            // Ventas del día (Solo vigentes)
+            // OJO: la convencion de Venta.Activa esta invertida: Activa = false es venta
+            // vigente y Activa = true es venta anulada (la creo VentaController.Create con
+            // false y VentaAdminController anula poniendo true). Filtrar por v.Activa
+            // suma las CANCELADAS como si fueran ingresos.
             // El filtro de TenantId se aplica globalmente, pero lo ponemos por claridad y seguridad
             vm.VentasHoy = await _context.Ventas
-                .Where(v => v.Activa && v.Fecha >= hoy && v.Fecha <= finHoy)
+                .Where(v => !v.Activa && v.Fecha >= hoy && v.Fecha <= finHoy)
                 .SumAsync(v => (decimal?)v.Total) ?? 0;
 
             // Egresos del día
@@ -44,9 +48,9 @@ namespace MiniMercado.Controllers
                 .Where(e => e.Fecha >= hoy && e.Fecha <= finHoy)
                 .SumAsync(e => (decimal?)e.Monto) ?? 0;
 
-            // Ventas del mes (Solo activas)
+            // Ventas del mes (Solo vigentes, ver nota de !Activa arriba)
             vm.VentasMes = await _context.Ventas
-                .Where(v => v.Activa && v.Fecha >= inicioMes)
+                .Where(v => !v.Activa && v.Fecha >= inicioMes)
                 .SumAsync(v => (decimal?)v.Total) ?? 0;
 
             // Egresos del mes
