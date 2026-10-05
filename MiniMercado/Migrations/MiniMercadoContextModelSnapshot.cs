@@ -264,7 +264,7 @@ namespace MiniMercado.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Auditorias");
+                    b.ToTable("Auditorias", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Caja", b =>
@@ -311,7 +311,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Cajas");
+                    b.ToTable("Cajas", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Cliente", b =>
@@ -344,7 +344,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Clientes");
+                    b.ToTable("Clientes", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.CobroTenant", b =>
@@ -377,7 +377,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("CobrosTenants");
+                    b.ToTable("CobrosTenants", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Configuracion", b =>
@@ -398,7 +398,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Configuraciones");
+                    b.ToTable("Configuraciones", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.EgresoCaja", b =>
@@ -455,7 +455,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("EgresosCaja");
+                    b.ToTable("EgresosCaja", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.ImpresionEtiqueta", b =>
@@ -495,7 +495,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ImpresionesEtiquetas");
+                    b.ToTable("ImpresionesEtiquetas", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.LoteProducto", b =>
@@ -527,7 +527,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("LotesProducto");
+                    b.ToTable("LotesProducto", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.MovimientoStock", b =>
@@ -566,7 +566,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MovimientosStock");
+                    b.ToTable("MovimientosStock", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Notificacion", b =>
@@ -609,7 +609,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Notificaciones");
+                    b.ToTable("Notificaciones", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Pago", b =>
@@ -649,7 +649,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("VentaId");
 
-                    b.ToTable("Pagos");
+                    b.ToTable("Pagos", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.PagoFiado", b =>
@@ -682,7 +682,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("PagosFiado");
+                    b.ToTable("PagosFiado", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Producto", b =>
@@ -725,7 +725,6 @@ namespace MiniMercado.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("RubroId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<decimal>("Stock")
@@ -745,7 +744,7 @@ namespace MiniMercado.Migrations
                     b.HasIndex("TenantId", "CodigoBarra")
                         .IsUnique();
 
-                    b.ToTable("Productos");
+                    b.ToTable("Productos", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.ProductoBase", b =>
@@ -782,7 +781,7 @@ namespace MiniMercado.Migrations
                     b.HasIndex("CodigoBarras")
                         .IsUnique();
 
-                    b.ToTable("ProductosBase");
+                    b.ToTable("ProductosBase", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.ProductoProveedor", b =>
@@ -803,7 +802,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("ProveedorId");
 
-                    b.ToTable("ProductoProveedores");
+                    b.ToTable("ProductoProveedores", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Proveedor", b =>
@@ -856,7 +855,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Proveedores");
+                    b.ToTable("Proveedores", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Rubro", b =>
@@ -882,7 +881,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Rubros");
+                    b.ToTable("Rubros", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Tenant", b =>
@@ -950,7 +949,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("FechaVencimiento");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.Venta", b =>
@@ -1004,7 +1003,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Ventas");
+                    b.ToTable("Ventas", (string)null);
                 });
 
             modelBuilder.Entity("MiniMercado.Models.VentaDetalle", b =>
@@ -1039,7 +1038,7 @@ namespace MiniMercado.Migrations
 
                     b.HasIndex("VentaId");
 
-                    b.ToTable("VentaDetalles");
+                    b.ToTable("VentaDetalles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1303,8 +1302,7 @@ namespace MiniMercado.Migrations
                     b.HasOne("MiniMercado.Models.Rubro", "Rubro")
                         .WithMany("Productos")
                         .HasForeignKey("RubroId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("MiniMercado.Models.Tenant", "Tenant")
                         .WithMany()

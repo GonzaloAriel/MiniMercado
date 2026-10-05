@@ -59,12 +59,13 @@ namespace MiniMercado.Models
         [ValidateNever]
         public List<ProductoProveedor> Proveedores { get; set; } = new List<ProductoProveedor>();
 
-        // Relación con Rubro (categoria)
-        [Required(ErrorMessage = "Debe seleccionar un rubro o crear uno nuevo")]
+        // Relación con Rubro (categoria). Opcional: el FK es nullable y la
+        // relación usa ON DELETE SET NULL, así que el modelo no puede declararla
+        // obligatoria. Ver D-013.
         public int? RubroId { get; set; }
 
         [ValidateNever]
-        public Rubro Rubro { get; set; }
+        public Rubro? Rubro { get; set; }
 
         // Vínculo opcional con el catálogo global (ProductoBase)
         public int? ProductoBaseId { get; set; }

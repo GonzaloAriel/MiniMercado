@@ -55,10 +55,10 @@
         </div>
 
         <div class="col-md-6 mb-3">
-            <label class="form-label fw-bold">Rubro / Categoría <span class="text-danger">*</span></label>
+            <label class="form-label fw-bold">Rubro / Categoría</label>
             <div class="input-group">
                 <select asp-for="RubroId" id="RubroId" class="form-select">
-                    <option value="">-- Seleccione un rubro --</option>
+                    <option value="">-- Sin rubro --</option>
                     @foreach (var r in ViewBag.Rubros as List<MiniMercado.Models.Rubro>)
                     {
                         <option value="@r.Id">@r.Nombre</option>
