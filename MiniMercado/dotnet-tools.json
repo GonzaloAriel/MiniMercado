@@ -7,7 +7,7 @@
       "commands": [
         "dotnet-ef"
       ],
-      "rollForward": "latestPatch"
+      "rollForward": true
     }
   }
 }
