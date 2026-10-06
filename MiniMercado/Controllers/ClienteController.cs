@@ -25,7 +25,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Index(string? filtro, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var query = _context.Clientes
@@ -86,7 +86,8 @@ namespace MiniMercado.Controllers
         [HttpPost]
         public IActionResult Create(Cliente cliente)
         {
-            cliente.TenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
+            cliente.TenantId = tenantId;
             ModelState.Remove(nameof(cliente.TenantId));
 
             if (!ModelState.IsValid)
@@ -103,7 +104,7 @@ namespace MiniMercado.Controllers
         // EDIT GET
         public IActionResult Edit(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var cliente = _context.Clientes
                 .FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
@@ -118,7 +119,7 @@ namespace MiniMercado.Controllers
         [HttpPost]
         public IActionResult Edit(Cliente cliente)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             ModelState.Remove(nameof(cliente.TenantId));
 
             if (!ModelState.IsValid)
@@ -144,7 +145,7 @@ namespace MiniMercado.Controllers
         // DETALLE + PAGOS
         public IActionResult Detalle(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var cliente = _context.Clientes
                 .FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
@@ -183,7 +184,7 @@ namespace MiniMercado.Controllers
         // REGISTRAR PAGO GET
         public IActionResult RegistrarPago(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var cliente = _context.Clientes
                 .FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
@@ -214,7 +215,7 @@ namespace MiniMercado.Controllers
         [HttpPost]
         public IActionResult RegistrarPago(PagoFiado pago)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             ModelState.Remove(nameof(pago.TenantId));
             ModelState.Remove(nameof(pago.Cliente));
@@ -247,7 +248,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin,Caja")]
         public IActionResult Buscar(string q)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var clientes = _context.Clientes
                 .Where(c => c.Activo && c.TenantId == tenantId &&
@@ -265,7 +266,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DesactivarAjax(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var cliente = _context.Clientes.FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
 
             if (cliente == null) return Json(new { ok = false, error = "Cliente no encontrado" });
@@ -281,7 +282,7 @@ namespace MiniMercado.Controllers
         // DESACTIVAR
         public IActionResult Desactivar(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var cliente = _context.Clientes
                 .FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
@@ -302,7 +303,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin,Caja")]
         public IActionResult Saldo(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var totalDeuda = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -327,7 +328,7 @@ namespace MiniMercado.Controllers
             if (string.IsNullOrWhiteSpace(request.Nombre))
                 return Json(new { ok = false, error = "Nombre requerido" });
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var cliente = new Cliente
             {

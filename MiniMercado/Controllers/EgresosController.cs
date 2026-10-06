@@ -28,7 +28,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, CategoriaEgreso? categoria, int? proveedorId, string? buscar, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 15;
 
             var query = _context.EgresosCaja
@@ -106,7 +106,7 @@ namespace MiniMercado.Controllers
 
         public async Task<IActionResult> Create()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             ViewBag.Categorias = Enum.GetValues(typeof(CategoriaEgreso))
                 .Cast<CategoriaEgreso>()
@@ -132,7 +132,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EgresoCaja egreso)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             // Buscar caja abierta
@@ -181,7 +181,7 @@ namespace MiniMercado.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var egreso = await _context.EgresosCaja
                 .Include(e => e.Caja)
                 .FirstOrDefaultAsync(e => e.Id == id && e.TenantId == tenantId);
@@ -220,7 +220,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EgresoCaja model)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var egreso = await _context.EgresosCaja
                 .Include(e => e.Caja)
                 .FirstOrDefaultAsync(e => e.Id == model.Id && e.TenantId == tenantId);
@@ -280,7 +280,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Anular(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var egreso = await _context.EgresosCaja
                 .Include(e => e.Caja)
                 .FirstOrDefaultAsync(e => e.Id == id && e.TenantId == tenantId);

@@ -21,7 +21,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Vencimientos(int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var result = await _alertasService.GetVencimientosPaginated(tenantId, page, pageSize);
@@ -35,7 +35,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> StockBajo(int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var result = await _alertasService.GetStockBajoPaginated(tenantId, page, pageSize);
@@ -49,7 +49,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> StockNegativo(int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var result = await _alertasService.GetStockNegativoPaginated(tenantId, page, pageSize);

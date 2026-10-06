@@ -29,7 +29,7 @@ public class VentaAdminController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult AnularAjax(int id, string? motivoAnulacion)
     {
-        var tenantId = _tenantService.GetTenantId().Value;
+        if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
                                  NombreVenta, UsuarioId, Usuario, EsFiado, 
@@ -78,7 +78,7 @@ public class VentaAdminController : Controller
     public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, string? estado, int page = 1)
     {
         if (page < 1) page = 1;
-        var tenantId = _tenantService.GetTenantId().Value;
+        if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
         int pageSize = 10;
 
         var query = _context.Ventas
@@ -134,7 +134,7 @@ public class VentaAdminController : Controller
     [Authorize(Roles = "Admin,Caja")]
     public IActionResult Detalle(int id)
     {
-        var tenantId = _tenantService.GetTenantId().Value;
+        if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -161,7 +161,7 @@ public class VentaAdminController : Controller
     [Authorize(Roles = "Admin,Caja")]
     public IActionResult Anular(int id)
     {
-        var tenantId = _tenantService.GetTenantId().Value;
+        if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -191,7 +191,7 @@ public class VentaAdminController : Controller
     [Authorize(Roles = "Admin,Caja")]
     public IActionResult ConfirmarAnular(int id, string? motivoAnulacion)
     {
-        var tenantId = _tenantService.GetTenantId().Value;
+        if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
         var venta = _context.Ventas
             .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 

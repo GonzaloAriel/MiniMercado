@@ -30,7 +30,7 @@ namespace MiniMercado.Controllers
         {
             if (productoId.HasValue)
             {
-                var tenantId = _tenantService.GetTenantId().Value;
+                if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
                 var producto = _context.Productos
                     .FirstOrDefault(p => p.Id == productoId && p.TenantId == tenantId);
@@ -50,7 +50,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Ingreso(MovimientoStock movimiento, DateTime? FechaVencimiento)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             movimiento.TenantId = tenantId;
             ModelState.Remove(nameof(movimiento.TenantId));
 

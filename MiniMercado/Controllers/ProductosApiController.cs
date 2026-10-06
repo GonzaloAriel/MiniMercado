@@ -28,7 +28,7 @@ namespace MiniMercado.Controllers
         {
             if (string.IsNullOrWhiteSpace(term)) return Ok(new List<object>());
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             term = term.Trim();
             var terms = term.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -107,7 +107,7 @@ namespace MiniMercado.Controllers
             {
                 if (request == null || request.BaseId <= 0) return BadRequest("ID de producto base inválido");
 
-                var tenantId = _tenantService.GetTenantId().Value;
+                if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
                 // 1. Buscar el ProductoBase
                 var pb = await _context.ProductosBase.FindAsync(request.BaseId);

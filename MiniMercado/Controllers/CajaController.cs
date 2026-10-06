@@ -22,7 +22,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult AbrirCaja()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var cajaAbierta = _context.Cajas.FirstOrDefault(c => c.TenantId == tenantId && c.UsuarioId == userId && c.Estado == "ABIERTA");
@@ -39,7 +39,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AbrirCaja(decimal montoInicial)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var caja = new Caja
@@ -60,7 +60,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult CerrarCaja()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var caja = _context.Cajas.FirstOrDefault(c => c.TenantId == tenantId && c.UsuarioId == userId && c.Estado == "ABIERTA");
@@ -80,7 +80,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CerrarCaja(int id, decimal montoReal)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var caja = _context.Cajas.FirstOrDefault(c => c.Id == id && c.TenantId == tenantId && c.UsuarioId == userId);
@@ -109,7 +109,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult ResumenCierre(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var caja = _context.Cajas.FirstOrDefault(c => c.Id == id && c.TenantId == tenantId);
             if (caja == null) return NotFound();
 
@@ -140,7 +140,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Historial(DateTime? desde, DateTime? hasta, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
             
             var fechaDesde = desde ?? DateTime.Today.AddDays(-7);

@@ -38,4 +38,18 @@
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!--
+    Copia controllers y servicios enteros para el guardia de P-007: comprueba que no
+    vuelva a aparecer GetTenantId().Value en ninguna fuente. Va en un subdirectorio
+    (fuente\src) para no pisar el copiado plano que usan los guardias de P-032.
+  -->
+  <ItemGroup>
+    <None Include="..\..\MiniMercado\Controllers\*.cs"
+          Link="fuente\src\Controllers\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\MiniMercado\Services\*.cs"
+          Link="fuente\src\Services\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

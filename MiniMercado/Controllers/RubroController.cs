@@ -26,7 +26,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Index(int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var query = _context.Rubros
@@ -83,7 +83,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Edit(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var rubro = _context.Rubros
                 .FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
@@ -99,7 +99,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Edit(Rubro rubro)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             if (!ModelState.IsValid)
                 return View(rubro);
@@ -122,7 +122,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Delete(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var rubro = _context.Rubros
                 .FirstOrDefault(r => r.Id == id && r.Activo && r.TenantId == tenantId);
@@ -139,7 +139,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DesactivarAjax(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var rubro = _context.Rubros.FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
 
             if (rubro == null) return Json(new { ok = false, error = "Rubro no encontrado" });
@@ -158,7 +158,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult DeleteConfirmed(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var rubro = _context.Rubros
                 .FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);
@@ -186,7 +186,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Inactivos(string? filtro, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var query = _context.Rubros
@@ -222,7 +222,7 @@ namespace MiniMercado.Controllers
             if (string.IsNullOrWhiteSpace(nombre))
                 return BadRequest("El nombre del rubro es obligatorio");
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var existe = _context.Rubros
                 .Any(r => r.Nombre == nombre && r.TenantId == tenantId && r.Activo);
@@ -252,7 +252,7 @@ namespace MiniMercado.Controllers
             if (string.IsNullOrWhiteSpace(request.Nombre))
                 return Json(new { ok = false, error = "Nombre requerido" });
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var rubro = new Rubro
             {
@@ -277,7 +277,7 @@ namespace MiniMercado.Controllers
             if (string.IsNullOrWhiteSpace(request?.Categoria))
                 return Json(new { success = false, error = "Categoría vacía" });
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var nombreNormalizado = request.Categoria.Trim();
 
             // Buscar rubro existente para este tenant (insensible a mayúsculas)
@@ -313,7 +313,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "AdminGlobal, Admin")]
         public IActionResult Reactivar(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var rubro = _context.Rubros
                 .FirstOrDefault(r => r.Id == id && r.TenantId == tenantId);

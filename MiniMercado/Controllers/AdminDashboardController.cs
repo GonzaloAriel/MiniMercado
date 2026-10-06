@@ -22,7 +22,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult Index(int? anio)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int year = anio ?? DateTime.Today.Year;
 
             var ventasRaw = _context.Ventas
@@ -155,7 +155,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult Pagos(int? anio)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int year = anio ?? DateTime.Today.Year;
 
             var pagosQuery = _context.Pagos

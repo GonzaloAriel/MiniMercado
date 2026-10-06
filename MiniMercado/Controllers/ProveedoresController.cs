@@ -32,7 +32,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Index(int? proveedorId, int? productoId, string? q, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             if (productoId.HasValue && !proveedorId.HasValue)
@@ -57,7 +57,7 @@ namespace MiniMercado.Controllers
         {
             if (id == null) return NotFound();
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var proveedor = await _context.Proveedores
                 .Include(p => p.Productos)
                     .ThenInclude(p => p.ProductoBase)
@@ -81,7 +81,7 @@ namespace MiniMercado.Controllers
         {
             if (ModelState.IsValid)
             {
-                var tenantId = _tenantService.GetTenantId().Value;
+                if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
                 var proveedor = new Proveedor
                 {
                     TenantId = tenantId,
@@ -111,7 +111,7 @@ namespace MiniMercado.Controllers
         {
             if (id == null) return NotFound();
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var proveedor = await _context.Proveedores
                 .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
 
@@ -142,7 +142,7 @@ namespace MiniMercado.Controllers
 
             if (ModelState.IsValid)
             {
-                var tenantId = _tenantService.GetTenantId().Value;
+                if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
                 var proveedor = await _context.Proveedores
                     .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
 
@@ -178,7 +178,7 @@ namespace MiniMercado.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleActivo(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var proveedor = await _context.Proveedores
                 .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
 
@@ -194,8 +194,8 @@ namespace MiniMercado.Controllers
 
         private bool ProveedorExists(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
-            return _context.Proveedores.Any(e => e.Id == id && e.TenantId == tenantId);
+            return _tenantService.TryGetTenantId(out var tenantId)
+                && _context.Proveedores.Any(e => e.Id == id && e.TenantId == tenantId);
         }
     }
 }

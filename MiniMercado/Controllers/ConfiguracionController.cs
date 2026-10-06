@@ -22,7 +22,7 @@ namespace MiniMercado.Controllers
 
         public async Task<IActionResult> Suscripcion()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var tenant = await _suscripcionService.GetSuscripcionActualAsync(tenantId);
             
             if (tenant == null) return NotFound();
@@ -35,7 +35,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult Index()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var tenant = _context.Tenants
                 .FirstOrDefault(t => t.Id == tenantId);
@@ -59,7 +59,7 @@ namespace MiniMercado.Controllers
         [HttpPost]
         public IActionResult Index(Tenant tenant, bool UsarCaja)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             ModelState.Remove(nameof(tenant.Activo));
 

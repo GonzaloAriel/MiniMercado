@@ -78,7 +78,7 @@ namespace MiniMercado.Controllers
         {
             if (string.IsNullOrWhiteSpace(codigo)) return BadRequest();
 
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var producto = _productoService.BuscarProductoPorCodigo(codigo, tenantId);
 
             if (producto == null) return NotFound();
@@ -100,7 +100,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Caja,Admin")]
         public IActionResult GetByRubro(int rubroId)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var productos = _context.Productos
                 .AsNoTracking()
@@ -123,7 +123,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Index(int? rubroId, string? filtro, int page = 1)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 15;
 
             var productosQuery = _context.Productos
@@ -183,7 +183,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             ViewBag.Rubros = _context.Rubros
                 .Where(r => r.TenantId == tenantId)
@@ -201,7 +201,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Create(Producto producto)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             producto.TenantId = tenantId;
 
             ModelState.Remove(nameof(producto.TenantId));
@@ -257,7 +257,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Edit(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var producto = _context.Productos
                 .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
@@ -281,7 +281,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Edit(Producto producto)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             ModelState.Remove(nameof(producto.TenantId));
             ModelState.Remove(nameof(producto.Rubro));
@@ -330,7 +330,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Delete(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var producto = _context.Productos
                 .FirstOrDefault(p => p.Id == id && p.Activo && p.TenantId == tenantId);
@@ -347,7 +347,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DesactivarAjax(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var producto = _context.Productos.FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
 
             if (producto == null) return Json(new { ok = false, error = "Producto no encontrado" });
@@ -365,7 +365,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult DeleteConfirmed(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var producto = _context.Productos
                 .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
@@ -394,7 +394,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Inactivos(string filtro)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var productos = _context.Productos
                 .Where(p => !p.Activo && p.TenantId == tenantId);
@@ -415,7 +415,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Reactivar(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var producto = _context.Productos
                 .FirstOrDefault(p => p.Id == id && p.TenantId == tenantId);
@@ -433,7 +433,7 @@ namespace MiniMercado.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Detalle(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var producto = _context.Productos
                 .Include(p => p.Rubro)
@@ -459,7 +459,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarLote(int id, string motivo)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var lote = await _context.LotesProducto.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
 
             if (lote == null) return NotFound();
@@ -493,7 +493,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarLote(int id, decimal cantidad, DateTime? fechaVencimiento)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var lote = await _context.LotesProducto.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
 
             if (lote == null) return NotFound();

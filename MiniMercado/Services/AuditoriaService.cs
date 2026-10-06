@@ -23,7 +23,18 @@ namespace MiniMercado.Services
         public void Registrar(string accion, string tabla, int? registroId, string descripcion, int? tenantIdManual = null)
         {
             var usuarioId = _http.HttpContext.User?.Identity?.Name;
-            var tenantId = tenantIdManual ?? _tenantService.GetTenantId().Value;
+
+            int tenantId;
+            if (tenantIdManual.HasValue)
+            {
+                tenantId = tenantIdManual.Value;
+            }
+            else if (!_tenantService.TryGetTenantId(out tenantId))
+            {
+                throw new InvalidOperationException(
+                    "AuditoriaService.Registrar: sin TenantId y sin tenantIdManual. " +
+                    "La auditoria no puede registrarse sin tenant (P-007).");
+            }
 
             var log = new Auditoria
             {

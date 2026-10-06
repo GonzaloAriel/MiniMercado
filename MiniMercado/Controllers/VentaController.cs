@@ -40,7 +40,7 @@ namespace MiniMercado.Controllers
         public IActionResult BuscarProductos(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return BadRequest();
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             texto = texto.Trim();
 
             // 1. Buscar productos del tenant
@@ -93,7 +93,7 @@ namespace MiniMercado.Controllers
         public IActionResult BuscarOAgregarProducto(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return BadRequest();
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             // 1. Buscar en local (Tenant) por nombre o código exacto
             var producto = _context.Productos
@@ -121,7 +121,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult Create()
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var config = _context.Configuraciones.FirstOrDefault(c => c.TenantId == tenantId);
@@ -141,7 +141,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(List<VentaDetalle> detalles, bool EsFiado, int? ClienteId, string? MetodoPago, decimal? MontoRecibido)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             // 1. Obtener configuración
@@ -383,7 +383,7 @@ namespace MiniMercado.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Confirmacion(int ventaId, string? NombreVenta)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -410,7 +410,7 @@ namespace MiniMercado.Controllers
         // GET: Confirmación de venta
         public IActionResult Confirmacion(int ventaId)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             // Leer venta sin JOIN automático con Cliente
             var venta = _context.Ventas
@@ -440,7 +440,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, int? ventaId, string? nombreVenta, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             var query = _context.Ventas
@@ -485,7 +485,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult Detalle(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -508,7 +508,7 @@ namespace MiniMercado.Controllers
 
         public IActionResult Ticket(int id)
         {
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
 
             var venta = _context.Ventas
                 .FromSqlRaw(@"SELECT Id, Fecha, Total, Activa, MotivoAnulacion, 
@@ -537,7 +537,7 @@ namespace MiniMercado.Controllers
         public async Task<IActionResult> Caja(DateTime? fecha, int page = 1)
         {
             if (page < 1) page = 1;
-            var tenantId = _tenantService.GetTenantId().Value;
+            if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();
             int pageSize = 10;
 
             DateTime dia = fecha ?? DateTime.Today;
