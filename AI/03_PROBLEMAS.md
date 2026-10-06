@@ -81,28 +81,35 @@ MEDIA = deuda o riesgo acotado.
   scheme de Identity re-lanza al login) en vez de **403**; el acceso esta
   denegado igual, pero un `403` seria lo correcto para un usuario ya autenticado.
 
-- **P-007 (ALTA, ABIERTO) — `GetTenantId().Value` sin verificar.** 86 ocurrencias en 15
-  archivos desenvuelven el claim con `.Value` sin comprobar que exista.
+- **P-007 (RESUELTO 2026-10-06) — `GetTenantId().Value` sin verificar.** 86 ocurrencias
+  en 15 archivos desenvuelven el claim con `.Value` sin comprobar que exista.
   Lanza excepcion para anonimos y para `AdminGlobal`, que por diseño no tiene
-  `TenantId`. Combinado con P-006, un `AdminGlobal` que entra a esas pantallas
-  obtiene 500 en vez de una pantalla coherente.
-  El patron correcto ya existe en `EtiquetasController`
-  (`if (!tenantIdNullable.HasValue) return Unauthorized();`) y sirve de referencia.
-  Afecta a: 15 archivos.
-  **Actualizacion 2026-10-05: el sintoma ya no es alcanzable.** Cerrar P-006
-  dejo los **85 `.Value` restantes** (14 archivos) todos dentro de controllers
-  que solo alcanzan `Admin` y `Caja`, y esos dos roles **siempre tienen
-  `TenantId`**. Se verifico ademas que `AuditoriaService.Registrar` (el unico
-  `.Value` en un service) lo invocan solo controllers `Admin`/`Caja`, asi que no
-  queda un solo camino desde `AdminGlobal` a un `.Value`.
-  **El problema pasa a ser defensa en profundidad, no un bug vivo**, asi que se
-  baja de ALTA a MEDIA. Sigue sin cerrarse: si manana se le agrega `AdminGlobal`
-  a uno de esos controllers, o se crea un usuario sin el claim `TenantId`, el 500
-  vuelve. La calidad de la correccion es "imposible llegar", no "el `.Value`
-  disappeared".
-  **Como cerrarlo de verdad:** helper unico que falle cerrado. El error mas caro
-  de esta lista es que **son 85 cambios mecanicos en 14 archivos sin una sola red
-  de tests** (P-017), asi que conviene hacer los tests primero.
+  `TenantId`: el usuario ve un 500 en vez de una pantalla coherente.
+  **Actualizacion 2026-10-05:** con P-006 cerrado los **85 `.Value` restantes** (14
+  archivos) quedaron todos en controllers `Admin`/`Caja`, que siempre tienen
+  `TenantId`, asi que el sintoma dejo de ser alcanzable y el problema paso a ser
+  defensa en profundidad.
+  **Solucion 2026-10-06:** helper unico `Services/TenantServiceExtensions.cs`, una
+  extension de `ITenantService` que devuelve `false` cuando no hay claim
+  (`TryGetTenantId`). Los 85 sitios pasaron a la forma
+  `if (!_tenantService.TryGetTenantId(out var tenantId)) return Unauthorized();`
+  (el patron de referencia de `EtiquetasController`). Tres casos especiales:
+  `ProveedoresController.ProveedorExists` (metodo privado bool) falla cerrado con
+  `false` -> NotFound; `ClienteController.Create` subio la guardia arriba del
+  initializer `cliente.TenantId = ...`; y `AuditoriaService.Registrar` (service,
+  no puede devolver IActionResult) lanza `InvalidOperationException` con mensaje que
+  cita P-007, porque no se registra auditoria sin tenant.
+  **Verificado:** `dotnet build` 0 errores; **94 tests verdes** (88 previos + 6
+  nuevos en `tests/MiniMercado.Tests/SinTenantIdTests.cs`: 4 actions con
+  `TenantServiceStub(null)` devuelven `UnauthorizedResult` en vez de lanzar,
+  `AuditoriaService` lanza el mensaje claro, y un guardia de fuente —mismo patron
+  que el de P-032— que falla si `GetTenantId().Value` vuelve a aparecer en
+  Controllers/ o Services/); humo de arranque de la app con 11 rutas anonimas
+  (200/302, cero excepciones en el log).
+  Patron a no repetir: **nunca desenvolver un claim con `.Value` a secas**: el claim
+  puede no existir, y el fallo tiene que ser una denegacion explicita, no un 500.
+  La solucion de fondo (middleware que resuelve el tenant una vez + base que deniega
+  por omision) sigue pendiente de **D-012**.
 
 - **P-008 (MEDIA) — Falta antiforgery en POST.** Sin
   `[ValidateAntiForgeryToken]`: `UsuariosController` (3 POST, crear/editar/borrar
@@ -172,23 +179,29 @@ MEDIA = deuda o riesgo acotado.
   en `RegistrarPago.cshtml`, por lo que nunca se envia). Verificado: un POST con
   `PrecioSugerido=999999999` no altera el monto registrado.
 
-- **P-013 (MEDIA) — Runtime .NET 6 no instalado en el sistema.** En la maquina
-  hay SDK 10.0.112 y runtime ASP.NET Core 10.0.12 en `/usr/lib/dotnet`, pero
-  ningun runtime 6. El proyecto **compila** en Linux, pero el binario `net6.0`
-  no puede arrancar con el muxer del sistema.
-  **Workaround 2026-10-02 (verificado):** se instalaron los runtimes 6.0.36
-  (`Microsoft.NETCore.App` y `Microsoft.AspNetCore.App`) con `dotnet-install.sh`
-  en `~/.dotnet`, **sin sudo y sin tocar el sistema**. Se compila con el SDK del
-  sistema y se ejecuta con el muxer de `~/.dotnet`:
-  `~/.dotnet/dotnet bin/Debug/net6.0/MiniMercado.dll`.
-  `dotnet run` pelado sigue sin servir, porque usa el muxer del sistema.
-  Reversible con `rm -rf ~/.dotnet`.
-  **Pendiente:** D-009 (framework destino). El workaround no decide D-009, solo
-  permite ver la app mientras tanto.
+- **P-013 (RESUELTO 2026-10-06) — Runtime .NET 6 no instalado en el sistema.**
+  En la maquina hay SDK 10.0.112 y runtime ASP.NET Core 10.0.12 en
+  `/usr/lib/dotnet`, pero no habia ningun runtime 6: el proyecto **compilaba**
+  en Linux, pero el binario `net6.0` no podia arrancar con el muxer del sistema.
+  *Workaround 2026-10-02:* runtimes 6.0.36 en `~/.dotnet` (sin sudo) y muxer
+  explicito para app y tests (`~/.dotnet/dotnet ...`, `DOTNET_ROOT=...`).
+  **Solucion 2026-10-06 (verificado):** los runtimes 6.0.36
+  (`Microsoft.NETCore.App` y `Microsoft.AspNetCore.App`) ahora estan en
+  `/usr/lib/dotnet`, instalados con `dotnet-install.sh --runtime ... --version 6.0.36
+  --install-dir /usr/lib/dotnet --no-path` (con sudo). El SDK 10 sigue siendo el
+  unico SDK y ahora compila **y ejecuta** `net6.0`. Verificado: `dotnet run`
+  arranca, `dotnet test` da **94/94** sin `DOTNET_ROOT`, y VS Code debuggea con
+  F5 (`.vscode/launch.json` + `.env`). `~/.dotnet` queda solo para el SDK 6 y
+  `dotnet ef`.
+  **Sigue pendiente:** D-009 (framework destino) — instalar el runtime 6 no
+  decide a donde migra el proyecto.
   Afecta a: ejecucion local.
 
-- **P-014 (MEDIA) — Sin `global.json`.** El SDK no esta pinneado: cada build puede
-  usar una version distinta. Acompana a P-013.
+- **P-014 (RESUELTO 2026-10-06) — Sin `global.json`.** El SDK no estaba pinneado:
+  cada build podia usar una version distinta.
+  **Solucion:** `global.json` en la raiz, `version: 6.0.428` con
+  `rollForward: latestMajor` (exige >= 6.0.428 pero permite saltar al SDK 10 del
+  sistema; un pin estricto a 6 romperia los builds locales). En CI instala 6.0.x.
   Afecta a: reproducibilidad de build.
 
 - **P-015 (MEDIA) — Logica de negocio en los controllers.** 20 de 26 controllers
@@ -371,7 +384,7 @@ Hallazgos de una revision de arquitectura previa a Dockerizar. Varios ya estan
 cubiertos por problemas de mas arriba; aca se dejan **priorizados** y se aclara
 cual es la solucion de fondo, no el parche puntual.
 
-- **P-025 (ALTA, PARCIAL) — Nada detecta la deriva entre el modelo y las migraciones.**
+- **P-025 (ALTA, RESUELTO 2026-10-06) — Nada detecta la deriva entre el modelo y las migraciones.**
   Los pasos 1 y 2 estan cerrados (`tools/SchemaCheck` y `tools/verificar-esquema.sh`, este ultimo con
   salida 4 explicita cuando encuentra migraciones sin commitear). **No esta 100% cerrado**: falta el
   paso 3 y que la barrera corra sola en CI; hoy se verifica a mano.
@@ -439,13 +452,19 @@ cual es la solucion de fondo, no el parche puntual.
     operaciones); el estado real del repo lo reporto C, porque la migracion de
     P-030 todavia no esta commiteada. La migracion de prueba que genera B se
     revierte siempre, incluso si el script se corta a la mitad.
-  **Lo que sigue:** el paso 3 (regla de equipo: un cambio de esquema nunca se
-    pushea sin su migracion en el mismo commit) sigue siendo solo una regla
-    escrita; y **el script hoy se corre a mano**. Conectarlo a una plataforma de
-    CI es una decision de infraestructura todavia no tomada (el repo no tiene
-    ninguna: no hay `.github/`, ni GitLab, ni Azure Pipelines). El script es
-    **agnostico de plataforma** justamente para que ese dia sea solo pegarlo en
-    un workflow.
+  **Cierre 2026-10-06 (paso 3 hecho: la barrera corre sola).** Se creo
+    `.github/workflows/ci.yml` (GitHub Actions; el remoto ya era GitHub): en cada
+    push a `main` y en cada PR corre build + los 94 tests + `verificar-esquema.sh`
+    contra un SQL Server 2022 en service container. La "regla de equipo" dejo de
+    ser texto: un cambio de esquema sin su migracion en el mismo commit rompe el
+    pipeline (lo atrapan A o B, segun donde este la deriva). El connection string
+    llega de `secrets.MSSQL_SA_PASSWORD` (seteado con `gh secret set` el
+    2026-10-06); la contrasena jamas se commitea. De paso se agrego `global.json`
+    (cierra P-014). Verificado localmente con los mismos comandos del workflow
+    (build 0 errores, 94/94 tests, script exit 0); la primera corrida en GitHub
+    ocurre en el proximo push. **Lo unico que CI no tapa:** el chequeo C
+    (migraciones sin commitear) es vacio en un checkout limpio, su valor es
+    local/pre-commit; el que impide el push peligroso es A+B, y los dos corren.
 
 - **P-026 — RESUELTO 2026-10-05.** Ver la ficha en la seccion de Problemas.
   Dos correcciones a lo que se creia saber: **no era un cambio de una linea**
@@ -457,9 +476,10 @@ cual es la solucion de fondo, no el parche puntual.
 - **P-027 (MEDIA) — Framework fuera de soporte (.NET 6 y EF Core 6, EOL desde
   nov-2024).** En una maquina de desarrollo da igual. Se vuelve deuda el dia que
   se publique: se hereda una imagen base sin parches de seguridad y sin soporte.
-  **Relacionado:** D-009 (framework destino) y P-013 (el workaround con
-  `~/.dotnet`). No hace falta hacerlo ya, pero la decision no se puede seguir
-  postergando indefinidamente: cada mes que pasa encarece el salto.
+  **Relacionado:** D-009 (framework destino). P-013 quedo resuelto el
+  2026-10-06 (runtimes 6 en `/usr/lib/dotnet`): lo que falta ahora es la
+  decision, no el entorno. No hace falta hacerlo ya, pero la decision no se puede
+  seguir postergando indefinidamente: cada mes que pasa encarece el salto.
 
 - **P-028 (MEDIA) — Sin health checks ni verificacion de dependencias.** Si la
   base no esta disponible, `Database.Migrate()` revienta y la app muere. En
@@ -578,5 +598,9 @@ cual es la solucion de fondo, no el parche puntual.
   2026-10-02: JSON valido (parser) y la app arranco con la connection string de
   entorno. Patron: **connection strings solo por variable de entorno**.
 
-- **P-010 follow-up — la app no arranca con `dotnet run`.** No es un problema de
-  codigo sino del entorno: ver P-013 (workaround con `~/.dotnet`).
+- **P-010 follow-up — `dotnet run` sin connection string.** El follow-up viejo
+  ("no arranca con `dotnet run`") era P-013, **resuelto 2026-10-06**: ahora
+  `dotnet run` arranca. Lo que sigue siendo cierto: `launchSettings.json` no
+  incluye la connection string y en Development la app muere al hacer seed sin
+  ella. En terminal hay que exportar `ConnectionStrings__MiniMercadoDB` a mano;
+  en VS Code, F5 la lee de `.env`.

@@ -1,5 +1,5 @@
 FORMATO: 1.0
-FECHA: 2026-10-05
+FECHA: 2026-10-06
 PROPOSITO: Estado real del sistema + camino hacia el stack Docker
 
 ---
@@ -35,19 +35,20 @@ Este documento **no registra ninguna decisión tomada**. Las decisiones se anota
 comparten infraestructura y base de datos, con aislamiento por `TenantId`.
 
 - **Repositorio:** https://github.com/GonzaloAriel/MiniMercado.git (**público**)
-- **Rama:** `main`, sincronizada con `origin/main`
-- **Último commit:** `9e8fcf0` — 2026-07-11 — "Ajustes de vistas y textos en Analisis
-  comercial y Edicion de productos"
-- **Working tree:** **con cambios sin commitear** (a 2026-10-05)
-- **Commits sin pushear:** ninguno
+- **Rama:** `main` — **14 commits sin pushear** respecto de `origin/main` (a 2026-10-06)
+- **Último commit:** `6cfe176` — 2026-10-05 — "Memoria al dia: P-017 en progreso,
+  P-032/P-033/P-034 cerrados"
+- **Working tree:** **con cambios sin commitear** (a 2026-10-06)
+- **Commits sin pushear:** 14 (los de 2026-10-02 y 2026-10-05; ninguno subido)
 
-> ⚠️ **Desde 2026-10-05 el working tree tiene trabajo sin commitear**, cerrado y verificado
-> pero sin commit: P-025 (paso 2), P-026, P-030, P-031, **P-006 (autorización, D-014)** y
-> **P-017 (tests de humo)**, **P-033 (atomicidad de venta)** y **P-032 (formula de
-> caja)**. Son **26 entradas** de `git status` (22 modificadas / borradas, 4 sin trackear: las
-> 2 de la migración P-030, `tools/verificar-esquema.sh` y el proyecto `tests/`). Es el primer
-> rato que el árbol no está limpio, y el motivo es que esos cambios se hicieron y probaron
-> sin commitear.
+> ⚠️ **El 2026-10-05 se commiteó casi todo el trabajo acumulado** (P-006/D-014,
+> P-026, P-030/D-013, P-031, P-025 paso 2, P-032, P-033 y la red inicial de tests,
+> entre otros), pero **quedaron 14 commits sin pushear**. El único trabajo del
+> árbol **sin commitear a 2026-10-06** es **P-007** (17 modificadas: los 13
+> controllers + `AuditoriaService` + 2 archivos de memoria + el csproj de tests, y
+> 3 sin trackear: `Services/TenantServiceExtensions.cs`,
+> `tests/MiniMercado.Tests/SinTenantIdTests.cs` y `dotnet-install.sh` — esta última
+> preexistente). Commit solo bajo pedido del TEAM LEAD.
 
 > ⚠️ **Los encabezados de `03_PROBLEMAS.md` no son confiables al 100%.** Varios problemas se
 > resolvieron a lo largo del trabajo y se documento el "qué se hizo" en su propia sección, pero
@@ -122,15 +123,15 @@ comparten infraestructura y base de datos, con aislamiento por `TenantId`.
 |---|---|
 | Dockerfile | **No existe** |
 | `compose.yaml` / orquestador | **No existe** |
-| Variables de entorno / `.env` | **No existe** |
+| Variables de entorno / `.env` | **Solo local**: existe `MiniMercado/.env` con `ConnectionStrings__MiniMercadoDB` (para F5 en VS Code), gitignoreado por `*.env`; no hay `.env` de despliegue |
 | `appsettings.Production.json` | **No existe** |
 | Logging estructurado | **No existe** (`ILogger` no está inyectado en ningún archivo) |
 | Application Insights / OpenTelemetry | **No existe** (la documentación lo daba por activo; el código no lo tiene) |
 | `BackgroundService` / `IHostedService` | **No existe** — todo corre por request |
-| Tests automatizados | **No existe** ningún proyecto de tests |
-| `global.json` (pin de SDK) | **No existe** |
-| CI/CD | **No existe** |
-| Verificación modelo↔migraciones | **Existe** — `tools/SchemaCheck` + `tools/verificar-esquema.sh`. Herramientas de desarrollo (fuera de la app y de la imagen Docker), **se corren a mano**, no hay workflow que las dispare (P-025) |
+| Tests automatizados | **EN PROGRESO** — `tests/MiniMercado.Tests`, **94 tests verdes** contra SQL Server real (P-017, D-015): 88 de flujos de dinero + 6 de P-007. Se corren con el dotnet del sistema (runtimes 6.0.36 en `/usr/lib/dotnet`; ver `00_MEMORIA.md` §Entorno local) y **corren en CI** (GitHub Actions, cada push/PR) |
+| `global.json` (pin de SDK) | **Existe** — `6.0.428` con `rollForward: latestMajor` (P-014): exige ≥ 6.0.428 y permite el SDK 10 del sistema |
+| CI/CD | **Existe CI**: `.github/workflows/ci.yml` (build + tests + barrera de esquema, contra SQL Server 2022 en service container, secret `MSSQL_SA_PASSWORD`). **CD no existe** |
+| Verificación modelo↔migraciones | **Existe** — `tools/SchemaCheck` + `tools/verificar-esquema.sh`, y **corre en CI** en cada push/PR (P-025 cerrado 2026-10-06). Herramientas fuera de la app y de la imagen Docker |
 
 ---
 
@@ -237,7 +238,7 @@ Ordenados por gravedad.
 > **CONSOLIDADO 2026-10-02:** los tres casos URGENTE (1, 2 y 3) están
 > **CONSOLIDADOS**: corregidos **y verificados en ejecución** contra SQL Server
 > 2022. Ver el detalle de la verificación al final de cada caso. Los casos
-> ALTA/MEDIA (4 a 11) siguen open.
+> ALTA/MEDIA (4 a 11) siguen open, **salvo el 4 (P-007), cerrado 2026-10-06**.
 
 > **Nota 2026-10-05 (P-025).** Este bloque §5 grew antes que `03_PROBLEMAS.md` y quedó
 > desfasado respecto de ahí. Desde 2026-10-05 `03_PROBLEMAS.md` es la lista vigente de
@@ -332,7 +333,7 @@ es el rol previsto) y el `.Value` a secas se reemplazó por el chequeo explícit
 autenticado como Admin → **200**. `Auditoria` sigue sin filtro global: su filtrado manual por
 `TenantId` es correcto y no se tocó.
 
-### 🟠 ALTA 4 — `GetTenantId().Value` sin verificación: 86 ocurrencias
+### ✅ CONSOLIDADO 4 — `GetTenantId().Value` sin verificación (P-007)
 
 En 15 archivos, el claim se desenvuelve con `.Value` sin comprobar que exista:
 
@@ -351,6 +352,22 @@ esas acciones obtiene un error 500 en vez de una pantalla coherente.
 `if (!tenantIdNullable.HasValue) return Unauthorized();`
 
 **Qué hay que hacer:** un helper único que devuelva un resultado explícito, y aplicarlo.
+
+**✅ CONSOLIDADO 2026-10-06 (confirmado por el TEAM LEAD).** Los **85 `.Value` de
+14 archivos** ahora pasan por `Services/TenantServiceExtensions.cs`, una extensión
+de `ITenantService` que falla cerrado: `TryGetTenantId(out var tenantId)` devuelve
+`false` cuando no hay claim, y el caller deniega con `return Unauthorized();`
+(el patrón de referencia de `EtiquetasController`). Casos especiales:
+`ProveedoresController.ProveedorExists` (método privado `bool`) devuelve `false` →
+NotFound; `ClienteController.Create` subió la guardia arriba del initializer; y
+`AuditoriaService.Registrar` lanza `InvalidOperationException` con mensaje que cita
+P-007 (un service no puede devolver `IActionResult`, y no se registra auditoría sin
+tenant). **Verificado:** `dotnet build` 0 errores; **94 tests verdes** (88 previos +
+6 nuevos en `SinTenantIdTests`, incluido un guardia de fuente que falla si
+`GetTenantId().Value` reaparece en Controllers/ o Services/); humo de arranque con
+11 rutas anónimas (200/302, cero excepciones). **Pendiente no bloqueante:** la
+solución de fondo (middleware que resuelve el tenant una vez + base que deniega por
+omisión) queda para **D-012**.
 
 ### 🟠 ALTA 5 — Autorización demasiado permisiva
 
@@ -415,9 +432,11 @@ Todas parametrizadas (`{0}`) → **no hay inyección SQL**. Pero:
 
 ### 🟡 MEDIA 10 — Tests de humo (P-017, en progreso)
 
-**Resuelto en lo esencial el 2026-10-05.** Existe `tests/MiniMercado.Tests` con **88 tests
-verdes** que cubren los tres flujos de dinero: cobro de suscripción, cierre de caja y venta
-del POS.
+**Resuelto en lo esencial el 2026-10-05.** Existe `tests/MiniMercado.Tests` con **94 tests
+verdes** (88 + 6 de P-007 agregados el 2026-10-06): los 88 cubren los tres
+flujos de dinero —cobro de suscripción, cierre de caja y venta del POS— y los 6
+nuevos (`SinTenantIdTests`) cubren la denegación sin `TenantId` y el guardia de
+fuente de P-007.
 
 Cada test crea su propia base descartable en el SQL Server (`MiniMercadoDB_test_<guid>`), la
 construye solo con `Database.Migrate()` —el mismo camino que la app— y la dropea al terminar.
@@ -595,3 +614,5 @@ Para no romper cosas al ordenar el código:
 | 2026-10-05 | **P-026 cerrado: las migraciones y el seed salen del arranque por defecto.** `Program.cs` tenía **dos** escrituras por arranque, no una: `Migrate()` **y** `SeedData.Inicializar()`. Quitar solo `Migrate()` no cerraba nada, porque el seed seguía corriendo en cada boot y tenía su propia carrera —con un índice único en `ProductoBase.CodigoBarras` que hace fallar a la segunda réplica con duplicate key. Ahora ambas están detrás de banderas independientes (`Bootstrap:ApplyMigrations` / `Bootstrap:Seed`), **activas solo en Development** e inactivas en cualquier otro entorno, con `try/catch` + `LogCritical` que re-lanza. Extra: con migraciones desactivadas se avisa cuántas pendientes hay y cuáles son las 3 primeras. **Verificado en ejecución en 4 escenarios**, incluido **dos réplicas en paralelo levantando a la vez, ambas sanas y sirviendo tráfico**. |
 | 2026-10-05 | **P-025 cerrado (paso 2): la barrera corre sola, con un comando.** Se creó `tools/verificar-esquema.sh`, que corre los **tres** chequeos de la solución de fondo y sale con código distinto por fallo: **A** deriva modelo/migraciones (`SchemaCheck`), **B** modelo adelantado al snapshot (genera una migración de prueba y mira si tiene contenido) y **C** migraciones sin commitear. Se agregó C porque A y B miden el modelo y ninguno miraba el working tree. **Los tres fallos se probaron inyectándolos a mano**: una columna al modelo sin migración la reportan A y B; el estado real del repo lo reporta C. La migración de prueba de B se revierte siempre, incluso si el script se corta. Es **agnóstico de plataforma** a propósito: el repo no tiene CI y elegir una es decisión de infraestructura pendiente. **P-025 no está 100% cerrado: falta que corra sola (CI) y el paso 3, que sigue siendo regla escrita.** |
 | 2026-10-05 | **Este documento pasa a fecha 2026-10-05.** Se sincronizó con lo realmente hecho: **60** migraciones (decía 59), §4.2 reescrito (ya no dice que `Migrate()` corre en cada arranque), **§4.3 nuevo** con la barrera de verificación, `dotnet-ef` corregido en §2, filas nuevas en §3.2, **§6.3 saneada** (listaba como vigentes el parche T-SQL, la autenticación Windows y `dotnet-ef 10.0.5`, los tres ya resueltos desde 2026-10-02), **D-6 resuelta** y §6.2 anotando que P-026 ya no bloquea al Dockerfile. §5 se marca como **registro histórico**: la lista vigente de problemas abiertos está en `03_PROBLEMAS.md`. **Sin commit: el working tree tiene estos 11 archivos sin commitear.** |
+| 2026-10-06 | **P-007 cerrado y CONSOLIDADO (§5 caso 4).** Los **85 `GetTenantId().Value` de 14 archivos** ahora pasan por `Services/TenantServiceExtensions.cs` (`TryGetTenantId`, extensión de `ITenantService` que falla cerrado): sin claim, la acción devuelve `Unauthorized()` en vez de un 500. Tres casos especiales: `ProveedorExists` devuelve `false` → NotFound, `ClienteController.Create` subió la guardia, y `AuditoriaService.Registrar` lanza una excepción con mensaje claro que cita P-007. **Verificado:** `dotnet build` 0 errores; **94 tests verdes** (88 previos + 6 nuevos en `SinTenantIdTests`, con guardia de fuente que impide la reaparición); humo de arranque con 11 rutas anónimas sin excepciones. **§1 actualizado** (el commit `6cfe176` de 2026-10-05 ya contenía P-006, P-026, P-030, P-025 paso 2, P-032, P-033 y los tests: quedan **14 commits sin pushear** y el árbol solo tiene los cambios de P-007). **§3.2**: la fila de tests dejó de decir "No existe". **00_MEMORIA.md** actualizado (P-007 pasa a "Hecho", lista de pendientes renumerada, agregado el comando de `dotnet test` con el muxer de `~/.dotnet`). **Sin commit** (regla 13). |
+| 2026-10-06 | **P-025 y P-014 cerrados: la barrera de esquema corre en CI.** Creado `.github/workflows/ci.yml` (GitHub Actions; el remoto ya era GitHub): en cada push a `main` y en cada PR corre `dotnet build` + los 94 tests + `tools/verificar-esquema.sh` contra SQL Server 2022 en service container; el connection string sale de `secrets.MSSQL_SA_PASSWORD` (seteado con `gh secret set`; la contraseña jamás se commitea). El paso 3 de P-025 (regla de equipo: migración en el mismo commit) ahora lo impide el pipeline, no la disciplina. `global.json` en la raíz: SDK `6.0.428` con `rollForward: latestMajor` (un pin estricto a 6 rompería los builds con el SDK 10 del sistema). **Verificado en local con los mismos comandos del CI:** build 0 errores, 94/94 tests, script exit 0, YAML parseado — **la primera corrida en GitHub ocurre en el próximo push**. Trampa detectada: `dotnet tool restore` con el SDK 10 revienta por el `rollForward` del manifiesto; restaurar con `~/.dotnet/dotnet`. **De paso:** arreglado el logo de la navbar (`_Layout.cshtml` apuntaba a `/wwwroot/images/...`: sobraba `wwwroot` y `images`≠`Images` case-sensitivity en Linux → 404; ahora `~/Images/...`, verificado 200) y la imagen del hero comentada en `Home/Index.cshtml`. **§3.2 actualizado** (`.env`, tests, `global.json`, CI/CD, verificación). **Sin commit** (regla 13). |

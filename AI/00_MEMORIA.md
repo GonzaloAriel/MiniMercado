@@ -24,8 +24,10 @@ punto de venta de escritorio ni un monolito de un solo comercio.
 | Contenedores | Ninguno |
 | Tests | Ninguno |
 
-SDK instalado en la máquina: **10.0.112**. Runtime ASP.NET Core instalado:
-**10.0.12**. No hay runtime 6 → `dotnet run` falla hasta migrar de framework.
+SDK instalado en la máquina: **10.0.112** (el único SDK). Runtimes en
+`/usr/lib/dotnet`: **10.0.12** y **6.0.36** (los dos, desde 2026-10-06, ver
+P-013). Con el runtime 6 en el sistema, `dotnet run` y `dotnet test` funcionan
+con el dotnet del sistema, sin hacks.
 
 ## Arquitectura
 
@@ -57,7 +59,7 @@ Reglas inviolables:
 6. **Claims**: `AdminGlobal` **no tiene `TenantId`** por diseño, y sin `TenantId` los
    query filters se desactivan. Antes de usar `GetTenantId()`, comprobar que tiene valor.
 
-## Entorno local (verificado 2026-10-02)
+## Entorno local (verificado 2026-10-06)
 
 La app **arranca y se ve en el navegador** en `http://127.0.0.1:5267`. Login:
 `admin@demo.com` (Admin del tenant demo) o `global@admin.com` (AdminGlobal).
@@ -78,9 +80,12 @@ Tarda ~10 s en aceptar logins. La base `MiniMercadoDB` **no hay que crearla a
 mano**: la crea `Database.Migrate()` en el primer arranque, junto con las 60
 migraciones.
 
-**2. Runtime .NET 6** instalado con `dotnet-install.sh` en `~/.dotnet`
-(sin sudo, reversible con `rm -rf ~/.dotnet`). El SDK del sistema es el 10 y
-**no** puede ejecutar un binario `net6.0`.
+**2. Runtimes .NET 6.0.36** (`Microsoft.NETCore.App` y
+`Microsoft.AspNetCore.App`) en `/usr/lib/dotnet`, instalados con
+`dotnet-install.sh --runtime ... --version 6.0.36 --install-dir /usr/lib/dotnet --no-path`
+(2026-10-06, con sudo; reversible quitando esas dos carpetas de
+`shared/`). Tambien quedan en `~/.dotnet` el SDK 6.0.428 y los mismos runtimes
+(sin sudo), que sigue siendo donde viven `dotnet ef`.
 
 **3. Compilar con el SDK del sistema, ejecutar con el muxer de `~/.dotnet`:**
 
@@ -96,10 +101,39 @@ Seed__PasswordCajaDemo='<password>' \
 ~/.dotnet/dotnet bin/Debug/net6.0/MiniMercado.dll
 ```
 
-`dotnet run` **no sirve**: usa el muxer del sistema, que no tiene runtime 6.
+`dotnet run` **sirve desde 2026-10-06**: el muxer del sistema ya encuentra el
+runtime 6 y usa el perfil `http` de `launchSettings.json` (Development, puerto
+5267). Pero `launchSettings.json` **no** incluye la connection string, y en
+Development la app hace seed al arrancar: sin ella muere. Exportala a mano
+(mismo valor que en el comando de tests de mas abajo) o usa F5 en VS Code, que
+la lee de `.env` (ver mas abajo).
 
 Las tres variables `Seed__*` son obligatorias: sin ellas el seed no crea
 ningun usuario (ver P-001 en `03_PROBLEMAS.md`).
+
+**Tests (P-017):** desde 2026-10-06 corren con el dotnet del sistema y sin
+ningun hack (los runtimes 6.0.36 ya estan en `/usr/lib/dotnet`, ver P-013).
+Desde `tests/MiniMercado.Tests`:
+
+```
+ConnectionStrings__MiniMercadoDB='Server=127.0.0.1,1433;Database=MiniMercadoDB;User Id=sa;Password=<password>;TrustServerCertificate=True;' \
+  dotnet test
+```
+
+(antes habia que agregar `DOTNET_ROOT=$HOME/.dotnet` y llamar al muxer de
+`~/.dotnet`; ya no.)
+
+Cada test crea su propia base `MiniMercadoDB_test_<guid>` y la dropea al terminar,
+asi que tarda minutos: la ultima corrida completa fue **94 tests en ~3 min**
+(2026-10-06, verificado sin `DOTNET_ROOT`).
+
+**VS Code (F5):** `.vscode/launch.json` (commiteable, **sin secretos**) arranca
+`bin/Debug/net6.0/MiniMercado.dll` en `http://localhost:5267` con
+`ASPNETCORE_ENVIRONMENT=Development` y toma la connection string de `.env` en la
+raiz del proyecto (cubierto por el gitignore `*.env`, por eso no sube al repo).
+`source .env` **no sirve en bash**: el `;` de la connection string parte la linea
+en comandos — en terminal exportala a mano. Si ya hay una instancia de la app en
+el 5267, cortala antes de un F5 (puerto ocupado).
 
 **Banderas de arranque (P-026):** las migraciones y el seed **no se ejecutan
 automáticamente** fuera de Development. Si se corre la app con
@@ -193,6 +227,22 @@ chequeo B genera una migración de prueba y la revierte siempre, incluso si el
 script se corta a la mitad. Sale con **1** y con **3** a la vez no puede pasar: el
 script corta en el primero.
 
+**La barrera corre en CI (2026-10-06).** `.github/workflows/ci.yml` (GitHub
+Actions; el remoto ya era GitHub) corre build + los 94 tests +
+`verificar-esquema.sh` en cada push a `main` y en cada PR, contra un SQL Server
+2022 en service container. El connection string sale de
+`secrets.MSSQL_SA_PASSWORD` (seteado con `gh secret set`; la contrasena jamas se
+commitea). Asi el paso 3 de P-025 lo impide el pipeline, no la disciplina.
+
+Dos trampas del CI/local:
+- `global.json` en la raiz fija SDK >= 6.0.428 con `rollForward: latestMajor`
+  (P-014): permite build con el SDK 10 del sistema y en CI instala 6.0.x.
+- `dotnet tool restore` con el SDK 10 **revienta** ("Se esperaba un True|False
+  para la propiedad rollForward"): el manifiesto `MiniMercado/dotnet-tools.json`
+  usa `"rollForward": "latestPatch"` y el SDK 6 lo acepta. Restaurar con
+  `~/.dotnet/dotnet tool restore --tool-manifest MiniMercado/dotnet-tools.json`.
+  `dotnet ef` si funciona desde el proyecto con cualquiera de los dos muxers.
+
 ## Objetivo actual
 
 **Ciclo 2026-10-02: la app arranca en local y el esquema es confiable.**
@@ -211,8 +261,9 @@ Dos objetivos ya cumplidos:
    sola: hoy es un script y se corre a mano.**
 
 Sigue pendiente llevarla a un despliegue con Docker Compose. Lo que falta para
-eso: no hay `Dockerfile`, no hay `compose.yaml`, no hay `.env`, no hay
-`appsettings.Production.json` y no hay healthchecks.
+eso: no hay `Dockerfile`, no hay `compose.yaml`, no hay `appsettings.Production.json`
+y no hay healthchecks. (Existe un `.env` local desde 2026-10-06, gitignored:
+es el que usa F5, no un `.env` de despliegue.)
 
 Pendiente de decisión del TEAM LEAD (no resuelto, no inventado): motor de base de
 datos, framework destino, dónde vive la app, historial de git, alcance del
@@ -248,15 +299,19 @@ decisiones bloqueantes en §6.4.
   Development). El problema real era doble: el seed tambien escribia en cada
   boot y tenia su propia carrera, con un indice unico que explota antes que las
   migraciones.
+- P-007: cerrado 2026-10-06. Los **85 `GetTenantId().Value` de 14 archivos** ahora
+  pasan por el helper `TenantServiceExtensions.TryGetTenantId` (extension de
+  `ITenantService`) que falla cerrado: sin claim, la accion devuelve
+  `Unauthorized()` en vez de un 500, `ProveedorExists` devuelve `false` (NotFound) y
+  `AuditoriaService.Registrar` lanza una excepcion con mensaje claro que cita
+  P-007. Verificado con **94 tests verdes** (88 previos + 6 nuevos en
+  `SinTenantIdTests`, incluido un guardia de fuente que falla si
+  `GetTenantId().Value` reaparece en Controllers/ o Services/) y humo de arranque
+  con 11 rutas anonimas: 200/302, 0 excepciones en el log.
 
 **Pendiente, en este orden:**
 
-1. **P-007 (defensa en profundidad, ya no alcanzable).** Quedan **85 `.Value`** en 14
-   archivos. Con P-006 cerrado ninguno es alcanzable, porque `AdminGlobal` es el único rol
-   sin `TenantId` y ya no entra a ningún controller que los tenga. El cierre de verdad es un
-   helper único que falle cerrado, pero son 85 cambios mecánicos y ahora ya hay red de tests
-   (P-017), asi que este es el siguiente paso natural.
-2. **P-017 (tests) — EMPEZADO 2026-10-05.** Ya no es lo pendiente: existe
+1. **P-017 (tests) — EMPEZADO 2026-10-05.** Ya no es lo pendiente: existe
    `tests/MiniMercado.Tests` con **88 tests verdes** contra SQL Server real (D-015) sobre
    los tres flujos de dinero (venta, cobro de suscripcion, cierre de caja) y el dashboard
    financiero. Escribirlos destapo 6 bugs reales, todos corregidos y cubiertos — ver
@@ -269,13 +324,14 @@ decisiones bloqueantes en §6.4.
    duplicarla).
    **P-034 cerrado sin tocar codigo** (D-017): el usuario decidio no sumar IVA ni descuentos.
    Con esto, los tres flujos de dinero que P-017 dejo abiertos quedan cerrados.
-3. **P-025 (lo que queda).** Correr `tools/verificar-esquema.sh` solo, sin que
-   nadie se acuerde: eso es elegir plataforma de CI y el repo no tiene ninguna.
-   El script es agnostico a proposito, asi que el dia es pegarlo en un workflow.
-   El paso 3 de P-025 (regla de equipo) tambien sigue siendo solo una regla.
-4. **P-028.** Health checks. Hoy una base atrasada solo se detecta en el log de
+2. **P-025 cerrado 2026-10-06.** La barrera corre en CI
+   (`.github/workflows/ci.yml`): build + tests + `verificar-esquema.sh` en cada
+   push a `main` y en cada PR, con SQL Server en service container. Lo unico que
+   queda es ver pasar la primera corrida en GitHub (ocurre en el proximo push;
+   si falla ahi, es bug del workflow, no de la barrera).
+3. **P-028.** Health checks. Hoy una base atrasada solo se detecta en el log de
    arranque; con un endpoint de salud se detecta en runtime.
-5. **P-027.** Framework EOL desde nov-2024: depende de D-009.
+4. **P-027.** Framework EOL desde nov-2024: depende de D-009.
 
 Nota: **P-006 cerrado 2026-10-05 (D-014).** `AdminGlobal` es back-office; solo gestiona
 tenants y consulta el catálogo global. **Y P-026 ya no bloquea al `Dockerfile`**, asi que el
@@ -284,18 +340,25 @@ orden de arriba no esta atado a ninguna decision pendiente.
 Prioridad acordada: seguir con los arreglos que **no dependen de ninguna decision
 de infraestructura** antes de escribir el Dockerfile o el compose.
 
-**Estado del entorno al cerrar la sesion (2026-10-02, fin del dia):**
+**Estado del entorno (2026-10-06):**
 
-- Contenedor `minimercado-sql` (SQL Server 2022) **levantado** en `127.0.0.1:1433`.
-- La app **esta parada**: se levanta con el comando de la seccion 3.
-- `MiniMercadoDB` tiene **60 migraciones** aplicadas, incluida
-  `20261005101937_RubroIdOpcional`.
-- `SchemaCheck` da **exit 0: "Sin deriva"**, sin aviso de comparacion parcial
-  (estado alcanzado el 2026-10-05 al cerrar P-030). Rebuildar la herramienta
-  antes de correrla.
-- No hay cliente `sqlcmd` en la maquina ni en el contenedor, ni `pyodbc` en
-  Python. Para tocar la base a mano, usar `SchemaCheck` o escribir SQL desde un
-  controller; no instalar tooling nuevo sin necesidad.
+- Contenedor `minimercado-sql` (SQL Server 2022) **levantado** en `127.0.0.1:1433`,
+  sin volumen Docker: si se borra el contenedor, se pierde la base (por ahora es
+  descartable y no hay backups; decision tomada por el TEAM LEAD).
+- `MiniMercadoDB` es la unica base de usuario, con **60 migraciones** aplicadas.
+- Los runtimes **6.0.36** estan en `/usr/lib/dotnet` (ademas del 10.0.12 y del
+  SDK 10.0.112): `dotnet run` y `dotnet test` funcionan con el dotnet del sistema.
+- **94 tests verdes** en ~3 min, sin hacks de entorno (2026-10-06).
+- **CI en GitHub Actions** (`.github/workflows/ci.yml`): build + tests +
+  `verificar-esquema.sh` contra SQL Server en service container; secret
+  `MSSQL_SA_PASSWORD` seteado vía `gh` (2026-10-06). `global.json` en la raiz
+  fija el SDK (P-014).
+- F5 en VS Code funciona via `.vscode/launch.json` + `.env` (ver "Entorno local").
+- **Si hay `sqlcmd`:** en el contenedor, en `/opt/mssql-tools18/bin/sqlcmd` (v18,
+  ya probado). Ejemplo:
+  `docker exec -it minimercado-sql /opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P '<password>' -C -d MiniMercadoDB`.
+  En la maquina host no hay `sqlcmd` ni `pyodbc`; no instalar tooling nuevo sin
+  necesidad.
 
 ## Fuentes de verdad
 
