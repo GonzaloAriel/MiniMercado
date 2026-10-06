@@ -233,15 +233,22 @@ Actions; el remoto ya era GitHub) corre build + los 94 tests +
 2022 en service container. El connection string sale de
 `secrets.MSSQL_SA_PASSWORD` (seteado con `gh secret set`; la contrasena jamas se
 commitea). Asi el paso 3 de P-025 lo impide el pipeline, no la disciplina.
+**Primera corrida VERDE el 2026-10-06 (5m39s, run 37520508040)**, al tercer
+intento: los dos primeros destaparon bugs reales (ver trampas abajo).
 
-Dos trampas del CI/local:
+Dos trampas que costo encontrar (ambas ya arregladas):
 - `global.json` en la raiz fija SDK >= 6.0.428 con `rollForward: latestMajor`
-  (P-014): permite build con el SDK 10 del sistema y en CI instala 6.0.x.
-- `dotnet tool restore` con el SDK 10 **revienta** ("Se esperaba un True|False
-  para la propiedad rollForward"): el manifiesto `MiniMercado/dotnet-tools.json`
-  usa `"rollForward": "latestPatch"` y el SDK 6 lo acepta. Restaurar con
-  `~/.dotnet/dotnet tool restore --tool-manifest MiniMercado/dotnet-tools.json`.
-  `dotnet ef` si funciona desde el proyecto con cualquiera de los dos muxers.
+  (P-014): permite build con el SDK 10 del sistema y en CI instala 6.0.x. En CI
+  el muxer elige el 10 (el runner ya lo trae y `latestMajor` va al mas nuevo).
+- El manifiesto `MiniMercado/dotnet-tools.json` quedo con `"rollForward": true`
+  (boolean): el SDK 10 **rechaza el string** `"latestPatch"` ("Se esperaba un
+  True|False") y con boolean lo aceptan los dos. Antes del fix, CI fallaba en
+  `dotnet tool restore` y hasta en `dotnet ef`. `dotnet ef` funciona desde el
+  proyecto con cualquiera de los dos muxers.
+- `SchemaCheck` abre su conexion admin a **`master`**, no a la base de
+  referencia: `MiniMercadoDB` solo se usa para armar los nombres de las bases
+  descartables. En CI esa base no existe y no hace falta crearla (el mismo
+  fix hizo falta en `EliminarBase`).
 
 ## Objetivo actual
 
@@ -326,9 +333,8 @@ decisiones bloqueantes en §6.4.
    Con esto, los tres flujos de dinero que P-017 dejo abiertos quedan cerrados.
 2. **P-025 cerrado 2026-10-06.** La barrera corre en CI
    (`.github/workflows/ci.yml`): build + tests + `verificar-esquema.sh` en cada
-   push a `main` y en cada PR, con SQL Server en service container. Lo unico que
-   queda es ver pasar la primera corrida en GitHub (ocurre en el proximo push;
-   si falla ahi, es bug del workflow, no de la barrera).
+   push a `main` y en cada PR, con SQL Server en service container.
+   **Primera corrida en GitHub verde** (2026-10-06, 5m39s).
 3. **P-028.** Health checks. Hoy una base atrasada solo se detecta en el log de
    arranque; con un endpoint de salud se detecta en runtime.
 4. **P-027.** Framework EOL desde nov-2024: depende de D-009.

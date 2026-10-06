@@ -460,11 +460,16 @@ cual es la solucion de fondo, no el parche puntual.
     pipeline (lo atrapan A o B, segun donde este la deriva). El connection string
     llega de `secrets.MSSQL_SA_PASSWORD` (seteado con `gh secret set` el
     2026-10-06); la contrasena jamas se commitea. De paso se agrego `global.json`
-    (cierra P-014). Verificado localmente con los mismos comandos del workflow
-    (build 0 errores, 94/94 tests, script exit 0); la primera corrida en GitHub
-    ocurre en el proximo push. **Lo unico que CI no tapa:** el chequeo C
-    (migraciones sin commitear) es vacio en un checkout limpio, su valor es
-    local/pre-commit; el que impide el push peligroso es A+B, y los dos corren.
+    (cierra P-014). **Primera corrida en GitHub VERDE el 2026-10-06 (5m39s)**,
+    al tercer intento: el 1ro fallo por el `rollForward` string del manifiesto
+    (el SDK 10 lo rechaza y en CI el muxer elige el 10; fix: boolean), el 2do
+    porque `SchemaCheck` abria conexion a la base de referencia `MiniMercadoDB`,
+    que en CI no existe (fix: admin en `master`, igual que en `EliminarBase`).
+    Ambos fixes probados en local simulando CI: muxer del sistema y connection
+    string apuntando a una base inexistente. **Lo unico que CI no tapa:** el
+    chequeo C (migraciones sin commitear) es vacio en un checkout limpio, su
+    valor es local/pre-commit; el que impide el push peligroso es A+B, y los dos
+    corren.
 
 - **P-026 — RESUELTO 2026-10-05.** Ver la ficha en la seccion de Problemas.
   Dos correcciones a lo que se creia saber: **no era un cambio de una linea**
