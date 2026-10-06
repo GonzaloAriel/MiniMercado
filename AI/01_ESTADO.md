@@ -35,26 +35,25 @@ Este documento **no registra ninguna decisión tomada**. Las decisiones se anota
 comparten infraestructura y base de datos, con aislamiento por `TenantId`.
 
 - **Repositorio:** https://github.com/GonzaloAriel/MiniMercado.git (**público**)
-- **Rama:** `main` — **14 commits sin pushear** respecto de `origin/main` (a 2026-10-06)
-- **Último commit:** `6cfe176` — 2026-10-05 — "Memoria al dia: P-017 en progreso,
-  P-032/P-033/P-034 cerrados"
-- **Working tree:** **con cambios sin commitear** (a 2026-10-06)
-- **Commits sin pushear:** 14 (los de 2026-10-02 y 2026-10-05; ninguno subido)
+- **Rama:** `main` — **al día con `origin/main`** (a 2026-10-06)
+- **Último commit:** `c744246` — 2026-10-06 — "Memoria al dia: primera corrida
+  de CI verde y los dos fixes que destapo"
+- **Working tree:** **limpio** (a 2026-10-06); solo queda sin trackear
+  `MiniMercado/dotnet-install.sh` (instalador descargado, no es código del proyecto)
+- **Commits sin pushear:** 0 — el 2026-10-06 se subieron los 8 commits del día
+  (P-007, logo de navbar, CI + `global.json`, F5 en VS Code, memoria y los
+  2 fixes de CI)
 
-> ⚠️ **El 2026-10-05 se commiteó casi todo el trabajo acumulado** (P-006/D-014,
-> P-026, P-030/D-013, P-031, P-025 paso 2, P-032, P-033 y la red inicial de tests,
-> entre otros), pero **quedaron 14 commits sin pushear**. El único trabajo del
-> árbol **sin commitear a 2026-10-06** es **P-007** (17 modificadas: los 13
-> controllers + `AuditoriaService` + 2 archivos de memoria + el csproj de tests, y
-> 3 sin trackear: `Services/TenantServiceExtensions.cs`,
-> `tests/MiniMercado.Tests/SinTenantIdTests.cs` y `dotnet-install.sh` — esta última
-> preexistente). Commit solo bajo pedido del TEAM LEAD.
+> **Actualización 2026-10-06:** lo que decía este bloque (14 commits sin pushear
+> y P-007 sin commitear) quedó superado: todo está commiteado y pusheado.
+> Commit y push solo bajo pedido del TEAM LEAD (regla 13).
 
 > ⚠️ **Los encabezados de `03_PROBLEMAS.md` no son confiables al 100%.** Varios problemas se
 > resolvieron a lo largo del trabajo y se documento el "qué se hizo" en su propia sección, pero
 > el encabezado del listado quedó diciendo `P-0XX (ALTA)` sin marcar. Al retomar, **verificar el
 > estado real de cada problema antes de trabajar sobre él**, no confiar en el encabezado. Casos
-> conocidos: P-006, P-021, P-022, P-025 (PARCIAL: pasos 1 y 2 hechos, falta CI y paso 3), P-026.
+> conocidos: P-021, P-022, P-023, P-024 (la solución está en el cuerpo, el
+> encabezado nunca se marcó). P-006, P-025 y P-026 ya se marcaron (2026-10-06).
 > No se corrigió de forma masiva a propósito: los marcadores de los cuerpos son ambiguos y
 > actualizarlos a ciegas sería peor que dejarlos señalizados.
 
