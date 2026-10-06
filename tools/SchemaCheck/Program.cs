@@ -53,7 +53,9 @@ public static class Program
         Console.WriteLine($"  A) {_Descripcion(baseMigraciones, "creada con las migraciones")}");
         Console.WriteLine($"  B) {_Descripcion(baseModelo, "creada desde el modelo (GenerateCreateScript)")}");
 
-        await using (var admin = new SqlConnection(conn))
+        // Admin en master: CREATE/DROP DATABASE no necesita que exista la base de
+        // referencia (en CI no existe) y desde master se puede dropear cualquier cosa.
+        await using (var admin = new SqlConnection(ConBase(conn, "master")))
         {
             await admin.OpenAsync();
             foreach (var nombre in new[] { baseMigraciones, baseModelo })
@@ -189,7 +191,7 @@ public static class Program
 
     private static async Task EliminarBase(string conn, string nombre)
     {
-        await using var admin = new SqlConnection(conn);
+        await using var admin = new SqlConnection(ConBase(conn, "master"));
         await admin.OpenAsync();
         await using var cmd = admin.CreateCommand();
         cmd.CommandText =
